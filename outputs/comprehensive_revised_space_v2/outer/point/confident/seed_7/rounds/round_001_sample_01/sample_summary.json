@@ -1,0 +1,81 @@
+{
+  "sampled_profile": {
+    "weight": 0.21986152859319433,
+    "time": 0.8990831368330093,
+    "flow_boundness": 0.3229022285062273,
+    "space_indirectness": 2.690889711580708e-05,
+    "shape_arcness": 0.4259806937930571
+  },
+  "environment_result": {
+    "context": {
+      "gesture": "point",
+      "target_state": "confident"
+    },
+    "requested_profile": {
+      "weight": 0.21986152859319433,
+      "time": 0.8990831368330093,
+      "flow_boundness": 0.3229022285062273,
+      "space_indirectness": 2.690889711580708e-05,
+      "shape_arcness": 0.4259806937930571
+    },
+    "achieved_profile": {
+      "weight": 0.2198613395145133,
+      "time": 0.8990829619491791,
+      "flow_boundness": 0.3229027374090377,
+      "space_indirectness": 2.6767500782696743e-05,
+      "shape_arcness": 0.42598081337642146
+    },
+    "valid_realisation": true,
+    "failure_reason": "evaluator_error: [Errno 11001] getaddrinfo failed",
+    "invalid_features": [],
+    "path_preserved": true,
+    "joint_limits_satisfied": true,
+    "physically_acceptable": true,
+    "realisation_rmse": 2.6818287646941657e-07,
+    "per_feature_abs_error": {
+      "weight": 1.8907868101769587e-07,
+      "time": 1.7488383019514941e-07,
+      "flow_boundness": 5.089028103921756e-07,
+      "space_indirectness": 1.4139633311033723e-07,
+      "shape_arcness": 1.1958336437745132e-07
+    },
+    "max_abs_feature_error": 5.089028103921756e-07,
+    "max_error_feature": "flow_boundness",
+    "feature_realisation_acceptable": true,
+    "inner_loss": 0.005748602673469318,
+    "inner_reward": -0.005748602673469318,
+    "perceptual_evaluations": [],
+    "mean_target_probability": null,
+    "mean_margin": null,
+    "mean_margin_clipped": null,
+    "mean_perceptual_reward": null,
+    "mean_perceptual_reward_clipped": null,
+    "perceptual_reward_std": null,
+    "target_classification_rate": null,
+    "winner_agreement_rate": null,
+    "mean_probability_entropy": null,
+    "outer_reward": -1.0,
+    "outer_reward_clipped": -1.0,
+    "optimiser_output_dir": "C:\\Users\\dsya0006\\Downloads\\Updated_CEM_Live_Retest_V2\\outputs\\comprehensive_revised_space_v2\\outer\\point\\confident\\seed_7\\rounds\\round_001_sample_01\\optimiser_outputs",
+    "action_coefficients": [
+      -0.004834712680507071,
+      -0.11342647638206584,
+      -0.11339261123159884,
+      -0.020220715114205232,
+      -0.005664766924334202,
+      -0.018463314439636235,
+      0.18359186535067515,
+      0.33924545066689105,
+      0.28243546039931866,
+      0.057958382294904506,
+      0.01626800275846327,
+      0.043311494094352435,
+      -0.07863915598332422,
+      0.3441463822216374,
+      0.2319583313165587,
+      -0.0739150049223977,
+      -0.34392987849135387,
+      0.11524943073420714
+    ]
+  }
+}

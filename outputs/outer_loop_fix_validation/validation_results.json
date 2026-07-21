@@ -1,0 +1,47 @@
+{
+  "synthetic_convergence": {
+    "0.0": {
+      "initial_median_rmse": 0.2469817807045694,
+      "final_median_rmse": 0.017296416902111943,
+      "final_p90_rmse": 0.053292114125083806,
+      "selected_best_true_median_rmse": 0.016249207671255064,
+      "fraction_improved": 1.0
+    },
+    "0.05": {
+      "initial_median_rmse": 0.2469817807045694,
+      "final_median_rmse": 0.16779946098968018,
+      "final_p90_rmse": 0.22404148187642955,
+      "selected_best_true_median_rmse": 0.17788219870232228,
+      "fraction_improved": 0.97
+    },
+    "0.15": {
+      "initial_median_rmse": 0.2469817807045694,
+      "final_median_rmse": 0.22094781002113845,
+      "final_p90_rmse": 0.29839429093125197,
+      "selected_best_true_median_rmse": 0.22697619412209952,
+      "fraction_improved": 0.72
+    }
+  },
+  "checkpoint_resume": {
+    "mean_exact_match": true,
+    "std_exact_match": true,
+    "round_counter_match": true
+  },
+  "environment_guards": {
+    "bad_path_rejected": true,
+    "bad_path_reason": "physical_acceptance_failed:path_preservation",
+    "bad_joint_rejected": true,
+    "bad_joint_reason": "physical_acceptance_failed:joint_limits",
+    "vlm_not_called_for_invalid": true,
+    "unclipped_rmse_used": true,
+    "valid_repeat_count": 3,
+    "target_classification_rate": 1.0,
+    "winner_agreement_rate": 1.0,
+    "finite_entropy": true
+  },
+  "elite_archive": {
+    "historical_elites_removed": true,
+    "elite_count": 4,
+    "mean_moved_to_current_batch": true
+  }
+}

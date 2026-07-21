@@ -1,0 +1,81 @@
+{
+  "sampled_profile": {
+    "weight": 0.4678316647459359,
+    "time": 0.8077241778553076,
+    "flow_boundness": 0.2717786722771705,
+    "space_indirectness": 0.11731518298583302,
+    "shape_arcness": 0.4397264786190447
+  },
+  "environment_result": {
+    "context": {
+      "gesture": "reach",
+      "target_state": "confident"
+    },
+    "requested_profile": {
+      "weight": 0.4678316647459359,
+      "time": 0.8077241778553076,
+      "flow_boundness": 0.2717786722771705,
+      "space_indirectness": 0.11731518298583302,
+      "shape_arcness": 0.4397264786190447
+    },
+    "achieved_profile": {
+      "weight": 0.4678330182081363,
+      "time": 0.8077233485849944,
+      "flow_boundness": 0.27177780393087086,
+      "space_indirectness": 0.11731687437933706,
+      "shape_arcness": 0.4397257542184832
+    },
+    "valid_realisation": true,
+    "failure_reason": "evaluator_error: [Errno 11001] getaddrinfo failed",
+    "invalid_features": [],
+    "path_preserved": true,
+    "joint_limits_satisfied": true,
+    "physically_acceptable": true,
+    "realisation_rmse": 1.154048754194527e-06,
+    "per_feature_abs_error": {
+      "weight": 1.353462200370803e-06,
+      "time": 8.292703131962398e-07,
+      "flow_boundness": 8.683462996428304e-07,
+      "space_indirectness": 1.6913935040469008e-06,
+      "shape_arcness": 7.244005614803761e-07
+    },
+    "max_abs_feature_error": 1.6913935040469008e-06,
+    "max_error_feature": "space_indirectness",
+    "feature_realisation_acceptable": true,
+    "inner_loss": 0.03428927169371364,
+    "inner_reward": -0.03428927169371364,
+    "perceptual_evaluations": [],
+    "mean_target_probability": null,
+    "mean_margin": null,
+    "mean_margin_clipped": null,
+    "mean_perceptual_reward": null,
+    "mean_perceptual_reward_clipped": null,
+    "perceptual_reward_std": null,
+    "target_classification_rate": null,
+    "winner_agreement_rate": null,
+    "mean_probability_entropy": null,
+    "outer_reward": -1.0,
+    "outer_reward_clipped": -1.0,
+    "optimiser_output_dir": "C:\\Users\\dsya0006\\Downloads\\Updated_CEM_Live_Retest_V2\\outputs\\comprehensive_revised_space_v2\\outer\\reach\\confident\\seed_7\\rounds\\round_004_sample_05\\optimiser_outputs",
+    "action_coefficients": [
+      -0.4801745149091692,
+      0.1755353173956128,
+      0.04478829240879788,
+      -0.03326213752070102,
+      -0.020230533037377853,
+      0.008998844864642353,
+      0.864898180036683,
+      -0.3450226172907611,
+      -0.03941937598414048,
+      0.06797539788595267,
+      0.03520773983296848,
+      -0.0068412743201304626,
+      0.15732243912139124,
+      -0.8772158380457094,
+      0.7250326852011387,
+      -0.05523852542335248,
+      0.005178592692746698,
+      0.07712362335906289
+    ]
+  }
+}

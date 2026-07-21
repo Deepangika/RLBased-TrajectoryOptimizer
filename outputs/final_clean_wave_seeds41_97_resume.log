@@ -1,0 +1,746 @@
+Space descriptor/range preflight passed: C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\configs\normalisation_ranges_balanced_3gestures_by_gesture.json
+{
+  "context_seed_runs": 6,
+  "estimated_outer_calls": 840,
+  "estimated_holdout_calls": 120,
+  "estimated_total_live_calls": 960
+}
+SKIP completed outer run: C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\outputs\final_clean_evaluation_v1\outer\wave\confident\seed_41\results_summary.json
+SKIP completed outer run: C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\outputs\final_clean_evaluation_v1\outer\wave\confident\seed_97\results_summary.json
+SKIP completed outer run: C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\outputs\final_clean_evaluation_v1\outer\wave\friendly\seed_41\results_summary.json
+
+$ C:\Users\dsya0006\anaconda3\envs\laban_rl\python.exe scripts/train_cem_contextual_bandit.py --gesture wave --target-state friendly --seed 97 --out C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\outputs\final_clean_evaluation_v1\outer\wave\friendly\seed_97 --evaluator gemini --model gemini-2.5-flash --temperature 0.2 --rounds 5 --cem-samples-per-round 6 --repeats 3 --validation-top-k 3 --validation-repeats 10 --maxiter 90 --popsize 8 --local-maxiter 300 --max-feature-error-threshold 0.1
+
+Evaluating informed initial profile independently...
+
+======================================================================================================
+SPATIOTEMPORAL DIRECT LABAN FEATURE OPTIMISER
+======================================================================================================
+Project root:          C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2
+Gesture:               wave
+Target:                friendly
+n_spatial_basis:       4
+n_timing_basis:        4
+max_delta:             0.15 rad
+max_total_delta:       0.5 rad
+max_end_delta:         0.1 rad
+endpoint_mode:         soft
+time_scale:            1.6
+maxiter:               90
+popsize:               8
+Feature weights:       {'weight': 1.0, 'time': 1.0, 'flow_boundness': 1.0, 'space_indirectness': 1.0, 'shape_arcness': 1.0}
+path_length_weight:    6.0
+endpoint_weight:       0.2
+
+======================================================================================================
+REFERENCE FEATURES
+======================================================================================================
+  weight                : 0.1508
+  time                  : 0.1399
+  flow_boundness        : 0.0608
+  space_indirectness    : 0.5377
+  shape_arcness         : 0.3019
+
+======================================================================================================
+TARGET PROFILE
+======================================================================================================
+  weight                : 0.4200
+  time                  : 0.4000
+  flow_boundness        : 0.2000
+  space_indirectness    : 0.3000
+  shape_arcness         : 0.6000
+
+======================================================================================================
+OPTIMISING
+======================================================================================================
+eval=00025 | loss=  3.6969 | feat= 2.1271 | near=0.000781 | ratio= 1.37 | plen= 0.135 | maxd= 0.110 | warp= 3.74 | W=3.797, T=3.527, F=1.098, S=0.875, Sh=0.048
+eval=00050 | loss=  1.3792 | feat= 0.7302 | near=0.000153 | ratio= 0.69 | plen= 0.093 | maxd= 0.034 | warp= 5.22 | W=0.808, T=1.906, F=0.604, S=0.582, Sh=0.527
+eval=00075 | loss=  2.9311 | feat= 1.5406 | near=0.000817 | ratio= 1.41 | plen= 0.172 | maxd= 0.053 | warp= 5.31 | W=1.692, T=3.354, F=1.258, S=0.814, Sh=0.222
+eval=00100 | loss=  0.6522 | feat= 0.4584 | near=0.000604 | ratio= 1.16 | plen= 0.025 | maxd= 0.065 | warp= 3.08 | W=0.485, T=1.230, F=0.413, S=0.763, Sh=0.289
+eval=00125 | loss=  0.7755 | feat= 0.6995 | near=0.000235 | ratio= 1.05 | plen= 0.002 | maxd= 0.060 | warp= 2.90 | W=1.079, T=1.748, F=0.572, S=0.537, Sh=0.581
+eval=00150 | loss=  1.4359 | feat= 1.0469 | near=0.000107 | ratio= 0.81 | plen= 0.037 | maxd= 0.035 | warp= 4.38 | W=1.258, T=2.448, F=0.843, S=0.627, Sh=0.347
+eval=00175 | loss=  1.1135 | feat= 0.9605 | near=0.000909 | ratio= 1.02 | plen= 0.000 | maxd= 0.049 | warp= 3.36 | W=0.890, T=2.397, F=0.715, S=0.507, Sh=0.290
+eval=00200 | loss=  1.8298 | feat= 1.1544 | near=0.002234 | ratio= 1.28 | plen= 0.077 | maxd= 0.097 | warp= 3.88 | W=1.633, T=2.466, F=0.976, S=0.697, Sh=0.197
+eval=00225 | loss=  0.1888 | feat= 0.1516 | near=0.000092 | ratio= 0.95 | plen= 0.003 | maxd= 0.022 | warp= 2.32 | W=0.298, T=0.493, F=0.212, S=0.350, Sh=0.302
+eval=00250 | loss=  1.4098 | feat= 1.2077 | near=0.000113 | ratio= 1.02 | plen= 0.000 | maxd= 0.050 | warp= 3.14 | W=1.462, T=2.720, F=0.815, S=0.879, Sh=0.270
+eval=00275 | loss=  1.2985 | feat= 1.0506 | near=0.001066 | ratio= 1.01 | plen= 0.000 | maxd= 0.155 | warp= 5.59 | W=0.896, T=2.621, F=0.782, S=0.225, Sh=0.477
+eval=00300 | loss=  1.1512 | feat= 0.9214 | near=0.001420 | ratio= 1.12 | plen= 0.015 | maxd= 0.063 | warp= 4.62 | W=0.996, T=2.244, F=0.752, S=0.226, Sh=0.147
+eval=00325 | loss=  1.3008 | feat= 0.2349 | near=0.000030 | ratio= 0.59 | plen= 0.172 | maxd= 0.009 | warp= 3.55 | W=0.496, T=0.882, F=0.245, S=0.119, Sh=0.548
+eval=00350 | loss=  1.6387 | feat= 1.2885 | near=0.000812 | ratio= 0.89 | plen= 0.013 | maxd= 0.082 | warp= 4.37 | W=1.843, T=2.784, F=0.905, S=0.492, Sh=0.354
+eval=00375 | loss=  0.6241 | feat= 0.5559 | near=0.000400 | ratio= 0.94 | plen= 0.004 | maxd= 0.058 | warp= 3.40 | W=0.788, T=1.428, F=0.498, S=0.641, Sh=0.216
+eval=00400 | loss=  1.3535 | feat= 1.1290 | near=0.000112 | ratio= 1.07 | plen= 0.005 | maxd= 0.039 | warp= 4.23 | W=1.022, T=2.714, F=0.782, S=0.674, Sh=0.177
+eval=00425 | loss=  0.6231 | feat= 0.4065 | near=0.001029 | ratio= 0.84 | plen= 0.026 | maxd= 0.059 | warp= 3.71 | W=0.725, T=1.169, F=0.485, S=0.256, Sh=0.359
+eval=00450 | loss=  0.7821 | feat= 0.7080 | near=0.001370 | ratio= 1.02 | plen= 0.001 | maxd= 0.084 | warp= 2.38 | W=1.466, T=1.448, F=0.444, S=0.027, Sh=0.176
+eval=00475 | loss=  0.8542 | feat= 0.7601 | near=0.000062 | ratio= 0.93 | plen= 0.005 | maxd= 0.030 | warp= 3.79 | W=0.888, T=1.767, F=0.583, S=0.886, Sh=1.156
+eval=00500 | loss=  0.3427 | feat= 0.2052 | near=0.000412 | ratio= 0.86 | plen= 0.020 | maxd= 0.046 | warp= 1.70 | W=0.269, T=0.701, F=0.236, S=0.324, Sh=0.292
+eval=00525 | loss=  0.3906 | feat= 0.3482 | near=0.000406 | ratio= 1.06 | plen= 0.003 | maxd= 0.040 | warp= 3.20 | W=0.515, T=1.018, F=0.324, S=0.589, Sh=0.259
+eval=00550 | loss=  0.8023 | feat= 0.7091 | near=0.000595 | ratio= 1.05 | plen= 0.003 | maxd= 0.060 | warp= 4.72 | W=0.876, T=1.744, F=0.554, S=0.763, Sh=0.201
+eval=00575 | loss=  1.1910 | feat= 1.0393 | near=0.000059 | ratio= 0.97 | plen= 0.001 | maxd= 0.028 | warp= 4.36 | W=1.266, T=2.382, F=0.896, S=0.754, Sh=0.344
+eval=00600 | loss=  0.4300 | feat= 0.3461 | near=0.000442 | ratio= 0.91 | plen= 0.009 | maxd= 0.059 | warp= 2.80 | W=0.593, T=1.080, F=0.365, S=0.496, Sh=0.398
+eval=00625 | loss=  0.8196 | feat= 0.2151 | near=0.000072 | ratio= 0.69 | plen= 0.096 | maxd= 0.019 | warp= 4.24 | W=0.231, T=0.714, F=0.262, S=0.603, Sh=0.564
+eval=00650 | loss=  0.9441 | feat= 0.6238 | near=0.001193 | ratio= 1.21 | plen= 0.045 | maxd= 0.081 | warp= 2.28 | W=1.020, T=1.487, F=0.515, S=0.457, Sh=0.072
+eval=00675 | loss=  1.7972 | feat= 0.7074 | near=0.001404 | ratio= 1.41 | plen= 0.169 | maxd= 0.067 | warp= 2.74 | W=0.911, T=1.695, F=0.568, S=0.775, Sh=0.128
+eval=00700 | loss=  0.9778 | feat= 0.7995 | near=0.000686 | ratio= 1.13 | plen= 0.016 | maxd= 0.054 | warp= 2.86 | W=1.197, T=1.895, F=0.600, S=0.321, Sh=0.156
+eval=00725 | loss=  0.7940 | feat= 0.6784 | near=0.000131 | ratio= 0.91 | plen= 0.007 | maxd= 0.029 | warp= 3.14 | W=0.735, T=1.783, F=0.632, S=0.423, Sh=0.305
+eval=00750 | loss=  1.0738 | feat= 0.9040 | near=0.000355 | ratio= 1.08 | plen= 0.007 | maxd= 0.068 | warp= 3.85 | W=0.866, T=2.264, F=0.629, S=0.169, Sh=0.141
+eval=00775 | loss=  0.4797 | feat= 0.4088 | near=0.000864 | ratio= 1.08 | plen= 0.006 | maxd= 0.056 | warp= 2.59 | W=0.916, T=1.022, F=0.412, S=0.381, Sh=0.211
+eval=00800 | loss=  0.2937 | feat= 0.2308 | near=0.000102 | ratio= 1.07 | plen= 0.005 | maxd= 0.027 | warp= 2.93 | W=0.554, T=0.656, F=0.338, S=0.469, Sh=0.232
+eval=00825 | loss=  2.5672 | feat= 1.1995 | near=0.000771 | ratio= 1.44 | plen= 0.195 | maxd= 0.070 | warp= 2.60 | W=2.088, T=2.365, F=0.634, S=0.633, Sh=0.101
+eval=00850 | loss=  0.5480 | feat= 0.4966 | near=0.000356 | ratio= 1.06 | plen= 0.004 | maxd= 0.072 | warp= 2.42 | W=0.770, T=1.368, F=0.313, S=0.447, Sh=0.228
+eval=00875 | loss=  0.2840 | feat= 0.2666 | near=0.000033 | ratio= 1.02 | plen= 0.001 | maxd= 0.011 | warp= 1.30 | W=0.750, T=0.763, F=0.165, S=0.438, Sh=0.293
+eval=00900 | loss=  0.3766 | feat= 0.2675 | near=0.001015 | ratio= 0.89 | plen= 0.013 | maxd= 0.067 | warp= 1.56 | W=0.334, T=0.402, F=0.127, S=-0.158, Sh=0.232
+eval=00925 | loss=  0.2009 | feat= 0.1701 | near=0.000315 | ratio= 1.03 | plen= 0.001 | maxd= 0.046 | warp= 3.47 | W=0.438, T=0.531, F=0.269, S=0.350, Sh=0.254
+eval=00950 | loss=  0.2527 | feat= 0.1918 | near=0.000478 | ratio= 1.08 | plen= 0.007 | maxd= 0.073 | warp= 1.06 | W=0.490, T=0.567, F=0.133, S=0.357, Sh=0.221
+eval=00975 | loss=  1.7417 | feat= 1.0884 | near=0.001250 | ratio= 1.28 | plen= 0.080 | maxd= 0.114 | warp= 1.87 | W=2.251, T=1.909, F=0.433, S=0.389, Sh=0.118
+eval=01000 | loss=  0.2329 | feat= 0.2026 | near=0.000376 | ratio= 0.98 | plen= 0.000 | maxd= 0.037 | warp= 2.53 | W=0.353, T=0.462, F=0.231, S=0.042, Sh=0.240
+eval=01025 | loss=  0.3496 | feat= 0.3192 | near=0.000411 | ratio= 0.97 | plen= 0.001 | maxd= 0.047 | warp= 1.69 | W=0.452, T=1.035, F=0.255, S=0.298, Sh=0.280
+eval=01050 | loss=  0.3928 | feat= 0.3432 | near=0.001693 | ratio= 1.02 | plen= 0.000 | maxd= 0.079 | warp= 1.85 | W=0.928, T=0.823, F=0.300, S=0.282, Sh=0.225
+eval=01075 | loss=  0.3194 | feat= 0.2118 | near=0.000646 | ratio= 0.89 | plen= 0.013 | maxd= 0.067 | warp= 1.59 | W=0.427, T=0.724, F=0.193, S=0.130, Sh=0.299
+eval=01100 | loss=  0.4952 | feat= 0.4257 | near=0.001026 | ratio= 0.94 | plen= 0.004 | maxd= 0.078 | warp= 3.28 | W=0.366, T=1.022, F=0.325, S=-0.245, Sh=0.149
+eval=01125 | loss=  0.4198 | feat= 0.3545 | near=0.000120 | ratio= 0.92 | plen= 0.006 | maxd= 0.034 | warp= 2.05 | W=0.547, T=1.098, F=0.329, S=0.409, Sh=0.290
+eval=01150 | loss=  0.8146 | feat= 0.3126 | near=0.000022 | ratio= 0.72 | plen= 0.080 | maxd= 0.012 | warp= 2.07 | W=0.346, T=1.025, F=0.229, S=0.357, Sh=0.302
+eval=01175 | loss=  1.6010 | feat= 0.5579 | near=0.000117 | ratio= 0.59 | plen= 0.166 | maxd= 0.046 | warp= 2.75 | W=0.382, T=1.633, F=0.345, S=0.188, Sh=0.606
+eval=01200 | loss=  0.2214 | feat= 0.1885 | near=0.000861 | ratio= 0.98 | plen= 0.000 | maxd= 0.050 | warp= 1.77 | W=0.438, T=0.658, F=0.221, S=0.312, Sh=0.268
+eval=01225 | loss=  0.3288 | feat= 0.2550 | near=0.000033 | ratio= 0.90 | plen= 0.009 | maxd= 0.014 | warp= 2.39 | W=0.435, T=0.674, F=0.192, S=0.455, Sh=0.125
+eval=01250 | loss=  0.3671 | feat= 0.3055 | near=0.000057 | ratio= 1.09 | plen= 0.007 | maxd= 0.023 | warp= 2.43 | W=0.360, T=0.849, F=0.288, S=0.619, Sh=0.211
+eval=01275 | loss=  0.4795 | feat= 0.3217 | near=0.000195 | ratio= 0.85 | plen= 0.022 | maxd= 0.028 | warp= 0.79 | W=0.384, T=0.327, F=0.074, S=-0.329, Sh=0.285
+eval=01300 | loss=  0.4215 | feat= 0.2457 | near=0.000294 | ratio= 0.84 | plen= 0.025 | maxd= 0.032 | warp= 1.88 | W=0.247, T=0.839, F=0.209, S=0.318, Sh=0.319
+eval=01325 | loss=  0.8760 | feat= 0.1784 | near=0.000022 | ratio= 0.66 | plen= 0.113 | maxd= 0.009 | warp= 2.10 | W=0.183, T=0.462, F=0.111, S=0.372, Sh=0.893
+eval=01350 | loss=  0.3452 | feat= 0.2024 | near=0.000785 | ratio= 1.14 | plen= 0.019 | maxd= 0.054 | warp= 1.64 | W=0.279, T=0.466, F=0.167, S=0.313, Sh=0.176
+eval=01375 | loss=  0.5642 | feat= 0.5129 | near=0.000780 | ratio= 0.99 | plen= 0.000 | maxd= 0.062 | warp= 2.84 | W=0.676, T=1.350, F=0.416, S=-0.034, Sh=0.165
+eval=01400 | loss=  0.1910 | feat= 0.1562 | near=0.000132 | ratio= 0.95 | plen= 0.003 | maxd= 0.025 | warp= 1.42 | W=0.250, T=0.394, F=0.144, S=0.479, Sh=0.359
+eval=01425 | loss=  0.1767 | feat= 0.1557 | near=0.000083 | ratio= 1.01 | plen= 0.000 | maxd= 0.020 | warp= 2.74 | W=0.462, T=0.702, F=0.301, S=0.416, Sh=0.669
+eval=01450 | loss=  0.2445 | feat= 0.2075 | near=0.000161 | ratio= 0.95 | plen= 0.003 | maxd= 0.031 | warp= 1.85 | W=0.357, T=0.750, F=0.278, S=0.271, Sh=0.314
+eval=01475 | loss=  0.3230 | feat= 0.2307 | near=0.000473 | ratio= 1.11 | plen= 0.012 | maxd= 0.047 | warp= 0.53 | W=0.330, T=0.398, F=0.105, S=0.429, Sh=0.118
+eval=01500 | loss=  0.4833 | feat= 0.3982 | near=0.001272 | ratio= 1.08 | plen= 0.007 | maxd= 0.074 | warp= 2.59 | W=0.713, T=1.080, F=0.399, S=0.264, Sh=0.148
+eval=01525 | loss=  0.3953 | feat= 0.3574 | near=0.000660 | ratio= 1.03 | plen= 0.001 | maxd= 0.045 | warp= 3.18 | W=0.625, T=1.015, F=0.337, S=0.130, Sh=0.186
+eval=01550 | loss=  0.5222 | feat= 0.2751 | near=0.000699 | ratio= 0.81 | plen= 0.035 | maxd= 0.071 | warp= 2.48 | W=0.554, T=0.693, F=0.207, S=-0.130, Sh=0.300
+eval=01575 | loss=  0.2636 | feat= 0.2067 | near=0.000668 | ratio= 1.07 | plen= 0.005 | maxd= 0.064 | warp= 1.80 | W=0.483, T=0.531, F=0.197, S=0.126, Sh=0.197
+eval=01600 | loss=  0.5428 | feat= 0.0732 | near=0.000103 | ratio= 0.72 | plen= 0.076 | maxd= 0.025 | warp= 1.33 | W=0.486, T=0.475, F=0.092, S=0.286, Sh=0.530
+eval=01625 | loss=  0.9464 | feat= 0.8438 | near=0.000667 | ratio= 1.05 | plen= 0.002 | maxd= 0.061 | warp= 2.49 | W=1.316, T=1.977, F=0.528, S=0.432, Sh=0.217
+eval=01650 | loss=  0.3163 | feat= 0.2253 | near=0.000079 | ratio= 0.89 | plen= 0.011 | maxd= 0.020 | warp= 2.78 | W=0.571, T=0.658, F=0.240, S=0.598, Sh=0.328
+eval=01675 | loss=  0.3923 | feat= 0.2701 | near=0.005041 | ratio= 0.97 | plen= 0.001 | maxd= 0.144 | warp= 2.15 | W=0.631, T=0.748, F=0.237, S=0.075, Sh=0.216
+eval=01700 | loss=  0.2587 | feat= 0.2130 | near=0.001372 | ratio= 1.05 | plen= 0.003 | maxd= 0.084 | warp= 1.27 | W=0.602, T=0.525, F=0.196, S=0.158, Sh=0.203
+eval=01725 | loss=  0.7665 | feat= 0.6202 | near=0.000113 | ratio= 0.88 | plen= 0.015 | maxd= 0.039 | warp= 4.04 | W=0.608, T=1.688, F=0.513, S=0.563, Sh=0.351
+eval=01750 | loss=  0.3073 | feat= 0.2174 | near=0.002479 | ratio= 0.93 | plen= 0.005 | maxd= 0.093 | warp= 1.46 | W=0.450, T=0.396, F=0.132, S=-0.003, Sh=0.227
+eval=01775 | loss=  0.2637 | feat= 0.2190 | near=0.000817 | ratio= 0.95 | plen= 0.002 | maxd= 0.064 | warp= 1.46 | W=0.239, T=0.537, F=0.164, S=0.034, Sh=0.259
+eval=01800 | loss=  0.2448 | feat= 0.1995 | near=0.000365 | ratio= 0.94 | plen= 0.004 | maxd= 0.047 | warp= 1.56 | W=0.265, T=0.682, F=0.173, S=0.444, Sh=0.328
+eval=01825 | loss=  0.2524 | feat= 0.2074 | near=0.001348 | ratio= 0.97 | plen= 0.001 | maxd= 0.075 | warp= 1.60 | W=0.369, T=0.625, F=0.208, S=0.146, Sh=0.228
+eval=01850 | loss=  0.3003 | feat= 0.2657 | near=0.000496 | ratio= 0.95 | plen= 0.003 | maxd= 0.059 | warp= 0.97 | W=0.818, T=0.656, F=0.119, S=0.181, Sh=0.270
+eval=01875 | loss=  0.4356 | feat= 0.3650 | near=0.001201 | ratio= 1.07 | plen= 0.005 | maxd= 0.061 | warp= 1.69 | W=0.545, T=0.901, F=0.256, S=-0.133, Sh=0.144
+eval=01900 | loss=  0.3624 | feat= 0.3133 | near=0.001046 | ratio= 0.95 | plen= 0.002 | maxd= 0.056 | warp= 0.75 | W=0.212, T=0.337, F=0.085, S=-0.218, Sh=0.197
+eval=01925 | loss=  0.2574 | feat= 0.1840 | near=0.000947 | ratio= 0.92 | plen= 0.006 | maxd= 0.069 | warp= 2.45 | W=0.319, T=0.595, F=0.233, S=0.210, Sh=0.266
+eval=01950 | loss=  0.3832 | feat= 0.3246 | near=0.001552 | ratio= 1.06 | plen= 0.003 | maxd= 0.067 | warp= 1.26 | W=0.834, T=0.574, F=0.171, S=0.062, Sh=0.082
+eval=01975 | loss=  1.2341 | feat= 0.2332 | near=0.000262 | ratio= 0.60 | plen= 0.163 | maxd= 0.041 | warp= 1.34 | W=0.054, T=0.198, F=0.068, S=0.021, Sh=0.645
+eval=02000 | loss=  0.5922 | feat= 0.2724 | near=0.000991 | ratio= 0.78 | plen= 0.048 | maxd= 0.070 | warp= 2.24 | W=0.418, T=0.596, F=0.175, S=-0.245, Sh=0.412
+eval=02025 | loss=  0.3958 | feat= 0.3004 | near=0.000974 | ratio= 1.10 | plen= 0.011 | maxd= 0.060 | warp= 1.82 | W=0.635, T=0.829, F=0.253, S=0.103, Sh=0.176
+eval=02050 | loss=  0.1832 | feat= 0.1601 | near=0.000104 | ratio= 1.03 | plen= 0.001 | maxd= 0.025 | warp= 1.27 | W=0.341, T=0.458, F=0.161, S=0.305, Sh=0.258
+eval=02075 | loss=  0.2997 | feat= 0.2560 | near=0.001128 | ratio= 0.96 | plen= 0.001 | maxd= 0.059 | warp= 1.92 | W=0.434, T=0.461, F=0.194, S=-0.110, Sh=0.205
+eval=02100 | loss=  0.4197 | feat= 0.2604 | near=0.001391 | ratio= 1.14 | plen= 0.021 | maxd= 0.087 | warp= 1.60 | W=0.751, T=0.526, F=0.193, S=0.163, Sh=0.159
+eval=02125 | loss=  0.2347 | feat= 0.2014 | near=0.000967 | ratio= 0.98 | plen= 0.000 | maxd= 0.063 | warp= 1.59 | W=0.253, T=0.592, F=0.192, S=0.222, Sh=0.237
+eval=02150 | loss=  0.6138 | feat= 0.1512 | near=0.000396 | ratio= 0.73 | plen= 0.073 | maxd= 0.058 | warp= 2.99 | W=0.169, T=0.550, F=0.190, S=0.391, Sh=0.458
+eval=02175 | loss=  0.5347 | feat= 0.2918 | near=0.004878 | ratio= 0.84 | plen= 0.024 | maxd= 0.107 | warp= 3.17 | W=0.489, T=0.925, F=0.354, S=0.353, Sh=0.255
+eval=02200 | loss=  0.3411 | feat= 0.2637 | near=0.002142 | ratio= 1.05 | plen= 0.003 | maxd= 0.087 | warp= 0.96 | W=0.279, T=0.280, F=0.126, S=-0.072, Sh=0.188
+eval=02225 | loss=  0.4294 | feat= 0.1708 | near=0.000098 | ratio= 0.80 | plen= 0.040 | maxd= 0.020 | warp= 1.41 | W=0.250, T=0.478, F=0.160, S=0.416, Sh=0.290
+eval=02250 | loss=  0.4204 | feat= 0.2911 | near=0.001231 | ratio= 0.88 | plen= 0.016 | maxd= 0.060 | warp= 0.55 | W=0.289, T=0.219, F=0.057, S=-0.174, Sh=0.241
+eval=02275 | loss=  0.5538 | feat= 0.4645 | near=0.001042 | ratio= 1.09 | plen= 0.008 | maxd= 0.067 | warp= 2.02 | W=0.791, T=1.195, F=0.417, S=0.031, Sh=0.163
+eval=02300 | loss=  0.3050 | feat= 0.2631 | near=0.001097 | ratio= 0.99 | plen= 0.000 | maxd= 0.076 | warp= 1.09 | W=0.788, T=0.606, F=0.123, S=0.175, Sh=0.218
+eval=02325 | loss=  0.6177 | feat= 0.5417 | near=0.000412 | ratio= 0.93 | plen= 0.005 | maxd= 0.037 | warp= 2.89 | W=0.752, T=1.495, F=0.448, S=0.401, Sh=0.306
+eval=02350 | loss=  0.1949 | feat= 0.1599 | near=0.000406 | ratio= 0.97 | plen= 0.001 | maxd= 0.047 | warp= 1.57 | W=0.508, T=0.481, F=0.163, S=0.254, Sh=0.268
+eval=02375 | loss=  0.2385 | feat= 0.1792 | near=0.001401 | ratio= 0.95 | plen= 0.003 | maxd= 0.076 | warp= 0.68 | W=0.597, T=0.298, F=0.104, S=0.175, Sh=0.293
+eval=02400 | loss=  0.2979 | feat= 0.2573 | near=0.000798 | ratio= 1.00 | plen= 0.000 | maxd= 0.068 | warp= 2.26 | W=0.506, T=0.799, F=0.241, S=0.319, Sh=0.197
+eval=02425 | loss=  0.2307 | feat= 0.1804 | near=0.000368 | ratio= 1.07 | plen= 0.005 | maxd= 0.059 | warp= 1.56 | W=0.420, T=0.482, F=0.156, S=0.452, Sh=0.238
+eval=02450 | loss=  0.1519 | feat= 0.1282 | near=0.000147 | ratio= 0.95 | plen= 0.002 | maxd= 0.023 | warp= 1.39 | W=0.376, T=0.373, F=0.123, S=0.335, Sh=0.331
+eval=02475 | loss=  0.2405 | feat= 0.1995 | near=0.000220 | ratio= 1.05 | plen= 0.002 | maxd= 0.034 | warp= 1.81 | W=0.520, T=0.444, F=0.203, S=0.583, Sh=0.273
+eval=02500 | loss=  0.6094 | feat= 0.5002 | near=0.000133 | ratio= 1.11 | plen= 0.011 | maxd= 0.033 | warp= 2.30 | W=0.492, T=1.347, F=0.395, S=0.523, Sh=0.089
+eval=02525 | loss=  0.3641 | feat= 0.1113 | near=0.000488 | ratio= 0.81 | plen= 0.037 | maxd= 0.039 | warp= 2.26 | W=0.320, T=0.495, F=0.176, S=0.273, Sh=0.396
+eval=02550 | loss=  0.8108 | feat= 0.5080 | near=0.000492 | ratio= 1.21 | plen= 0.043 | maxd= 0.081 | warp= 3.09 | W=0.702, T=1.309, F=0.487, S=0.631, Sh=0.161
+eval=02575 | loss=  0.3176 | feat= 0.2630 | near=0.002305 | ratio= 0.97 | plen= 0.001 | maxd= 0.101 | warp= 1.32 | W=0.901, T=0.457, F=0.147, S=0.171, Sh=0.298
+eval=02600 | loss=  0.7078 | feat= 0.2960 | near=0.000339 | ratio= 0.75 | plen= 0.062 | maxd= 0.035 | warp= 2.19 | W=0.228, T=0.940, F=0.267, S=0.603, Sh=0.486
+eval=02625 | loss=  0.8254 | feat= 0.7358 | near=0.001652 | ratio= 1.00 | plen= 0.000 | maxd= 0.063 | warp= 3.72 | W=1.099, T=1.778, F=0.615, S=0.551, Sh=0.264
+eval=02650 | loss=  0.3026 | feat= 0.2627 | near=0.001271 | ratio= 1.03 | plen= 0.001 | maxd= 0.084 | warp= 1.34 | W=0.351, T=0.639, F=0.169, S=0.554, Sh=0.134
+eval=02675 | loss=  0.9071 | feat= 0.8298 | near=0.000171 | ratio= 0.99 | plen= 0.000 | maxd= 0.052 | warp= 2.49 | W=1.201, T=1.920, F=0.609, S=0.756, Sh=0.216
+eval=02700 | loss=  0.2974 | feat= 0.2758 | near=0.000107 | ratio= 1.02 | plen= 0.000 | maxd= 0.033 | warp= 1.83 | W=0.521, T=0.897, F=0.255, S=0.452, Sh=0.289
+eval=02725 | loss=  0.1511 | feat= 0.1262 | near=0.000138 | ratio= 0.96 | plen= 0.002 | maxd= 0.021 | warp= 0.84 | W=0.425, T=0.403, F=0.107, S=0.366, Sh=0.342
+eval=02750 | loss=  0.6612 | feat= 0.5299 | near=0.000111 | ratio= 0.87 | plen= 0.016 | maxd= 0.019 | warp= 2.75 | W=0.464, T=1.413, F=0.420, S=0.850, Sh=0.446
+eval=02775 | loss=  0.3491 | feat= 0.2965 | near=0.001449 | ratio= 1.03 | plen= 0.001 | maxd= 0.067 | warp= 1.96 | W=0.320, T=0.943, F=0.266, S=0.331, Sh=0.240
+eval=02800 | loss=  0.4180 | feat= 0.3949 | near=0.000225 | ratio= 0.99 | plen= 0.000 | maxd= 0.051 | warp= 2.06 | W=0.881, T=1.054, F=0.276, S=0.458, Sh=0.271
+eval=02825 | loss=  0.2677 | feat= 0.2463 | near=0.000052 | ratio= 0.98 | plen= 0.000 | maxd= 0.022 | warp= 1.33 | W=0.564, T=0.461, F=0.125, S=0.612, Sh=0.180
+eval=02850 | loss=  0.1933 | feat= 0.1643 | near=0.000115 | ratio= 0.96 | plen= 0.002 | maxd= 0.022 | warp= 2.36 | W=0.391, T=0.436, F=0.171, S=0.514, Sh=0.307
+eval=02875 | loss=  0.2067 | feat= 0.1525 | near=0.000232 | ratio= 0.92 | plen= 0.006 | maxd= 0.029 | warp= 1.15 | W=0.419, T=0.480, F=0.121, S=0.207, Sh=0.292
+eval=02900 | loss=  0.2599 | feat= 0.1814 | near=0.000071 | ratio= 0.90 | plen= 0.009 | maxd= 0.018 | warp= 2.23 | W=0.295, T=0.549, F=0.181, S=0.532, Sh=0.331
+eval=02925 | loss=  0.3699 | feat= 0.3472 | near=0.000175 | ratio= 0.99 | plen= 0.000 | maxd= 0.047 | warp= 1.73 | W=0.827, T=0.929, F=0.234, S=0.249, Sh=0.209
+eval=02950 | loss=  0.6685 | feat= 0.6026 | near=0.000751 | ratio= 1.07 | plen= 0.005 | maxd= 0.073 | warp= 1.88 | W=1.511, T=1.012, F=0.258, S=0.063, Sh=0.164
+eval=02975 | loss=  0.8882 | feat= 0.8036 | near=0.000259 | ratio= 1.06 | plen= 0.003 | maxd= 0.070 | warp= 3.27 | W=1.390, T=1.811, F=0.485, S=0.686, Sh=0.339
+eval=03000 | loss=  0.2728 | feat= 0.1953 | near=0.001230 | ratio= 1.09 | plen= 0.008 | maxd= 0.084 | warp= 2.25 | W=0.409, T=0.376, F=0.196, S=0.449, Sh=0.190
+eval=03025 | loss=  0.4544 | feat= 0.3955 | near=0.000244 | ratio= 1.08 | plen= 0.006 | maxd= 0.054 | warp= 2.19 | W=0.788, T=1.076, F=0.321, S=0.514, Sh=0.240
+eval=03050 | loss=  0.1085 | feat= 0.0804 | near=0.000212 | ratio= 0.97 | plen= 0.001 | maxd= 0.026 | warp= 1.50 | W=0.472, T=0.359, F=0.134, S=0.453, Sh=0.603
+eval=03075 | loss=  0.8436 | feat= 0.5445 | near=0.000494 | ratio= 0.79 | plen= 0.043 | maxd= 0.037 | warp= 2.52 | W=0.627, T=1.557, F=0.381, S=0.288, Sh=0.338
+eval=03100 | loss=  0.6366 | feat= 0.5893 | near=0.000485 | ratio= 1.01 | plen= 0.000 | maxd= 0.035 | warp= 1.93 | W=0.928, T=1.554, F=0.299, S=0.323, Sh=0.231
+eval=03125 | loss=  0.4619 | feat= 0.1365 | near=0.000292 | ratio= 0.77 | plen= 0.051 | maxd= 0.038 | warp= 1.30 | W=0.304, T=0.330, F=0.095, S=0.121, Sh=0.422
+eval=03150 | loss=  0.6402 | feat= 0.6009 | near=0.000105 | ratio= 1.01 | plen= 0.000 | maxd= 0.018 | warp= 2.34 | W=0.996, T=1.529, F=0.444, S=0.455, Sh=0.261
+eval=03175 | loss=  0.5975 | feat= 0.3471 | near=0.000462 | ratio= 0.81 | plen= 0.037 | maxd= 0.043 | warp= 2.55 | W=0.485, T=0.966, F=0.275, S=-0.116, Sh=0.284
+eval=03200 | loss=  0.3062 | feat= 0.2363 | near=0.000531 | ratio= 1.08 | plen= 0.007 | maxd= 0.065 | warp= 1.70 | W=0.416, T=0.659, F=0.207, S=0.499, Sh=0.185
+eval=03225 | loss=  0.2378 | feat= 0.1743 | near=0.000570 | ratio= 0.93 | plen= 0.005 | maxd= 0.056 | warp= 1.18 | W=0.244, T=0.266, F=0.100, S=0.488, Sh=0.360
+eval=03250 | loss=  0.4224 | feat= 0.2883 | near=0.000070 | ratio= 1.14 | plen= 0.020 | maxd= 0.018 | warp= 0.81 | W=0.393, T=0.422, F=0.117, S=0.688, Sh=0.093
+eval=03275 | loss=  0.2029 | feat= 0.1706 | near=0.000138 | ratio= 0.95 | plen= 0.003 | maxd= 0.028 | warp= 1.60 | W=0.358, T=0.724, F=0.211, S=0.449, Sh=0.480
+eval=03300 | loss=  0.2998 | feat= 0.1420 | near=0.000237 | ratio= 0.85 | plen= 0.023 | maxd= 0.032 | warp= 2.04 | W=0.343, T=0.465, F=0.168, S=0.328, Sh=0.302
+eval=03325 | loss=  0.2634 | feat= 0.0990 | near=0.000030 | ratio= 0.84 | plen= 0.026 | maxd= 0.010 | warp= 1.72 | W=0.367, T=0.400, F=0.163, S=0.340, Sh=0.392
+eval=03350 | loss=  0.3709 | feat= 0.2774 | near=0.000170 | ratio= 0.89 | plen= 0.012 | maxd= 0.039 | warp= 2.95 | W=0.405, T=0.850, F=0.248, S=0.584, Sh=0.285
+eval=03375 | loss=  0.3804 | feat= 0.2672 | near=0.000217 | ratio= 0.88 | plen= 0.015 | maxd= 0.044 | warp= 2.68 | W=0.289, T=0.874, F=0.261, S=0.433, Sh=0.293
+eval=03400 | loss=  0.6748 | feat= 0.5905 | near=0.000144 | ratio= 1.09 | plen= 0.007 | maxd= 0.031 | warp= 2.06 | W=1.062, T=1.381, F=0.419, S=0.644, Sh=0.150
+eval=03425 | loss=  0.5481 | feat= 0.3752 | near=0.002705 | ratio= 1.11 | plen= 0.012 | maxd= 0.166 | warp= 1.92 | W=0.800, T=0.980, F=0.226, S=0.119, Sh=0.164
+eval=03450 | loss=  0.2370 | feat= 0.2106 | near=0.000591 | ratio= 1.02 | plen= 0.000 | maxd= 0.056 | warp= 0.20 | W=0.246, T=0.182, F=0.070, S=0.250, Sh=0.247
+eval=03475 | loss=  0.4950 | feat= 0.3055 | near=0.001905 | ratio= 1.15 | plen= 0.023 | maxd= 0.079 | warp= 2.05 | W=0.822, T=0.679, F=0.251, S=0.269, Sh=0.127
+eval=03500 | loss=  0.2145 | feat= 0.1649 | near=0.000264 | ratio= 0.92 | plen= 0.006 | maxd= 0.035 | warp= 1.84 | W=0.311, T=0.586, F=0.177, S=0.372, Sh=0.310
+eval=03525 | loss=  0.3998 | feat= 0.3486 | near=0.000928 | ratio= 1.06 | plen= 0.003 | maxd= 0.062 | warp= 1.38 | W=0.808, T=0.752, F=0.175, S=-0.103, Sh=0.186
+eval=03550 | loss=  0.2949 | feat= 0.2255 | near=0.000915 | ratio= 1.07 | plen= 0.005 | maxd= 0.060 | warp= 1.55 | W=0.657, T=0.619, F=0.203, S=0.297, Sh=0.213
+eval=03575 | loss=  0.5559 | feat= 0.1849 | near=0.000252 | ratio= 0.76 | plen= 0.059 | maxd= 0.028 | warp= 0.84 | W=0.233, T=0.219, F=0.067, S=0.143, Sh=0.353
+eval=03600 | loss=  0.4228 | feat= 0.3147 | near=0.003405 | ratio= 1.08 | plen= 0.006 | maxd= 0.114 | warp= 1.95 | W=0.353, T=0.944, F=0.261, S=0.542, Sh=0.236
+eval=03625 | loss=  0.3705 | feat= 0.1444 | near=0.000227 | ratio= 0.82 | plen= 0.033 | maxd= 0.026 | warp= 2.76 | W=0.387, T=0.538, F=0.191, S=0.319, Sh=0.311
+eval=03650 | loss=  0.3354 | feat= 0.3172 | near=0.000027 | ratio= 0.99 | plen= 0.000 | maxd= 0.013 | warp= 2.13 | W=0.556, T=0.970, F=0.243, S=0.498, Sh=0.256
+eval=03675 | loss=  0.3099 | feat= 0.2682 | near=0.000201 | ratio= 1.06 | plen= 0.003 | maxd= 0.043 | warp= 2.72 | W=0.415, T=0.800, F=0.270, S=0.544, Sh=0.232
+eval=03700 | loss=  0.2818 | feat= 0.2547 | near=0.000058 | ratio= 1.04 | plen= 0.002 | maxd= 0.024 | warp= 1.52 | W=0.355, T=0.674, F=0.200, S=0.669, Sh=0.270
+eval=03725 | loss=  0.2534 | feat= 0.2138 | near=0.000902 | ratio= 0.96 | plen= 0.002 | maxd= 0.077 | warp= 1.29 | W=0.404, T=0.469, F=0.116, S=0.455, Sh=0.161
+eval=03750 | loss=  0.5058 | feat= 0.2649 | near=0.000142 | ratio= 1.20 | plen= 0.038 | maxd= 0.028 | warp= 1.24 | W=0.357, T=0.610, F=0.183, S=0.612, Sh=0.147
+eval=03775 | loss=  0.1776 | feat= 0.1628 | near=0.000103 | ratio= 1.00 | plen= 0.000 | maxd= 0.020 | warp= 1.53 | W=0.424, T=0.311, F=0.134, S=0.352, Sh=0.257
+eval=03800 | loss=  0.2379 | feat= 0.2176 | near=0.000416 | ratio= 1.01 | plen= 0.000 | maxd= 0.067 | warp= 1.74 | W=0.695, T=0.532, F=0.160, S=0.202, Sh=0.236
+eval=03825 | loss=  0.3143 | feat= 0.2697 | near=0.000535 | ratio= 0.93 | plen= 0.004 | maxd= 0.052 | warp= 1.02 | W=0.129, T=0.331, F=0.104, S=-0.062, Sh=0.233
+eval=03850 | loss=  0.8648 | feat= 0.7924 | near=0.000228 | ratio= 1.04 | plen= 0.002 | maxd= 0.039 | warp= 2.91 | W=1.106, T=1.890, F=0.561, S=0.754, Sh=0.265
+eval=03875 | loss=  0.3740 | feat= 0.2442 | near=0.000834 | ratio= 1.13 | plen= 0.017 | maxd= 0.071 | warp= 1.53 | W=0.513, T=0.715, F=0.186, S=0.316, Sh=0.164
+eval=03900 | loss=  0.3261 | feat= 0.2233 | near=0.000393 | ratio= 0.88 | plen= 0.014 | maxd= 0.037 | warp= 0.93 | W=0.226, T=0.248, F=0.083, S=0.287, Sh=0.182
+eval=03925 | loss=  0.3162 | feat= 0.2820 | near=0.000223 | ratio= 1.04 | plen= 0.002 | maxd= 0.037 | warp= 2.66 | W=0.441, T=0.884, F=0.278, S=0.656, Sh=0.425
+eval=03950 | loss=  0.2484 | feat= 0.2201 | near=0.000448 | ratio= 0.98 | plen= 0.000 | maxd= 0.039 | warp= 2.56 | W=0.411, T=0.754, F=0.215, S=0.463, Sh=0.299
+eval=03975 | loss=  0.3552 | feat= 0.2413 | near=0.000259 | ratio= 1.12 | plen= 0.015 | maxd= 0.043 | warp= 1.64 | W=0.476, T=0.771, F=0.241, S=0.452, Sh=0.246
+eval=04000 | loss=  0.1831 | feat= 0.1417 | near=0.000104 | ratio= 0.95 | plen= 0.003 | maxd= 0.020 | warp= 2.56 | W=0.488, T=0.521, F=0.204, S=0.321, Sh=0.316
+eval=04025 | loss=  1.1593 | feat= 0.4385 | near=0.000299 | ratio= 1.34 | plen= 0.116 | maxd= 0.056 | warp= 1.87 | W=0.635, T=1.038, F=0.372, S=0.745, Sh=0.071
+eval=04050 | loss=  0.6545 | feat= 0.3774 | near=0.007092 | ratio= 1.15 | plen= 0.023 | maxd= 0.141 | warp= 2.80 | W=0.575, T=1.023, F=0.388, S=0.561, Sh=0.157
+eval=04075 | loss=  0.2808 | feat= 0.2474 | near=0.000545 | ratio= 1.02 | plen= 0.000 | maxd= 0.050 | warp= 1.39 | W=0.627, T=0.635, F=0.200, S=0.070, Sh=0.206
+eval=04100 | loss=  0.7155 | feat= 0.2539 | near=0.000369 | ratio= 0.73 | plen= 0.073 | maxd= 0.050 | warp= 1.68 | W=0.078, T=0.355, F=0.116, S=-0.091, Sh=0.392
+eval=04125 | loss=  0.7973 | feat= 0.7053 | near=0.001145 | ratio= 1.06 | plen= 0.003 | maxd= 0.072 | warp= 3.74 | W=1.437, T=1.514, F=0.536, S=0.517, Sh=0.371
+eval=04150 | loss=  0.1835 | feat= 0.1652 | near=0.000181 | ratio= 0.98 | plen= 0.001 | maxd= 0.051 | warp= 1.14 | W=0.365, T=0.512, F=0.134, S=0.487, Sh=0.315
+eval=04175 | loss=  0.5458 | feat= 0.4934 | near=0.000079 | ratio= 1.05 | plen= 0.002 | maxd= 0.022 | warp= 3.32 | W=0.586, T=1.321, F=0.415, S=0.745, Sh=0.289
+eval=04200 | loss=  0.2330 | feat= 0.1856 | near=0.000338 | ratio= 0.93 | plen= 0.004 | maxd= 0.044 | warp= 2.06 | W=0.343, T=0.428, F=0.150, S=0.243, Sh=0.200
+eval=04225 | loss=  0.2753 | feat= 0.1618 | near=0.000636 | ratio= 1.12 | plen= 0.015 | maxd= 0.045 | warp= 0.99 | W=0.561, T=0.674, F=0.162, S=0.447, Sh=0.486
+eval=04250 | loss=  1.1902 | feat= 0.1833 | near=0.000088 | ratio= 0.60 | plen= 0.163 | maxd= 0.024 | warp= 1.19 | W=0.109, T=0.286, F=0.060, S=0.470, Sh=0.503
+eval=04275 | loss=  0.3485 | feat= 0.1732 | near=0.000194 | ratio= 0.84 | plen= 0.026 | maxd= 0.035 | warp= 2.22 | W=0.315, T=0.394, F=0.140, S=0.476, Sh=0.277
+eval=04300 | loss=  0.3214 | feat= 0.1689 | near=0.000248 | ratio= 0.85 | plen= 0.023 | maxd= 0.036 | warp= 0.72 | W=0.186, T=0.279, F=0.072, S=0.382, Sh=0.376
+eval=04325 | loss=  0.2585 | feat= 0.2370 | near=0.000712 | ratio= 0.99 | plen= 0.000 | maxd= 0.057 | warp= 1.72 | W=0.744, T=0.589, F=0.176, S=0.478, Sh=0.271
+eval=04350 | loss=  0.2972 | feat= 0.2583 | near=0.000220 | ratio= 1.05 | plen= 0.002 | maxd= 0.048 | warp= 2.08 | W=0.425, T=0.751, F=0.234, S=0.607, Sh=0.261
+eval=04375 | loss=  0.2862 | feat= 0.2280 | near=0.000540 | ratio= 1.08 | plen= 0.006 | maxd= 0.043 | warp= 1.57 | W=0.455, T=0.725, F=0.192, S=0.366, Sh=0.214
+eval=04400 | loss=  0.2602 | feat= 0.2194 | near=0.000566 | ratio= 1.04 | plen= 0.001 | maxd= 0.074 | warp= 2.62 | W=0.301, T=0.727, F=0.244, S=0.399, Sh=0.271
+eval=04425 | loss=  0.2542 | feat= 0.2305 | near=0.000070 | ratio= 0.96 | plen= 0.001 | maxd= 0.017 | warp= 2.55 | W=0.381, T=0.717, F=0.235, S=0.606, Sh=0.337
+eval=04450 | loss=  0.7611 | feat= 0.2449 | near=0.001067 | ratio= 0.72 | plen= 0.080 | maxd= 0.084 | warp= 0.86 | W=0.426, T=0.397, F=0.053, S=-0.057, Sh=0.212
+eval=04475 | loss=  0.2184 | feat= 0.1582 | near=0.000436 | ratio= 0.93 | plen= 0.005 | maxd= 0.034 | warp= 1.82 | W=0.518, T=0.539, F=0.158, S=0.476, Sh=0.348
+eval=04500 | loss=  0.2234 | feat= 0.1837 | near=0.000254 | ratio= 1.06 | plen= 0.004 | maxd= 0.034 | warp= 1.12 | W=0.647, T=0.504, F=0.147, S=0.333, Sh=0.280
+eval=04525 | loss=  0.1790 | feat= 0.1460 | near=0.000268 | ratio= 0.95 | plen= 0.003 | maxd= 0.038 | warp= 0.94 | W=0.294, T=0.447, F=0.104, S=0.437, Sh=0.354
+eval=04550 | loss=  0.1997 | feat= 0.1809 | near=0.000232 | ratio= 1.00 | plen= 0.000 | maxd= 0.045 | warp= 0.87 | W=0.409, T=0.349, F=0.097, S=0.530, Sh=0.288
+eval=04575 | loss=  0.2759 | feat= 0.2364 | near=0.000587 | ratio= 1.06 | plen= 0.003 | maxd= 0.067 | warp= 2.38 | W=0.461, T=0.597, F=0.228, S=0.470, Sh=0.143
+eval=04600 | loss=  0.3625 | feat= 0.1369 | near=0.000138 | ratio= 0.81 | plen= 0.035 | maxd= 0.032 | warp= 1.61 | W=0.221, T=0.350, F=0.104, S=0.336, Sh=0.398
+eval=04625 | loss=  0.2526 | feat= 0.1721 | near=0.000471 | ratio= 0.90 | plen= 0.010 | maxd= 0.063 | warp= 2.00 | W=0.596, T=0.347, F=0.153, S=0.448, Sh=0.299
+eval=04650 | loss=  0.2002 | feat= 0.1853 | near=0.000168 | ratio= 1.01 | plen= 0.000 | maxd= 0.024 | warp= 0.87 | W=0.211, T=0.372, F=0.118, S=0.377, Sh=0.262
+eval=04675 | loss=  0.2709 | feat= 0.2432 | near=0.000223 | ratio= 1.02 | plen= 0.000 | maxd= 0.034 | warp= 2.16 | W=0.396, T=0.765, F=0.237, S=0.543, Sh=0.282
+eval=04700 | loss=  0.2902 | feat= 0.2093 | near=0.002584 | ratio= 1.06 | plen= 0.004 | maxd= 0.108 | warp= 1.91 | W=0.287, T=0.565, F=0.175, S=0.464, Sh=0.217
+eval=04725 | loss=  0.6994 | feat= 0.6095 | near=0.001423 | ratio= 1.07 | plen= 0.006 | maxd= 0.087 | warp= 3.38 | W=0.599, T=1.559, F=0.481, S=0.801, Sh=0.210
+eval=04750 | loss=  0.5556 | feat= 0.2462 | near=0.000977 | ratio= 1.22 | plen= 0.047 | maxd= 0.084 | warp= 1.13 | W=0.248, T=0.573, F=0.170, S=0.537, Sh=0.168
+eval=04775 | loss=  0.3740 | feat= 0.3355 | near=0.000247 | ratio= 1.05 | plen= 0.002 | maxd= 0.052 | warp= 2.33 | W=0.480, T=0.954, F=0.281, S=0.502, Sh=0.147
+eval=04800 | loss=  0.5624 | feat= 0.3778 | near=0.001843 | ratio= 1.14 | plen= 0.020 | maxd= 0.146 | warp= 1.22 | W=0.774, T=1.042, F=0.189, S=0.330, Sh=0.181
+eval=04825 | loss=  0.2690 | feat= 0.2385 | near=0.000339 | ratio= 0.98 | plen= 0.000 | maxd= 0.057 | warp= 2.38 | W=0.421, T=0.688, F=0.213, S=0.553, Sh=0.229
+eval=04850 | loss=  0.8180 | feat= 0.7143 | near=0.000373 | ratio= 1.09 | plen= 0.008 | maxd= 0.053 | warp= 2.90 | W=1.377, T=1.581, F=0.379, S=0.653, Sh=0.311
+eval=04875 | loss=  0.2426 | feat= 0.2302 | near=0.000098 | ratio= 1.00 | plen= 0.000 | maxd= 0.020 | warp= 0.81 | W=0.264, T=0.208, F=0.090, S=0.540, Sh=0.234
+eval=04900 | loss=  0.2712 | feat= 0.2470 | near=0.000047 | ratio= 0.99 | plen= 0.000 | maxd= 0.016 | warp= 1.98 | W=0.333, T=0.699, F=0.206, S=0.656, Sh=0.314
+eval=04925 | loss=  0.3251 | feat= 0.2993 | near=0.000214 | ratio= 1.03 | plen= 0.001 | maxd= 0.033 | warp= 2.42 | W=0.388, T=0.666, F=0.231, S=0.651, Sh=0.098
+eval=04950 | loss=  0.2667 | feat= 0.2392 | near=0.000226 | ratio= 0.95 | plen= 0.002 | maxd= 0.028 | warp= 1.94 | W=0.273, T=0.571, F=0.182, S=0.567, Sh=0.196
+eval=04975 | loss=  0.2521 | feat= 0.2006 | near=0.000087 | ratio= 0.93 | plen= 0.005 | maxd= 0.023 | warp= 2.00 | W=0.241, T=0.461, F=0.150, S=0.545, Sh=0.279
+eval=05000 | loss=  0.2076 | feat= 0.1882 | near=0.000434 | ratio= 1.02 | plen= 0.000 | maxd= 0.041 | warp= 1.48 | W=0.205, T=0.582, F=0.199, S=0.270, Sh=0.289
+eval=05025 | loss=  0.3769 | feat= 0.3553 | near=0.000403 | ratio= 0.99 | plen= 0.000 | maxd= 0.068 | warp= 1.97 | W=0.455, T=1.045, F=0.226, S=0.483, Sh=0.176
+eval=05050 | loss=  0.2336 | feat= 0.1932 | near=0.000734 | ratio= 1.05 | plen= 0.003 | maxd= 0.085 | warp= 0.35 | W=0.409, T=0.315, F=0.076, S=0.436, Sh=0.218
+eval=05075 | loss=  0.4159 | feat= 0.1548 | near=0.000236 | ratio= 0.80 | plen= 0.040 | maxd= 0.031 | warp= 2.36 | W=0.195, T=0.604, F=0.183, S=0.350, Sh=0.443
+eval=05100 | loss=  0.2695 | feat= 0.2306 | near=0.000730 | ratio= 1.05 | plen= 0.002 | maxd= 0.070 | warp= 2.19 | W=0.478, T=0.729, F=0.221, S=0.279, Sh=0.208
+eval=05125 | loss=  0.2068 | feat= 0.1864 | near=0.000185 | ratio= 1.03 | plen= 0.001 | maxd= 0.029 | warp= 0.75 | W=0.267, T=0.247, F=0.097, S=0.290, Sh=0.260
+eval=05150 | loss=  0.5871 | feat= 0.3933 | near=0.000350 | ratio= 1.17 | plen= 0.028 | maxd= 0.045 | warp= 1.98 | W=0.804, T=0.800, F=0.294, S=0.574, Sh=-0.018
+eval=05175 | loss=  0.3190 | feat= 0.3006 | near=0.000136 | ratio= 0.98 | plen= 0.001 | maxd= 0.017 | warp= 2.36 | W=0.457, T=0.926, F=0.244, S=0.601, Sh=0.315
+eval=05200 | loss=  0.3589 | feat= 0.3208 | near=0.000168 | ratio= 0.96 | plen= 0.001 | maxd= 0.028 | warp= 2.21 | W=0.430, T=0.902, F=0.258, S=0.596, Sh=0.186
+eval=05225 | loss=  0.4119 | feat= 0.3256 | near=0.003218 | ratio= 1.07 | plen= 0.004 | maxd= 0.089 | warp= 2.97 | W=0.477, T=1.018, F=0.356, S=0.373, Sh=0.261
+eval=05250 | loss=  0.4585 | feat= 0.2401 | near=0.001700 | ratio= 1.17 | plen= 0.027 | maxd= 0.122 | warp= 2.33 | W=0.593, T=0.573, F=0.242, S=0.455, Sh=0.150
+eval=05275 | loss=  0.2107 | feat= 0.1933 | near=0.000219 | ratio= 1.03 | plen= 0.001 | maxd= 0.043 | warp= 1.75 | W=0.292, T=0.476, F=0.158, S=0.500, Sh=0.250
+eval=05300 | loss=  0.3045 | feat= 0.2800 | near=0.000325 | ratio= 1.00 | plen= 0.000 | maxd= 0.056 | warp= 2.78 | W=0.341, T=0.846, F=0.273, S=0.513, Sh=0.231
+eval=05325 | loss=  0.4675 | feat= 0.4364 | near=0.000202 | ratio= 1.04 | plen= 0.002 | maxd= 0.025 | warp= 1.79 | W=0.905, T=1.169, F=0.327, S=0.419, Sh=0.291
+eval=05350 | loss=  0.2904 | feat= 0.2738 | near=0.000133 | ratio= 1.00 | plen= 0.000 | maxd= 0.023 | warp= 1.39 | W=0.734, T=0.580, F=0.163, S=0.473, Sh=0.139
+eval=05375 | loss=  0.3568 | feat= 0.2420 | near=0.000414 | ratio= 1.12 | plen= 0.015 | maxd= 0.061 | warp= 1.77 | W=0.456, T=0.680, F=0.221, S=0.737, Sh=0.746
+eval=05400 | loss=  0.3670 | feat= 0.2559 | near=0.001960 | ratio= 1.10 | plen= 0.010 | maxd= 0.119 | warp= 1.98 | W=0.416, T=0.594, F=0.203, S=0.619, Sh=0.166
+eval=05425 | loss=  0.3194 | feat= 0.2880 | near=0.000302 | ratio= 1.01 | plen= 0.000 | maxd= 0.037 | warp= 2.02 | W=0.511, T=0.816, F=0.217, S=0.645, Sh=0.263
+eval=05450 | loss=  0.1796 | feat= 0.1592 | near=0.000117 | ratio= 1.01 | plen= 0.000 | maxd= 0.028 | warp= 2.11 | W=0.339, T=0.515, F=0.190, S=0.410, Sh=0.292
+eval=05475 | loss=  0.3836 | feat= 0.3465 | near=0.000695 | ratio= 1.03 | plen= 0.001 | maxd= 0.046 | warp= 2.84 | W=0.503, T=0.948, F=0.335, S=0.631, Sh=0.194
+eval=05500 | loss=  0.3413 | feat= 0.3018 | near=0.000493 | ratio= 1.06 | plen= 0.003 | maxd= 0.063 | warp= 1.33 | W=0.797, T=0.741, F=0.169, S=0.375, Sh=0.163
+eval=05525 | loss=  0.2957 | feat= 0.2544 | near=0.000327 | ratio= 1.06 | plen= 0.003 | maxd= 0.033 | warp= 1.57 | W=0.291, T=0.783, F=0.209, S=0.407, Sh=0.214
+eval=05550 | loss=  0.2792 | feat= 0.2050 | near=0.000307 | ratio= 1.10 | plen= 0.010 | maxd= 0.047 | warp= 2.15 | W=0.370, T=0.668, F=0.230, S=0.553, Sh=0.335
+eval=05575 | loss=  0.2104 | feat= 0.1868 | near=0.000439 | ratio= 1.02 | plen= 0.000 | maxd= 0.054 | warp= 1.91 | W=0.262, T=0.450, F=0.183, S=0.234, Sh=0.223
+eval=05600 | loss=  0.3758 | feat= 0.2570 | near=0.001348 | ratio= 1.12 | plen= 0.014 | maxd= 0.095 | warp= 1.26 | W=0.640, T=0.508, F=0.161, S=0.037, Sh=0.153
+eval=05625 | loss=  0.3008 | feat= 0.2776 | near=0.000201 | ratio= 0.97 | plen= 0.001 | maxd= 0.025 | warp= 1.26 | W=0.552, T=0.896, F=0.168, S=0.231, Sh=0.259
+eval=05650 | loss=  0.3708 | feat= 0.3476 | near=0.000023 | ratio= 0.98 | plen= 0.001 | maxd= 0.015 | warp= 1.49 | W=0.661, T=1.033, F=0.242, S=0.519, Sh=0.292
+eval=05675 | loss=  0.3718 | feat= 0.3455 | near=0.000074 | ratio= 0.98 | plen= 0.000 | maxd= 0.032 | warp= 2.74 | W=0.468, T=0.992, F=0.293, S=0.718, Sh=0.354
+eval=05700 | loss=  0.2443 | feat= 0.1998 | near=0.000104 | ratio= 0.93 | plen= 0.004 | maxd= 0.025 | warp= 1.89 | W=0.243, T=0.434, F=0.151, S=0.612, Sh=0.341
+eval=05725 | loss=  0.2570 | feat= 0.2392 | near=0.000866 | ratio= 1.00 | plen= 0.000 | maxd= 0.065 | warp= 0.44 | W=0.390, T=0.214, F=0.082, S=0.312, Sh=0.114
+eval=05750 | loss=  0.8602 | feat= 0.6923 | near=0.000432 | ratio= 0.86 | plen= 0.019 | maxd= 0.070 | warp= 3.02 | W=1.050, T=1.760, F=0.429, S=0.363, Sh=0.293
+eval=05775 | loss=  0.2546 | feat= 0.2300 | near=0.000442 | ratio= 0.97 | plen= 0.001 | maxd= 0.077 | warp= 1.25 | W=0.454, T=0.765, F=0.140, S=0.254, Sh=0.248
+eval=05800 | loss=  0.3685 | feat= 0.2616 | near=0.000381 | ratio= 1.12 | plen= 0.015 | maxd= 0.040 | warp= 0.94 | W=0.501, T=0.650, F=0.157, S=0.489, Sh=0.114
+eval=05825 | loss=  0.2301 | feat= 0.2004 | near=0.000634 | ratio= 1.04 | plen= 0.002 | maxd= 0.078 | warp= 1.90 | W=0.235, T=0.559, F=0.193, S=0.483, Sh=0.272
+eval=05850 | loss=  0.3156 | feat= 0.1364 | near=0.000094 | ratio= 0.83 | plen= 0.028 | maxd= 0.025 | warp= 1.26 | W=0.402, T=0.581, F=0.106, S=0.326, Sh=0.376
+eval=05875 | loss=  0.0891 | feat= 0.0747 | near=0.000287 | ratio= 1.01 | plen= 0.000 | maxd= 0.029 | warp= 1.36 | W=0.333, T=0.381, F=0.120, S=0.413, Sh=0.569
+eval=05900 | loss=  0.3202 | feat= 0.2588 | near=0.000086 | ratio= 1.09 | plen= 0.008 | maxd= 0.030 | warp= 1.72 | W=0.392, T=0.537, F=0.174, S=0.630, Sh=0.146
+eval=05925 | loss=  0.6835 | feat= 0.3728 | near=0.000468 | ratio= 1.22 | plen= 0.048 | maxd= 0.042 | warp= 1.96 | W=0.461, T=0.997, F=0.319, S=0.648, Sh=0.151
+eval=05950 | loss=  0.8971 | feat= 0.5897 | near=0.000991 | ratio= 1.21 | plen= 0.043 | maxd= 0.064 | warp= 2.65 | W=0.843, T=1.428, F=0.494, S=0.714, Sh=0.105
+eval=05975 | loss=  0.4434 | feat= 0.2550 | near=0.000445 | ratio= 1.16 | plen= 0.027 | maxd= 0.034 | warp= 1.91 | W=0.567, T=0.772, F=0.226, S=0.458, Sh=0.227
+eval=06000 | loss=  0.5574 | feat= 0.3971 | near=0.000235 | ratio= 1.15 | plen= 0.024 | maxd= 0.064 | warp= 2.27 | W=0.907, T=1.020, F=0.251, S=0.386, Sh=0.205
+eval=06025 | loss=  0.3346 | feat= 0.2671 | near=0.002783 | ratio= 1.05 | plen= 0.002 | maxd= 0.106 | warp= 1.92 | W=0.632, T=0.589, F=0.189, S=0.439, Sh=0.093
+eval=06050 | loss=  0.3078 | feat= 0.2684 | near=0.002093 | ratio= 1.01 | plen= 0.000 | maxd= 0.078 | warp= 0.74 | W=0.439, T=0.274, F=0.089, S=-0.095, Sh=0.181
+eval=06075 | loss=  0.2653 | feat= 0.1381 | near=0.000076 | ratio= 0.87 | plen= 0.018 | maxd= 0.020 | warp= 1.44 | W=0.289, T=0.334, F=0.107, S=0.391, Sh=0.362
+eval=06100 | loss=  0.3331 | feat= 0.1488 | near=0.000581 | ratio= 0.84 | plen= 0.027 | maxd= 0.045 | warp= 1.19 | W=0.310, T=0.398, F=0.126, S=0.125, Sh=0.350
+eval=06125 | loss=  0.5215 | feat= 0.4022 | near=0.004364 | ratio= 1.08 | plen= 0.007 | maxd= 0.113 | warp= 2.28 | W=0.535, T=1.146, F=0.339, S=0.646, Sh=0.283
+eval=06150 | loss=  0.3676 | feat= 0.3214 | near=0.000657 | ratio= 1.06 | plen= 0.004 | maxd= 0.060 | warp= 2.24 | W=0.394, T=0.876, F=0.268, S=0.560, Sh=0.134
+eval=06175 | loss=  0.3400 | feat= 0.1743 | near=0.000447 | ratio= 0.85 | plen= 0.023 | maxd= 0.039 | warp= 1.09 | W=0.328, T=0.311, F=0.096, S=0.089, Sh=0.317
+eval=06200 | loss=  0.3370 | feat= 0.1041 | near=0.001108 | ratio= 0.82 | plen= 0.033 | maxd= 0.064 | warp= 1.90 | W=0.335, T=0.392, F=0.130, S=0.253, Sh=0.401
+eval=06225 | loss=  0.2299 | feat= 0.1920 | near=0.001016 | ratio= 1.05 | plen= 0.002 | maxd= 0.095 | warp= 1.33 | W=0.639, T=0.374, F=0.126, S=0.409, Sh=0.256
+eval=06250 | loss=  0.1729 | feat= 0.1492 | near=0.000231 | ratio= 0.98 | plen= 0.000 | maxd= 0.027 | warp= 1.69 | W=0.273, T=0.435, F=0.173, S=0.567, Sh=0.473
+eval=06275 | loss=  0.3179 | feat= 0.2699 | near=0.000228 | ratio= 1.07 | plen= 0.005 | maxd= 0.031 | warp= 1.46 | W=0.454, T=0.765, F=0.185, S=0.429, Sh=0.139
+eval=06300 | loss=  0.4084 | feat= 0.3786 | near=0.000062 | ratio= 0.97 | plen= 0.001 | maxd= 0.026 | warp= 2.27 | W=0.443, T=1.147, F=0.338, S=0.516, Sh=0.297
+eval=06325 | loss=  0.3916 | feat= 0.3427 | near=0.000501 | ratio= 1.07 | plen= 0.004 | maxd= 0.049 | warp= 1.87 | W=0.729, T=0.966, F=0.208, S=0.234, Sh=0.191
+eval=06350 | loss=  0.1982 | feat= 0.1847 | near=0.000157 | ratio= 1.00 | plen= 0.000 | maxd= 0.028 | warp= 1.33 | W=0.444, T=0.424, F=0.131, S=0.350, Sh=0.197
+eval=06375 | loss=  0.2146 | feat= 0.2017 | near=0.000148 | ratio= 1.01 | plen= 0.000 | maxd= 0.039 | warp= 0.75 | W=0.492, T=0.359, F=0.099, S=0.517, Sh=0.227
+eval=06400 | loss=  0.1927 | feat= 0.1536 | near=0.000221 | ratio= 0.94 | plen= 0.003 | maxd= 0.042 | warp= 1.19 | W=0.286, T=0.381, F=0.105, S=0.317, Sh=0.300
+eval=06425 | loss=  0.2711 | feat= 0.1847 | near=0.000398 | ratio= 1.11 | plen= 0.012 | maxd= 0.041 | warp= 0.95 | W=0.416, T=0.311, F=0.106, S=0.371, Sh=0.214
+eval=06450 | loss=  0.3677 | feat= 0.3358 | near=0.000370 | ratio= 1.02 | plen= 0.001 | maxd= 0.065 | warp= 2.69 | W=0.777, T=0.770, F=0.297, S=0.571, Sh=0.135
+eval=06475 | loss=  0.1994 | feat= 0.1692 | near=0.000221 | ratio= 0.95 | plen= 0.002 | maxd= 0.043 | warp= 0.83 | W=0.335, T=0.316, F=0.090, S=0.494, Sh=0.319
+eval=06500 | loss=  0.3292 | feat= 0.3068 | near=0.000055 | ratio= 1.02 | plen= 0.000 | maxd= 0.028 | warp= 2.19 | W=0.683, T=0.599, F=0.212, S=0.735, Sh=0.185
+eval=06525 | loss=  0.3915 | feat= 0.2195 | near=0.000225 | ratio= 0.84 | plen= 0.024 | maxd= 0.043 | warp= 2.72 | W=0.389, T=0.663, F=0.215, S=0.599, Sh=0.316
+eval=06550 | loss=  0.4564 | feat= 0.4344 | near=0.000068 | ratio= 1.02 | plen= 0.001 | maxd= 0.027 | warp= 3.08 | W=0.626, T=1.152, F=0.364, S=0.700, Sh=0.214
+eval=06575 | loss=  0.2057 | feat= 0.1830 | near=0.000246 | ratio= 1.03 | plen= 0.001 | maxd= 0.042 | warp= 1.50 | W=0.447, T=0.446, F=0.143, S=0.420, Sh=0.216
+eval=06600 | loss=  0.4915 | feat= 0.2422 | near=0.000438 | ratio= 1.20 | plen= 0.038 | maxd= 0.043 | warp= 1.22 | W=0.657, T=0.654, F=0.194, S=0.367, Sh=0.190
+eval=06625 | loss=  0.2191 | feat= 0.1828 | near=0.000113 | ratio= 0.93 | plen= 0.004 | maxd= 0.031 | warp= 0.88 | W=0.194, T=0.378, F=0.093, S=0.470, Sh=0.326
+eval=06650 | loss=  0.6704 | feat= 0.3565 | near=0.000277 | ratio= 1.22 | plen= 0.050 | maxd= 0.041 | warp= 1.15 | W=0.831, T=0.779, F=0.203, S=0.648, Sh=0.151
+eval=06675 | loss=  0.2266 | feat= 0.2054 | near=0.000113 | ratio= 1.03 | plen= 0.001 | maxd= 0.024 | warp= 1.63 | W=0.343, T=0.409, F=0.147, S=0.573, Sh=0.243
+eval=06700 | loss=  0.1912 | feat= 0.1728 | near=0.000174 | ratio= 1.01 | plen= 0.000 | maxd= 0.027 | warp= 0.89 | W=0.342, T=0.267, F=0.105, S=0.356, Sh=0.263
+eval=06725 | loss=  0.5729 | feat= 0.2936 | near=0.000928 | ratio= 1.20 | plen= 0.042 | maxd= 0.094 | warp= 2.46 | W=0.505, T=0.733, F=0.296, S=0.363, Sh=0.053
+eval=06750 | loss=  0.7066 | feat= 0.3357 | near=0.000566 | ratio= 0.76 | plen= 0.056 | maxd= 0.040 | warp= 3.26 | W=0.290, T=0.967, F=0.298, S=0.655, Sh=0.302
+eval=06775 | loss=  0.4926 | feat= 0.2365 | near=0.000687 | ratio= 1.20 | plen= 0.038 | maxd= 0.054 | warp= 0.99 | W=0.548, T=0.337, F=0.134, S=0.334, Sh=0.096
+eval=06800 | loss=  0.2065 | feat= 0.1727 | near=0.000650 | ratio= 1.02 | plen= 0.000 | maxd= 0.048 | warp= 1.43 | W=0.464, T=0.466, F=0.146, S=0.587, Sh=0.360
+eval=06825 | loss=  0.4447 | feat= 0.2105 | near=0.000162 | ratio= 0.81 | plen= 0.036 | maxd= 0.029 | warp= 1.18 | W=0.183, T=0.324, F=0.109, S=0.107, Sh=0.263
+eval=06850 | loss=  0.6006 | feat= 0.3210 | near=0.000860 | ratio= 1.21 | plen= 0.043 | maxd= 0.069 | warp= 1.17 | W=0.890, T=0.668, F=0.167, S=0.217, Sh=0.137
+eval=06875 | loss=  0.1854 | feat= 0.1437 | near=0.001706 | ratio= 0.99 | plen= 0.000 | maxd= 0.103 | warp= 1.27 | W=0.699, T=0.419, F=0.119, S=0.341, Sh=0.469
+eval=06900 | loss=  0.3074 | feat= 0.2309 | near=0.000817 | ratio= 1.09 | plen= 0.008 | maxd= 0.060 | warp= 1.90 | W=0.601, T=0.708, F=0.193, S=0.398, Sh=0.241
+eval=06925 | loss=  0.2136 | feat= 0.1924 | near=0.000589 | ratio= 0.99 | plen= 0.000 | maxd= 0.054 | warp= 1.21 | W=0.373, T=0.526, F=0.134, S=0.379, Sh=0.204
+eval=06950 | loss=  0.2264 | feat= 0.1916 | near=0.000372 | ratio= 1.06 | plen= 0.004 | maxd= 0.051 | warp= 0.82 | W=0.584, T=0.437, F=0.110, S=0.506, Sh=0.276
+eval=06975 | loss=  0.7650 | feat= 0.4841 | near=0.000450 | ratio= 1.20 | plen= 0.041 | maxd= 0.074 | warp= 2.97 | W=0.707, T=1.233, F=0.415, S=0.689, Sh=0.156
+eval=07000 | loss=  0.3264 | feat= 0.2623 | near=0.000122 | ratio= 1.09 | plen= 0.009 | maxd= 0.022 | warp= 1.19 | W=0.597, T=0.732, F=0.164, S=0.419, Sh=0.167
+eval=07025 | loss=  0.3028 | feat= 0.2244 | near=0.001052 | ratio= 1.09 | plen= 0.008 | maxd= 0.048 | warp= 1.80 | W=0.550, T=0.648, F=0.203, S=0.454, Sh=0.213
+eval=07050 | loss=  0.2129 | feat= 0.2024 | near=0.000058 | ratio= 0.99 | plen= 0.000 | maxd= 0.018 | warp= 0.64 | W=0.191, T=0.288, F=0.087, S=0.494, Sh=0.301
+eval=07075 | loss=  0.1934 | feat= 0.1537 | near=0.000147 | ratio= 0.93 | plen= 0.004 | maxd= 0.019 | warp= 1.48 | W=0.454, T=0.408, F=0.143, S=0.200, Sh=0.278
+eval=07100 | loss=  0.2274 | feat= 0.1980 | near=0.000635 | ratio= 1.03 | plen= 0.001 | maxd= 0.064 | warp= 2.44 | W=0.336, T=0.607, F=0.202, S=0.596, Sh=0.358
+eval=07125 | loss=  0.2521 | feat= 0.2054 | near=0.000859 | ratio= 1.05 | plen= 0.003 | maxd= 0.065 | warp= 1.40 | W=0.639, T=0.508, F=0.206, S=0.204, Sh=0.223
+eval=07150 | loss=  0.2636 | feat= 0.2427 | near=0.000073 | ratio= 0.99 | plen= 0.000 | maxd= 0.022 | warp= 1.51 | W=0.462, T=0.660, F=0.166, S=0.686, Sh=0.327
+eval=07175 | loss=  1.4098 | feat= 1.0781 | near=0.000718 | ratio= 1.17 | plen= 0.028 | maxd= 0.109 | warp= 2.59 | W=1.922, T=2.199, F=0.548, S=0.375, Sh=0.162
+eval=07200 | loss=  0.2294 | feat= 0.2128 | near=0.000289 | ratio= 0.98 | plen= 0.000 | maxd= 0.029 | warp= 0.91 | W=0.164, T=0.229, F=0.082, S=0.242, Sh=0.262
+eval=07225 | loss=  0.4771 | feat= 0.3476 | near=0.000212 | ratio= 1.14 | plen= 0.018 | maxd= 0.036 | warp= 1.32 | W=0.623, T=0.933, F=0.223, S=0.564, Sh=0.144
+eval=07250 | loss=  1.0734 | feat= 0.2828 | near=0.000595 | ratio= 0.65 | plen= 0.125 | maxd= 0.079 | warp= 1.54 | W=0.257, T=0.903, F=0.179, S=-0.034, Sh=0.509
+eval=07275 | loss=  0.1993 | feat= 0.1622 | near=0.000765 | ratio= 1.01 | plen= 0.000 | maxd= 0.053 | warp= 1.48 | W=0.367, T=0.405, F=0.159, S=0.595, Sh=0.399
+eval=07300 | loss=  0.2750 | feat= 0.2183 | near=0.000100 | ratio= 0.92 | plen= 0.006 | maxd= 0.016 | warp= 1.18 | W=0.187, T=0.525, F=0.118, S=0.572, Sh=0.304
+eval=07325 | loss=  0.2377 | feat= 0.1929 | near=0.000218 | ratio= 1.06 | plen= 0.004 | maxd= 0.028 | warp= 1.71 | W=0.447, T=0.587, F=0.163, S=0.438, Sh=0.240
+eval=07350 | loss=  0.4626 | feat= 0.2042 | near=0.000183 | ratio= 1.20 | plen= 0.041 | maxd= 0.050 | warp= 1.85 | W=0.467, T=0.618, F=0.227, S=0.526, Sh=0.273
+eval=07375 | loss=  0.5470 | feat= 0.2967 | near=0.000051 | ratio= 0.80 | plen= 0.039 | maxd= 0.019 | warp= 2.36 | W=0.397, T=1.017, F=0.182, S=0.413, Sh=0.387
+eval=07400 | loss=  0.5227 | feat= 0.2734 | near=0.000055 | ratio= 0.80 | plen= 0.039 | maxd= 0.013 | warp= 2.39 | W=0.478, T=0.992, F=0.187, S=0.411, Sh=0.517
+eval=07425 | loss=  0.2280 | feat= 0.1959 | near=0.000311 | ratio= 1.05 | plen= 0.003 | maxd= 0.037 | warp= 1.67 | W=0.438, T=0.366, F=0.148, S=0.479, Sh=0.206
+eval=07450 | loss=  0.2226 | feat= 0.1904 | near=0.000784 | ratio= 1.04 | plen= 0.001 | maxd= 0.065 | warp= 0.80 | W=0.286, T=0.335, F=0.093, S=0.572, Sh=0.329
+eval=07475 | loss=  0.0814 | feat= 0.0520 | near=0.000572 | ratio= 0.99 | plen= 0.000 | maxd= 0.041 | warp= 1.85 | W=0.338, T=0.442, F=0.154, S=0.351, Sh=0.580
+eval=07500 | loss=  0.3401 | feat= 0.2790 | near=0.001160 | ratio= 1.06 | plen= 0.003 | maxd= 0.076 | warp= 2.29 | W=0.815, T=0.719, F=0.249, S=0.493, Sh=0.297
+eval=07525 | loss=  0.2051 | feat= 0.1380 | near=0.000068 | ratio= 0.90 | plen= 0.010 | maxd= 0.020 | warp= 1.28 | W=0.407, T=0.329, F=0.108, S=0.355, Sh=0.320
+eval=07550 | loss=  0.5005 | feat= 0.3263 | near=0.000347 | ratio= 1.16 | plen= 0.025 | maxd= 0.037 | warp= 0.90 | W=0.949, T=0.648, F=0.151, S=0.267, Sh=0.167
+eval=07575 | loss=  0.5499 | feat= 0.4029 | near=0.000114 | ratio= 1.14 | plen= 0.020 | maxd= 0.037 | warp= 2.44 | W=0.578, T=1.058, F=0.313, S=0.731, Sh=0.206
+eval=07600 | loss=  0.2813 | feat= 0.2235 | near=0.001432 | ratio= 1.03 | plen= 0.001 | maxd= 0.105 | warp= 2.22 | W=0.451, T=0.692, F=0.233, S=0.369, Sh=0.203
+eval=07625 | loss=  0.1840 | feat= 0.1612 | near=0.000401 | ratio= 1.00 | plen= 0.000 | maxd= 0.049 | warp= 1.26 | W=0.442, T=0.439, F=0.141, S=0.331, Sh=0.249
+eval=07650 | loss=  0.3925 | feat= 0.2026 | near=0.000820 | ratio= 1.16 | plen= 0.026 | maxd= 0.070 | warp= 1.53 | W=0.453, T=0.437, F=0.162, S=0.243, Sh=0.155
+eval=07675 | loss=  0.5337 | feat= 0.5049 | near=0.000446 | ratio= 1.01 | plen= 0.000 | maxd= 0.056 | warp= 2.33 | W=0.820, T=1.345, F=0.276, S=0.379, Sh=0.141
+eval=07700 | loss=  1.0007 | feat= 0.2828 | near=0.001061 | ratio= 1.34 | plen= 0.114 | maxd= 0.071 | warp= 1.48 | W=0.422, T=0.826, F=0.226, S=0.595, Sh=0.239
+eval=07725 | loss=  0.2756 | feat= 0.2391 | near=0.000759 | ratio= 1.00 | plen= 0.000 | maxd= 0.049 | warp= 2.95 | W=0.305, T=0.764, F=0.288, S=0.453, Sh=0.270
+eval=07750 | loss=  0.2578 | feat= 0.2320 | near=0.000583 | ratio= 1.03 | plen= 0.001 | maxd= 0.067 | warp= 1.28 | W=0.700, T=0.678, F=0.168, S=0.376, Sh=0.273
+eval=07775 | loss=  0.4706 | feat= 0.4269 | near=0.000195 | ratio= 0.94 | plen= 0.003 | maxd= 0.037 | warp= 3.24 | W=0.499, T=1.124, F=0.359, S=0.783, Sh=0.252
+eval=07800 | loss=  0.5535 | feat= 0.5033 | near=0.001131 | ratio= 1.04 | plen= 0.001 | maxd= 0.057 | warp= 1.98 | W=0.995, T=1.255, F=0.259, S=0.088, Sh=0.205
+eval=07825 | loss=  0.4872 | feat= 0.2727 | near=0.000351 | ratio= 1.18 | plen= 0.033 | maxd= 0.045 | warp= 0.82 | W=0.791, T=0.591, F=0.144, S=0.369, Sh=0.165
+eval=07850 | loss=  0.3061 | feat= 0.2358 | near=0.001188 | ratio= 1.08 | plen= 0.007 | maxd= 0.057 | warp= 1.29 | W=0.428, T=0.600, F=0.141, S=0.206, Sh=0.125
+eval=07875 | loss=  0.2110 | feat= 0.1842 | near=0.000599 | ratio= 1.01 | plen= 0.000 | maxd= 0.049 | warp= 1.50 | W=0.498, T=0.505, F=0.168, S=0.193, Sh=0.226
+eval=07900 | loss=  0.3689 | feat= 0.3391 | near=0.000878 | ratio= 0.98 | plen= 0.000 | maxd= 0.082 | warp= 1.34 | W=1.016, T=0.655, F=0.167, S=0.402, Sh=0.222
+eval=07925 | loss=  0.3173 | feat= 0.2623 | near=0.000025 | ratio= 1.07 | plen= 0.005 | maxd= 0.011 | warp= 2.82 | W=0.399, T=0.779, F=0.269, S=0.717, Sh=0.744
+eval=07950 | loss=  1.1104 | feat= 0.2443 | near=0.000664 | ratio= 1.37 | plen= 0.139 | maxd= 0.057 | warp= 1.54 | W=0.467, T=0.624, F=0.245, S=0.384, Sh=0.113
+eval=07975 | loss=  0.2152 | feat= 0.1579 | near=0.000297 | ratio= 0.93 | plen= 0.006 | maxd= 0.042 | warp= 1.20 | W=0.555, T=0.492, F=0.131, S=0.407, Sh=0.314
+eval=08000 | loss=  0.2508 | feat= 0.2080 | near=0.000524 | ratio= 0.95 | plen= 0.003 | maxd= 0.046 | warp= 1.84 | W=0.175, T=0.481, F=0.165, S=0.137, Sh=0.251
+eval=08025 | loss=  0.5577 | feat= 0.5136 | near=0.000182 | ratio= 0.97 | plen= 0.001 | maxd= 0.054 | warp= 2.55 | W=0.681, T=1.385, F=0.441, S=0.666, Sh=0.303
+eval=08050 | loss=  0.2657 | feat= 0.2359 | near=0.000525 | ratio= 1.01 | plen= 0.000 | maxd= 0.057 | warp= 2.38 | W=0.201, T=0.527, F=0.207, S=0.153, Sh=0.161
+eval=08075 | loss=  0.2101 | feat= 0.1898 | near=0.000355 | ratio= 0.99 | plen= 0.000 | maxd= 0.046 | warp= 1.82 | W=0.276, T=0.513, F=0.186, S=0.200, Sh=0.231
+eval=08100 | loss=  2.1089 | feat= 0.6557 | near=0.001089 | ratio= 1.48 | plen= 0.228 | maxd= 0.123 | warp= 2.75 | W=1.182, T=1.480, F=0.450, S=0.462, Sh=0.041
+eval=08125 | loss=  0.1932 | feat= 0.1714 | near=0.000412 | ratio= 1.02 | plen= 0.001 | maxd= 0.039 | warp= 1.45 | W=0.495, T=0.371, F=0.139, S=0.339, Sh=0.232
+eval=08150 | loss=  0.4834 | feat= 0.3086 | near=0.000410 | ratio= 1.16 | plen= 0.026 | maxd= 0.068 | warp= 2.02 | W=0.471, T=1.006, F=0.279, S=0.485, Sh=0.344
+eval=08175 | loss=  0.2550 | feat= 0.1949 | near=0.001054 | ratio= 1.08 | plen= 0.006 | maxd= 0.084 | warp= 1.65 | W=0.416, T=0.772, F=0.192, S=0.427, Sh=0.413
+eval=08200 | loss=  0.3113 | feat= 0.1903 | near=0.000021 | ratio= 0.87 | plen= 0.016 | maxd= 0.010 | warp= 2.10 | W=0.448, T=0.610, F=0.169, S=0.620, Sh=0.419
+eval=08225 | loss=  0.3603 | feat= 0.3347 | near=0.000484 | ratio= 1.01 | plen= 0.000 | maxd= 0.050 | warp= 2.06 | W=0.815, T=0.916, F=0.239, S=0.448, Sh=0.263
+eval=08250 | loss=  0.4030 | feat= 0.3579 | near=0.000650 | ratio= 1.05 | plen= 0.003 | maxd= 0.080 | warp= 3.84 | W=0.558, T=1.035, F=0.352, S=0.490, Sh=0.201
+eval=08275 | loss=  0.2368 | feat= 0.1932 | near=0.001250 | ratio= 0.98 | plen= 0.000 | maxd= 0.087 | warp= 1.56 | W=0.670, T=0.387, F=0.165, S=0.195, Sh=0.266
+eval=08300 | loss=  0.2237 | feat= 0.1956 | near=0.000096 | ratio= 0.95 | plen= 0.002 | maxd= 0.018 | warp= 1.53 | W=0.453, T=0.547, F=0.157, S=0.473, Sh=0.230
+eval=08325 | loss=  2.0720 | feat= 0.9830 | near=0.000511 | ratio= 1.40 | plen= 0.163 | maxd= 0.092 | warp= 2.17 | W=1.639, T=2.112, F=0.534, S=0.501, Sh=0.089
+eval=08350 | loss=  1.1277 | feat= 0.5050 | near=0.001287 | ratio= 1.31 | plen= 0.098 | maxd= 0.070 | warp= 1.83 | W=1.212, T=1.032, F=0.313, S=0.332, Sh=0.116
+eval=08375 | loss=  0.2056 | feat= 0.1409 | near=0.000411 | ratio= 0.93 | plen= 0.005 | maxd= 0.045 | warp= 1.99 | W=0.408, T=0.434, F=0.172, S=0.421, Sh=0.313
+eval=08400 | loss=  0.9395 | feat= 0.6107 | near=0.000688 | ratio= 1.22 | plen= 0.049 | maxd= 0.049 | warp= 1.68 | W=1.284, T=1.293, F=0.302, S=0.397, Sh=0.050
+eval=08425 | loss=  0.5010 | feat= 0.3933 | near=0.000806 | ratio= 1.11 | plen= 0.011 | maxd= 0.080 | warp= 2.22 | W=1.128, T=0.652, F=0.240, S=0.550, Sh=0.220
+eval=08450 | loss=  0.2211 | feat= 0.1932 | near=0.000352 | ratio= 0.96 | plen= 0.001 | maxd= 0.041 | warp= 1.07 | W=0.456, T=0.340, F=0.124, S=0.330, Sh=0.182
+eval=08475 | loss=  0.2309 | feat= 0.1831 | near=0.000637 | ratio= 0.95 | plen= 0.002 | maxd= 0.076 | warp= 1.55 | W=0.621, T=0.603, F=0.197, S=0.306, Sh=0.307
+eval=08500 | loss=  0.2342 | feat= 0.2028 | near=0.000418 | ratio= 1.04 | plen= 0.002 | maxd= 0.050 | warp= 2.32 | W=0.493, T=0.504, F=0.203, S=0.528, Sh=0.229
+eval=08525 | loss=  0.2689 | feat= 0.2474 | near=0.000085 | ratio= 1.01 | plen= 0.000 | maxd= 0.021 | warp= 2.90 | W=0.560, T=0.621, F=0.236, S=0.668, Sh=0.282
+eval=08550 | loss=  0.2112 | feat= 0.1759 | near=0.000212 | ratio= 0.95 | plen= 0.002 | maxd= 0.041 | warp= 2.31 | W=0.347, T=0.562, F=0.190, S=0.424, Sh=0.272
+eval=08575 | loss=  0.5362 | feat= 0.5089 | near=0.000080 | ratio= 1.00 | plen= 0.000 | maxd= 0.023 | warp= 2.60 | W=0.619, T=1.350, F=0.399, S=0.731, Sh=0.243
+eval=08600 | loss=  0.4354 | feat= 0.4007 | near=0.000115 | ratio= 0.97 | plen= 0.001 | maxd= 0.035 | warp= 3.43 | W=0.552, T=1.109, F=0.350, S=0.711, Sh=0.299
+eval=08625 | loss=  0.1647 | feat= 0.1441 | near=0.000306 | ratio= 1.01 | plen= 0.000 | maxd= 0.031 | warp= 1.96 | W=0.302, T=0.525, F=0.189, S=0.247, Sh=0.333
+eval=08650 | loss=  0.3993 | feat= 0.3258 | near=0.002134 | ratio= 1.06 | plen= 0.003 | maxd= 0.075 | warp= 2.51 | W=0.527, T=0.955, F=0.248, S=0.340, Sh=0.145
+eval=08675 | loss=  0.3967 | feat= 0.2996 | near=0.001419 | ratio= 1.09 | plen= 0.008 | maxd= 0.107 | warp= 2.43 | W=0.732, T=0.547, F=0.224, S=0.641, Sh=0.139
+eval=08700 | loss=  0.0770 | feat= 0.0524 | near=0.000300 | ratio= 0.97 | plen= 0.001 | maxd= 0.037 | warp= 2.03 | W=0.421, T=0.459, F=0.162, S=0.389, Sh=0.569
+eval=08725 | loss=  0.1398 | feat= 0.1154 | near=0.000291 | ratio= 0.97 | plen= 0.001 | maxd= 0.043 | warp= 2.35 | W=0.484, T=0.644, F=0.188, S=0.304, Sh=0.549
+eval=08750 | loss=  0.1844 | feat= 0.1643 | near=0.000315 | ratio= 0.98 | plen= 0.001 | maxd= 0.040 | warp= 1.85 | W=0.499, T=0.480, F=0.213, S=0.418, Sh=0.271
+eval=08775 | loss=  0.1906 | feat= 0.1709 | near=0.000296 | ratio= 0.99 | plen= 0.000 | maxd= 0.037 | warp= 1.50 | W=0.246, T=0.446, F=0.140, S=0.361, Sh=0.274
+eval=08800 | loss=  0.2682 | feat= 0.2376 | near=0.000968 | ratio= 0.98 | plen= 0.000 | maxd= 0.071 | warp= 1.49 | W=0.705, T=0.500, F=0.165, S=0.287, Sh=0.165
+eval=08825 | loss=  0.2362 | feat= 0.2088 | near=0.000295 | ratio= 0.97 | plen= 0.001 | maxd= 0.040 | warp= 2.39 | W=0.328, T=0.431, F=0.174, S=0.344, Sh=0.146
+eval=08850 | loss=  0.1626 | feat= 0.1195 | near=0.000298 | ratio= 0.95 | plen= 0.003 | maxd= 0.044 | warp= 1.29 | W=0.478, T=0.538, F=0.146, S=0.115, Sh=0.490
+eval=08875 | loss=  0.1564 | feat= 0.1297 | near=0.000343 | ratio= 0.99 | plen= 0.000 | maxd= 0.046 | warp= 2.40 | W=0.564, T=0.560, F=0.203, S=0.484, Sh=0.538
+eval=08900 | loss=  0.2691 | feat= 0.2148 | near=0.000271 | ratio= 0.92 | plen= 0.006 | maxd= 0.037 | warp= 2.04 | W=0.721, T=0.591, F=0.176, S=0.401, Sh=0.296
+eval=08925 | loss=  0.7294 | feat= 0.6498 | near=0.001678 | ratio= 1.05 | plen= 0.003 | maxd= 0.062 | warp= 2.77 | W=1.250, T=1.476, F=0.371, S=0.126, Sh=0.148
+eval=08950 | loss=  0.4528 | feat= 0.4217 | near=0.000510 | ratio= 0.99 | plen= 0.000 | maxd= 0.078 | warp= 2.93 | W=0.792, T=1.156, F=0.325, S=0.228, Sh=0.203
+eval=08975 | loss=  0.2561 | feat= 0.2146 | near=0.000227 | ratio= 0.95 | plen= 0.003 | maxd= 0.036 | warp= 3.22 | W=0.332, T=0.719, F=0.244, S=0.411, Sh=0.274
+eval=09000 | loss=  1.0489 | feat= 0.7653 | near=0.001179 | ratio= 1.18 | plen= 0.033 | maxd= 0.126 | warp= 2.30 | W=1.817, T=1.273, F=0.294, S=0.371, Sh=0.152
+eval=09025 | loss=  0.2722 | feat= 0.2446 | near=0.000095 | ratio= 0.96 | plen= 0.002 | maxd= 0.024 | warp= 1.85 | W=0.726, T=0.600, F=0.187, S=0.474, Sh=0.232
+eval=09050 | loss=  0.3029 | feat= 0.2789 | near=0.000201 | ratio= 0.99 | plen= 0.000 | maxd= 0.031 | warp= 2.48 | W=0.487, T=0.785, F=0.260, S=0.582, Sh=0.209
+eval=09075 | loss=  0.6121 | feat= 0.3117 | near=0.000730 | ratio= 1.21 | plen= 0.045 | maxd= 0.066 | warp= 2.49 | W=0.610, T=0.794, F=0.321, S=0.489, Sh=0.106
+eval=09100 | loss=  0.5588 | feat= 0.4405 | near=0.000988 | ratio= 1.12 | plen= 0.014 | maxd= 0.061 | warp= 2.54 | W=0.697, T=1.211, F=0.355, S=0.541, Sh=0.207
+eval=09125 | loss=  0.2557 | feat= 0.2379 | near=0.000371 | ratio= 1.00 | plen= 0.000 | maxd= 0.037 | warp= 1.18 | W=0.703, T=0.516, F=0.127, S=0.115, Sh=0.213
+eval=09150 | loss=  0.2651 | feat= 0.2511 | near=0.000066 | ratio= 1.01 | plen= 0.000 | maxd= 0.017 | warp= 1.71 | W=0.637, T=0.717, F=0.200, S=0.547, Sh=0.273
+eval=09175 | loss=  0.2501 | feat= 0.2186 | near=0.000080 | ratio= 0.95 | plen= 0.003 | maxd= 0.023 | warp= 1.80 | W=0.601, T=0.644, F=0.174, S=0.376, Sh=0.226
+eval=09200 | loss=  0.3096 | feat= 0.2856 | near=0.000501 | ratio= 1.00 | plen= 0.000 | maxd= 0.033 | warp= 2.10 | W=0.551, T=0.918, F=0.226, S=0.345, Sh=0.254
+eval=09225 | loss=  0.3018 | feat= 0.2630 | near=0.001090 | ratio= 0.97 | plen= 0.001 | maxd= 0.049 | warp= 1.27 | W=0.620, T=0.833, F=0.181, S=0.260, Sh=0.259
+eval=09250 | loss=  0.5074 | feat= 0.4140 | near=0.000641 | ratio= 1.11 | plen= 0.011 | maxd= 0.061 | warp= 2.19 | W=0.808, T=0.989, F=0.290, S=0.402, Sh=0.016
+eval=09275 | loss=  0.5660 | feat= 0.4967 | near=0.000349 | ratio= 1.08 | plen= 0.006 | maxd= 0.055 | warp= 2.10 | W=0.943, T=1.207, F=0.274, S=0.567, Sh=0.118
+eval=09300 | loss=  0.4096 | feat= 0.3840 | near=0.000197 | ratio= 1.02 | plen= 0.001 | maxd= 0.034 | warp= 2.98 | W=0.371, T=1.072, F=0.361, S=0.667, Sh=0.251
+eval=09325 | loss=  0.3734 | feat= 0.2179 | near=0.000602 | ratio= 0.85 | plen= 0.021 | maxd= 0.051 | warp= 3.16 | W=0.673, T=0.728, F=0.189, S=0.261, Sh=0.347
+eval=09350 | loss=  0.2381 | feat= 0.1422 | near=0.000031 | ratio= 0.88 | plen= 0.014 | maxd= 0.011 | warp= 1.42 | W=0.542, T=0.466, F=0.128, S=0.216, Sh=0.336
+eval=09375 | loss=  0.5290 | feat= 0.1865 | near=0.001073 | ratio= 0.77 | plen= 0.051 | maxd= 0.059 | warp= 3.54 | W=0.424, T=0.657, F=0.241, S=0.133, Sh=0.321
+eval=09400 | loss=  0.3456 | feat= 0.3145 | near=0.000508 | ratio= 1.02 | plen= 0.000 | maxd= 0.083 | warp= 3.01 | W=0.575, T=1.009, F=0.267, S=0.243, Sh=0.296
+eval=09425 | loss=  0.3620 | feat= 0.3207 | near=0.000238 | ratio= 0.95 | plen= 0.003 | maxd= 0.037 | warp= 2.15 | W=0.451, T=0.989, F=0.322, S=0.459, Sh=0.245
+eval=09450 | loss=  0.5581 | feat= 0.5197 | near=0.000313 | ratio= 1.00 | plen= 0.000 | maxd= 0.056 | warp= 4.23 | W=0.622, T=1.272, F=0.472, S=0.799, Sh=0.124
+eval=09475 | loss=  0.2134 | feat= 0.1701 | near=0.000591 | ratio= 1.06 | plen= 0.003 | maxd= 0.053 | warp= 0.85 | W=0.531, T=0.386, F=0.128, S=0.277, Sh=0.244
+eval=09500 | loss=  0.3658 | feat= 0.3047 | near=0.000606 | ratio= 1.08 | plen= 0.006 | maxd= 0.061 | warp= 0.92 | W=0.872, T=0.619, F=0.155, S=0.529, Sh=0.203
+eval=09525 | loss=  0.4058 | feat= 0.2339 | near=0.000313 | ratio= 1.16 | plen= 0.024 | maxd= 0.036 | warp= 0.80 | W=0.163, T=0.389, F=0.124, S=0.484, Sh=0.190
+eval=09550 | loss=  0.3199 | feat= 0.2773 | near=0.000394 | ratio= 0.96 | plen= 0.001 | maxd= 0.027 | warp= 3.08 | W=0.483, T=0.862, F=0.291, S=0.582, Sh=0.319
+eval=09575 | loss=  0.4030 | feat= 0.3762 | near=0.000385 | ratio= 1.02 | plen= 0.000 | maxd= 0.039 | warp= 1.69 | W=1.053, T=0.846, F=0.196, S=0.389, Sh=0.284
+eval=09600 | loss=  0.6305 | feat= 0.5764 | near=0.000901 | ratio= 0.99 | plen= 0.000 | maxd= 0.059 | warp= 3.26 | W=0.842, T=1.494, F=0.406, S=0.753, Sh=0.402
+eval=09625 | loss=  0.2461 | feat= 0.2044 | near=0.001139 | ratio= 1.03 | plen= 0.001 | maxd= 0.065 | warp= 2.11 | W=0.597, T=0.607, F=0.232, S=0.313, Sh=0.235
+eval=09650 | loss=  0.2282 | feat= 0.2020 | near=0.000324 | ratio= 1.02 | plen= 0.001 | maxd= 0.038 | warp= 2.82 | W=0.452, T=0.612, F=0.216, S=0.385, Sh=0.212
+eval=09675 | loss=  0.2127 | feat= 0.1856 | near=0.000224 | ratio= 0.96 | plen= 0.002 | maxd= 0.042 | warp= 2.45 | W=0.499, T=0.510, F=0.194, S=0.568, Sh=0.314
+eval=09700 | loss=  0.4126 | feat= 0.3670 | near=0.000671 | ratio= 1.06 | plen= 0.003 | maxd= 0.041 | warp= 3.57 | W=0.515, T=1.098, F=0.378, S=0.391, Sh=0.230
+eval=09725 | loss=  0.4033 | feat= 0.3807 | near=0.000069 | ratio= 0.97 | plen= 0.001 | maxd= 0.021 | warp= 2.26 | W=0.658, T=1.163, F=0.230, S=0.429, Sh=0.338
+eval=09750 | loss=  0.4592 | feat= 0.1776 | near=0.000357 | ratio= 0.79 | plen= 0.043 | maxd= 0.044 | warp= 1.58 | W=0.287, T=0.282, F=0.100, S=0.122, Sh=0.310
+eval=09775 | loss=  0.2056 | feat= 0.1722 | near=0.000544 | ratio= 0.98 | plen= 0.000 | maxd= 0.059 | warp= 1.49 | W=0.354, T=0.332, F=0.144, S=0.258, Sh=0.233
+eval=09800 | loss=  0.2814 | feat= 0.2079 | near=0.000459 | ratio= 1.09 | plen= 0.007 | maxd= 0.058 | warp= 2.67 | W=0.581, T=0.508, F=0.220, S=0.475, Sh=0.215
+eval=09825 | loss=  0.1678 | feat= 0.1405 | near=0.000323 | ratio= 1.00 | plen= 0.000 | maxd= 0.033 | warp= 1.93 | W=0.330, T=0.504, F=0.183, S=0.465, Sh=0.371
+eval=09850 | loss=  0.2242 | feat= 0.2007 | near=0.000608 | ratio= 1.00 | plen= 0.000 | maxd= 0.068 | warp= 0.94 | W=0.673, T=0.559, F=0.131, S=0.356, Sh=0.277
+eval=09875 | loss=  0.3055 | feat= 0.2886 | near=0.000162 | ratio= 1.01 | plen= 0.000 | maxd= 0.035 | warp= 1.97 | W=0.654, T=0.891, F=0.230, S=0.445, Sh=0.285
+eval=09900 | loss=  0.3847 | feat= 0.3538 | near=0.000693 | ratio= 1.00 | plen= 0.000 | maxd= 0.050 | warp= 1.52 | W=0.895, T=0.840, F=0.222, S=0.031, Sh=0.235
+eval=09925 | loss=  0.2152 | feat= 0.1776 | near=0.000843 | ratio= 0.96 | plen= 0.001 | maxd= 0.072 | warp= 0.79 | W=0.442, T=0.266, F=0.086, S=0.324, Sh=0.245
+eval=09950 | loss=  0.3120 | feat= 0.2512 | near=0.000332 | ratio= 0.92 | plen= 0.007 | maxd= 0.041 | warp= 1.61 | W=0.200, T=0.442, F=0.121, S=0.707, Sh=0.294
+eval=09975 | loss=  0.3343 | feat= 0.2250 | near=0.001284 | ratio= 0.89 | plen= 0.012 | maxd= 0.064 | warp= 3.89 | W=0.404, T=0.672, F=0.253, S=0.576, Sh=0.284
+eval=10000 | loss=  0.3436 | feat= 0.2953 | near=0.002006 | ratio= 1.03 | plen= 0.001 | maxd= 0.079 | warp= 3.15 | W=0.371, T=0.787, F=0.282, S=0.601, Sh=0.168
+eval=10025 | loss=  0.3780 | feat= 0.3566 | near=0.000164 | ratio= 0.98 | plen= 0.001 | maxd= 0.040 | warp= 1.66 | W=0.928, T=0.880, F=0.208, S=0.502, Sh=0.274
+eval=10050 | loss=  0.4364 | feat= 0.4118 | near=0.000300 | ratio= 1.00 | plen= 0.000 | maxd= 0.058 | warp= 1.45 | W=1.191, T=0.726, F=0.170, S=0.520, Sh=0.286
+eval=10075 | loss=  0.3433 | feat= 0.2910 | near=0.001266 | ratio= 1.06 | plen= 0.003 | maxd= 0.072 | warp= 2.73 | W=0.489, T=0.815, F=0.287, S=0.577, Sh=0.197
+eval=10100 | loss=  0.3154 | feat= 0.2896 | near=0.000271 | ratio= 1.01 | plen= 0.000 | maxd= 0.040 | warp= 1.21 | W=0.635, T=0.942, F=0.194, S=0.409, Sh=0.341
+eval=10125 | loss=  0.2613 | feat= 0.2432 | near=0.000116 | ratio= 1.01 | plen= 0.000 | maxd= 0.032 | warp= 1.41 | W=0.700, T=0.657, F=0.211, S=0.564, Sh=0.315
+eval=10150 | loss=  1.0180 | feat= 0.9153 | near=0.000438 | ratio= 1.00 | plen= 0.000 | maxd= 0.099 | warp= 2.83 | W=1.577, T=2.025, F=0.427, S=0.585, Sh=0.325
+eval=10175 | loss=  0.5567 | feat= 0.5201 | near=0.000111 | ratio= 0.98 | plen= 0.000 | maxd= 0.023 | warp= 3.22 | W=0.597, T=1.379, F=0.458, S=0.733, Sh=0.270
+eval=10200 | loss=  2.5370 | feat= 0.5447 | near=0.002126 | ratio= 1.55 | plen= 0.304 | maxd= 0.135 | warp= 2.50 | W=1.009, T=1.192, F=0.458, S=0.737, Sh=0.099
+eval=10225 | loss=  1.0973 | feat= 0.9526 | near=0.001207 | ratio= 0.94 | plen= 0.003 | maxd= 0.057 | warp= 3.68 | W=1.389, T=2.146, F=0.651, S=0.741, Sh=0.209
+eval=10250 | loss=  0.5381 | feat= 0.3767 | near=0.001193 | ratio= 1.14 | plen= 0.020 | maxd= 0.099 | warp= 2.25 | W=0.637, T=1.055, F=0.289, S=0.567, Sh=0.207
+eval=10275 | loss=  0.4195 | feat= 0.3149 | near=0.000357 | ratio= 1.12 | plen= 0.014 | maxd= 0.047 | warp= 1.77 | W=0.806, T=0.639, F=0.207, S=0.458, Sh=0.086
+
+======================================================================================================
+POLISHING WITH L-BFGS-B
+======================================================================================================
+eval=10300 | loss=  3.0763 | feat= 1.7151 | near=0.000863 | ratio= 1.38 | plen= 0.148 | maxd= 0.093 | warp= 5.77 | W=2.669, T=3.303, F=1.168, S=0.465, Sh=0.091
+eval=10325 | loss=  0.3874 | feat= 0.3638 | near=0.000369 | ratio= 1.02 | plen= 0.000 | maxd= 0.037 | warp= 2.14 | W=0.715, T=0.994, F=0.331, S=0.434, Sh=0.167
+eval=10350 | loss=  0.2283 | feat= 0.2044 | near=0.000315 | ratio= 0.97 | plen= 0.001 | maxd= 0.037 | warp= 2.01 | W=0.425, T=0.524, F=0.168, S=0.338, Sh=0.163
+eval=10375 | loss=  0.1516 | feat= 0.1270 | near=0.000301 | ratio= 0.97 | plen= 0.001 | maxd= 0.037 | warp= 2.03 | W=0.421, T=0.461, F=0.162, S=0.387, Sh=0.860
+eval=10400 | loss=  0.0753 | feat= 0.0507 | near=0.000300 | ratio= 0.97 | plen= 0.001 | maxd= 0.037 | warp= 2.03 | W=0.421, T=0.459, F=0.162, S=0.389, Sh=0.592
+eval=10425 | loss=  0.0752 | feat= 0.0505 | near=0.000300 | ratio= 0.97 | plen= 0.001 | maxd= 0.037 | warp= 2.03 | W=0.421, T=0.459, F=0.162, S=0.389, Sh=0.600
+eval=10450 | loss=  0.0751 | feat= 0.0505 | near=0.000300 | ratio= 0.97 | plen= 0.001 | maxd= 0.037 | warp= 2.03 | W=0.421, T=0.459, F=0.162, S=0.388, Sh=0.598
+eval=10475 | loss=  0.0751 | feat= 0.0505 | near=0.000301 | ratio= 0.97 | plen= 0.001 | maxd= 0.037 | warp= 2.03 | W=0.421, T=0.459, F=0.162, S=0.388, Sh=0.596
+eval=10500 | loss=  0.0748 | feat= 0.0501 | near=0.000302 | ratio= 0.97 | plen= 0.001 | maxd= 0.038 | warp= 2.03 | W=0.420, T=0.459, F=0.161, S=0.386, Sh=0.588
+eval=10525 | loss=  0.0725 | feat= 0.0478 | near=0.000309 | ratio= 0.97 | plen= 0.001 | maxd= 0.038 | warp= 2.01 | W=0.419, T=0.458, F=0.160, S=0.373, Sh=0.567
+eval=10550 | loss=  0.0691 | feat= 0.0442 | near=0.000330 | ratio= 0.97 | plen= 0.001 | maxd= 0.039 | warp= 1.96 | W=0.415, T=0.458, F=0.157, S=0.340, Sh=0.546
+eval=10575 | loss=  0.0637 | feat= 0.0389 | near=0.000326 | ratio= 0.97 | plen= 0.001 | maxd= 0.039 | warp= 1.97 | W=0.416, T=0.458, F=0.158, S=0.348, Sh=0.591
+eval=10600 | loss=  0.0616 | feat= 0.0368 | near=0.000360 | ratio= 0.97 | plen= 0.001 | maxd= 0.041 | warp= 1.90 | W=0.409, T=0.460, F=0.154, S=0.296, Sh=0.570
+eval=10625 | loss=  0.0595 | feat= 0.0347 | near=0.000346 | ratio= 0.97 | plen= 0.001 | maxd= 0.040 | warp= 1.93 | W=0.412, T=0.459, F=0.156, S=0.317, Sh=0.585
+eval=10650 | loss=  0.0586 | feat= 0.0338 | near=0.000352 | ratio= 0.97 | plen= 0.001 | maxd= 0.041 | warp= 1.92 | W=0.410, T=0.459, F=0.155, S=0.309, Sh=0.599
+eval=10675 | loss=  0.0586 | feat= 0.0338 | near=0.000351 | ratio= 0.97 | plen= 0.001 | maxd= 0.041 | warp= 1.92 | W=0.410, T=0.459, F=0.155, S=0.310, Sh=0.600
+eval=10700 | loss=  0.0585 | feat= 0.0338 | near=0.000351 | ratio= 0.97 | plen= 0.001 | maxd= 0.041 | warp= 1.92 | W=0.410, T=0.459, F=0.155, S=0.311, Sh=0.599
+eval=10725 | loss=  0.0576 | feat= 0.0336 | near=0.000353 | ratio= 0.97 | plen= 0.001 | maxd= 0.041 | warp= 1.91 | W=0.410, T=0.456, F=0.155, S=0.312, Sh=0.586
+eval=10750 | loss=  0.0548 | feat= 0.0323 | near=0.000359 | ratio= 0.97 | plen= 0.001 | maxd= 0.041 | warp= 1.89 | W=0.420, T=0.450, F=0.155, S=0.315, Sh=0.580
+eval=10775 | loss=  0.0499 | feat= 0.0294 | near=0.000388 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.83 | W=0.436, T=0.442, F=0.153, S=0.296, Sh=0.606
+eval=10800 | loss=  0.0495 | feat= 0.0293 | near=0.000392 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.82 | W=0.440, T=0.440, F=0.152, S=0.295, Sh=0.597
+eval=10825 | loss=  0.0489 | feat= 0.0294 | near=0.000394 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.81 | W=0.447, T=0.437, F=0.152, S=0.302, Sh=0.600
+eval=10850 | loss=  0.0489 | feat= 0.0295 | near=0.000394 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.81 | W=0.448, T=0.436, F=0.152, S=0.303, Sh=0.600
+eval=10875 | loss=  0.0489 | feat= 0.0296 | near=0.000393 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.81 | W=0.449, T=0.435, F=0.153, S=0.305, Sh=0.600
+eval=10900 | loss=  0.0483 | feat= 0.0290 | near=0.000390 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.82 | W=0.447, T=0.434, F=0.153, S=0.309, Sh=0.599
+eval=10925 | loss=  0.0479 | feat= 0.0277 | near=0.000379 | ratio= 0.98 | plen= 0.000 | maxd= 0.042 | warp= 1.83 | W=0.432, T=0.428, F=0.153, S=0.317, Sh=0.580
+eval=10950 | loss=  0.0465 | feat= 0.0254 | near=0.000377 | ratio= 0.98 | plen= 0.001 | maxd= 0.042 | warp= 1.83 | W=0.420, T=0.427, F=0.152, S=0.312, Sh=0.592
+eval=10975 | loss=  0.0459 | feat= 0.0264 | near=0.000394 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.80 | W=0.441, T=0.425, F=0.152, S=0.307, Sh=0.591
+eval=11000 | loss=  0.0456 | feat= 0.0255 | near=0.000388 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.81 | W=0.433, T=0.427, F=0.152, S=0.307, Sh=0.602
+eval=11025 | loss=  0.0452 | feat= 0.0253 | near=0.000391 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.80 | W=0.434, T=0.425, F=0.152, S=0.306, Sh=0.595
+eval=11050 | loss=  0.0447 | feat= 0.0245 | near=0.000393 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.80 | W=0.429, T=0.423, F=0.151, S=0.302, Sh=0.597
+eval=11075 | loss=  0.0444 | feat= 0.0243 | near=0.000395 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.79 | W=0.429, T=0.422, F=0.151, S=0.300, Sh=0.598
+eval=11100 | loss=  0.0441 | feat= 0.0241 | near=0.000397 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.79 | W=0.429, T=0.420, F=0.151, S=0.300, Sh=0.596
+eval=11125 | loss=  0.0438 | feat= 0.0239 | near=0.000398 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.78 | W=0.429, T=0.418, F=0.151, S=0.301, Sh=0.595
+eval=11150 | loss=  0.0434 | feat= 0.0237 | near=0.000398 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.78 | W=0.430, T=0.416, F=0.151, S=0.304, Sh=0.597
+eval=11175 | loss=  0.0429 | feat= 0.0234 | near=0.000404 | ratio= 0.98 | plen= 0.000 | maxd= 0.044 | warp= 1.77 | W=0.430, T=0.413, F=0.150, S=0.302, Sh=0.595
+eval=11200 | loss=  0.0427 | feat= 0.0233 | near=0.000404 | ratio= 0.98 | plen= 0.000 | maxd= 0.044 | warp= 1.76 | W=0.431, T=0.411, F=0.151, S=0.304, Sh=0.599
+eval=11225 | loss=  0.0426 | feat= 0.0232 | near=0.000405 | ratio= 0.98 | plen= 0.000 | maxd= 0.044 | warp= 1.76 | W=0.430, T=0.411, F=0.150, S=0.303, Sh=0.599
+eval=11250 | loss=  0.0426 | feat= 0.0232 | near=0.000405 | ratio= 0.98 | plen= 0.000 | maxd= 0.044 | warp= 1.76 | W=0.430, T=0.411, F=0.150, S=0.303, Sh=0.599
+eval=11275 | loss=  0.0425 | feat= 0.0231 | near=0.000405 | ratio= 0.98 | plen= 0.000 | maxd= 0.044 | warp= 1.76 | W=0.429, T=0.411, F=0.150, S=0.303, Sh=0.598
+eval=11300 | loss=  0.0425 | feat= 0.0230 | near=0.000405 | ratio= 0.98 | plen= 0.000 | maxd= 0.044 | warp= 1.76 | W=0.428, T=0.410, F=0.150, S=0.303, Sh=0.598
+eval=11325 | loss=  0.0489 | feat= 0.0294 | near=0.000402 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.76 | W=0.425, T=0.409, F=0.151, S=0.306, Sh=0.558
+eval=11350 | loss=  0.0424 | feat= 0.0229 | near=0.000404 | ratio= 0.98 | plen= 0.000 | maxd= 0.043 | warp= 1.76 | W=0.427, T=0.410, F=0.151, S=0.304, Sh=0.597
+eval=11375 | loss=  0.0423 | feat= 0.0229 | near=0.000404 | ratio= 0.98 | plen= 0.000 | maxd= 0.044 | warp= 1.76 | W=0.428, T=0.410, F=0.151, S=0.305, Sh=0.599
+eval=11400 | loss=  0.0423 | feat= 0.0229 | near=0.000406 | ratio= 0.98 | plen= 0.000 | maxd= 0.044 | warp= 1.76 | W=0.428, T=0.409, F=0.150, S=0.304, Sh=0.600
+eval=11425 | loss=  0.0422 | feat= 0.0229 | near=0.000407 | ratio= 0.98 | plen= 0.000 | maxd= 0.044 | warp= 1.76 | W=0.429, T=0.409, F=0.150, S=0.303, Sh=0.599
+eval=11450 | loss=  0.0422 | feat= 0.0229 | near=0.000410 | ratio= 0.98 | plen= 0.000 | maxd= 0.044 | warp= 1.75 | W=0.429, T=0.408, F=0.150, S=0.302, Sh=0.598
+eval=11475 | loss=  0.0422 | feat= 0.0229 | near=0.000412 | ratio= 0.98 | plen= 0.000 | maxd= 0.044 | warp= 1.75 | W=0.428, T=0.408, F=0.150, S=0.299, Sh=0.599
+eval=11500 | loss=  0.0422 | feat= 0.0228 | near=0.000407 | ratio= 0.98 | plen= 0.000 | maxd= 0.044 | warp= 1.76 | W=0.428, T=0.409, F=0.150, S=0.303, Sh=0.599
+eval=11525 | loss=  0.0421 | feat= 0.0228 | near=0.000410 | ratio= 0.98 | plen= 0.000 | maxd= 0.044 | warp= 1.75 | W=0.428, T=0.408, F=0.150, S=0.300, Sh=0.600
+eval=11550 | loss=  0.0420 | feat= 0.0228 | near=0.000411 | ratio= 0.98 | plen= 0.000 | maxd= 0.044 | warp= 1.75 | W=0.428, T=0.408, F=0.150, S=0.300, Sh=0.598
+eval=11575 | loss=  0.0418 | feat= 0.0228 | near=0.000412 | ratio= 0.98 | plen= 0.000 | maxd= 0.044 | warp= 1.75 | W=0.427, T=0.409, F=0.151, S=0.299, Sh=0.596
+eval=11600 | loss=  0.0414 | feat= 0.0226 | near=0.000411 | ratio= 0.99 | plen= 0.000 | maxd= 0.044 | warp= 1.76 | W=0.426, T=0.411, F=0.151, S=0.301, Sh=0.593
+eval=11625 | loss=  0.0406 | feat= 0.0222 | near=0.000410 | ratio= 0.99 | plen= 0.000 | maxd= 0.044 | warp= 1.77 | W=0.424, T=0.414, F=0.153, S=0.304, Sh=0.594
+eval=11650 | loss=  0.0398 | feat= 0.0219 | near=0.000415 | ratio= 0.99 | plen= 0.000 | maxd= 0.044 | warp= 1.77 | W=0.421, T=0.418, F=0.155, S=0.303, Sh=0.596
+eval=11675 | loss=  0.0397 | feat= 0.0220 | near=0.000415 | ratio= 1.00 | plen= 0.000 | maxd= 0.044 | warp= 1.77 | W=0.423, T=0.420, F=0.156, S=0.307, Sh=0.595
+eval=11700 | loss=  0.0396 | feat= 0.0219 | near=0.000416 | ratio= 1.00 | plen= 0.000 | maxd= 0.044 | warp= 1.78 | W=0.421, T=0.422, F=0.157, S=0.307, Sh=0.599
+eval=11725 | loss=  0.0395 | feat= 0.0219 | near=0.000415 | ratio= 1.00 | plen= 0.000 | maxd= 0.044 | warp= 1.78 | W=0.421, T=0.421, F=0.157, S=0.307, Sh=0.600
+eval=11750 | loss=  0.0395 | feat= 0.0218 | near=0.000416 | ratio= 1.00 | plen= 0.000 | maxd= 0.044 | warp= 1.77 | W=0.422, T=0.420, F=0.156, S=0.305, Sh=0.600
+eval=11775 | loss=  0.0398 | feat= 0.0221 | near=0.000430 | ratio= 1.00 | plen= 0.000 | maxd= 0.045 | warp= 1.75 | W=0.426, T=0.419, F=0.155, S=0.297, Sh=0.594
+eval=11800 | loss=  0.0394 | feat= 0.0218 | near=0.000424 | ratio= 1.00 | plen= 0.000 | maxd= 0.044 | warp= 1.76 | W=0.424, T=0.420, F=0.156, S=0.301, Sh=0.599
+eval=11825 | loss=  0.0393 | feat= 0.0217 | near=0.000423 | ratio= 1.00 | plen= 0.000 | maxd= 0.044 | warp= 1.76 | W=0.424, T=0.420, F=0.156, S=0.303, Sh=0.596
+eval=11850 | loss=  0.0392 | feat= 0.0216 | near=0.000422 | ratio= 1.00 | plen= 0.000 | maxd= 0.044 | warp= 1.77 | W=0.424, T=0.420, F=0.157, S=0.305, Sh=0.598
+eval=11875 | loss=  0.0388 | feat= 0.0212 | near=0.000420 | ratio= 1.00 | plen= 0.000 | maxd= 0.044 | warp= 1.78 | W=0.423, T=0.420, F=0.158, S=0.308, Sh=0.601
+eval=11900 | loss=  0.0430 | feat= 0.0254 | near=0.000417 | ratio= 1.00 | plen= 0.000 | maxd= 0.044 | warp= 1.82 | W=0.421, T=0.416, F=0.161, S=0.315, Sh=0.566
+eval=11925 | loss=  0.0412 | feat= 0.0236 | near=0.000419 | ratio= 1.00 | plen= 0.000 | maxd= 0.044 | warp= 1.81 | W=0.419, T=0.414, F=0.160, S=0.312, Sh=0.571
+eval=11950 | loss=  0.0378 | feat= 0.0201 | near=0.000420 | ratio= 1.00 | plen= 0.000 | maxd= 0.044 | warp= 1.80 | W=0.419, T=0.414, F=0.158, S=0.307, Sh=0.593
+eval=11975 | loss=  0.1499 | feat= 0.1308 | near=0.000433 | ratio= 0.98 | plen= 0.000 | maxd= 0.045 | warp= 1.74 | W=0.420, T=0.401, F=0.153, S=0.287, Sh=0.312
+eval=12000 | loss=  0.0386 | feat= 0.0207 | near=0.000432 | ratio= 0.99 | plen= 0.000 | maxd= 0.045 | warp= 1.77 | W=0.421, T=0.407, F=0.156, S=0.296, Sh=0.587
+eval=12025 | loss=  0.0377 | feat= 0.0195 | near=0.000424 | ratio= 0.99 | plen= 0.000 | maxd= 0.044 | warp= 1.79 | W=0.417, T=0.404, F=0.157, S=0.299, Sh=0.597
+eval=12050 | loss=  0.0374 | feat= 0.0195 | near=0.000424 | ratio= 0.99 | plen= 0.000 | maxd= 0.044 | warp= 1.79 | W=0.419, T=0.409, F=0.157, S=0.302, Sh=0.598
+eval=12075 | loss=  0.0370 | feat= 0.0193 | near=0.000428 | ratio= 1.00 | plen= 0.000 | maxd= 0.045 | warp= 1.79 | W=0.421, T=0.409, F=0.158, S=0.303, Sh=0.596
+eval=12100 | loss=  0.0366 | feat= 0.0189 | near=0.000432 | ratio= 1.00 | plen= 0.000 | maxd= 0.045 | warp= 1.81 | W=0.420, T=0.410, F=0.161, S=0.306, Sh=0.589
+eval=12125 | loss=  0.0364 | feat= 0.0188 | near=0.000431 | ratio= 1.00 | plen= 0.000 | maxd= 0.045 | warp= 1.80 | W=0.422, T=0.409, F=0.160, S=0.304, Sh=0.596
+eval=12150 | loss=  0.0354 | feat= 0.0177 | near=0.000434 | ratio= 1.00 | plen= 0.000 | maxd= 0.045 | warp= 1.82 | W=0.419, T=0.409, F=0.162, S=0.306, Sh=0.605
+eval=12175 | loss=  0.0348 | feat= 0.0171 | near=0.000437 | ratio= 1.00 | plen= 0.000 | maxd= 0.045 | warp= 1.82 | W=0.418, T=0.407, F=0.163, S=0.306, Sh=0.599
+eval=12200 | loss=  0.0482 | feat= 0.0303 | near=0.000450 | ratio= 1.00 | plen= 0.000 | maxd= 0.045 | warp= 1.84 | W=0.418, T=0.405, F=0.166, S=0.304, Sh=0.542
+eval=12225 | loss=  0.0347 | feat= 0.0169 | near=0.000441 | ratio= 1.00 | plen= 0.000 | maxd= 0.045 | warp= 1.82 | W=0.419, T=0.406, F=0.163, S=0.304, Sh=0.594
+eval=12250 | loss=  0.0342 | feat= 0.0164 | near=0.000442 | ratio= 1.00 | plen= 0.000 | maxd= 0.045 | warp= 1.83 | W=0.417, T=0.406, F=0.164, S=0.304, Sh=0.598
+eval=12275 | loss=  0.0345 | feat= 0.0164 | near=0.000449 | ratio= 1.01 | plen= 0.000 | maxd= 0.045 | warp= 1.84 | W=0.416, T=0.408, F=0.167, S=0.305, Sh=0.587
+eval=12300 | loss=  0.0338 | feat= 0.0157 | near=0.000452 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.84 | W=0.419, T=0.408, F=0.167, S=0.305, Sh=0.593
+eval=12325 | loss=  0.0336 | feat= 0.0153 | near=0.000453 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.83 | W=0.420, T=0.407, F=0.167, S=0.305, Sh=0.599
+eval=12350 | loss=  0.0335 | feat= 0.0152 | near=0.000454 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.83 | W=0.420, T=0.407, F=0.167, S=0.304, Sh=0.597
+eval=12375 | loss=  0.0332 | feat= 0.0150 | near=0.000455 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.84 | W=0.418, T=0.407, F=0.168, S=0.303, Sh=0.596
+eval=12400 | loss=  0.0328 | feat= 0.0146 | near=0.000462 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.84 | W=0.415, T=0.407, F=0.169, S=0.298, Sh=0.595
+eval=12425 | loss=  0.0326 | feat= 0.0143 | near=0.000464 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.84 | W=0.417, T=0.407, F=0.169, S=0.299, Sh=0.600
+eval=12450 | loss=  0.0324 | feat= 0.0139 | near=0.000472 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.84 | W=0.419, T=0.406, F=0.170, S=0.298, Sh=0.599
+eval=12475 | loss=  0.0321 | feat= 0.0134 | near=0.000480 | ratio= 1.01 | plen= 0.000 | maxd= 0.047 | warp= 1.84 | W=0.418, T=0.406, F=0.171, S=0.296, Sh=0.599
+eval=12500 | loss=  0.0326 | feat= 0.0141 | near=0.000473 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.84 | W=0.417, T=0.406, F=0.170, S=0.297, Sh=0.607
+eval=12525 | loss=  0.0321 | feat= 0.0134 | near=0.000479 | ratio= 1.01 | plen= 0.000 | maxd= 0.047 | warp= 1.84 | W=0.418, T=0.406, F=0.171, S=0.296, Sh=0.600
+eval=12550 | loss=  0.0320 | feat= 0.0132 | near=0.000480 | ratio= 1.01 | plen= 0.000 | maxd= 0.047 | warp= 1.84 | W=0.420, T=0.407, F=0.171, S=0.297, Sh=0.600
+eval=12575 | loss=  0.0320 | feat= 0.0132 | near=0.000479 | ratio= 1.01 | plen= 0.000 | maxd= 0.047 | warp= 1.84 | W=0.418, T=0.407, F=0.171, S=0.297, Sh=0.600
+eval=12600 | loss=  0.0320 | feat= 0.0132 | near=0.000478 | ratio= 1.01 | plen= 0.000 | maxd= 0.047 | warp= 1.85 | W=0.418, T=0.407, F=0.171, S=0.297, Sh=0.600
+eval=12625 | loss=  0.0320 | feat= 0.0132 | near=0.000475 | ratio= 1.01 | plen= 0.000 | maxd= 0.047 | warp= 1.85 | W=0.417, T=0.407, F=0.172, S=0.298, Sh=0.601
+eval=12650 | loss=  0.0319 | feat= 0.0132 | near=0.000475 | ratio= 1.01 | plen= 0.000 | maxd= 0.047 | warp= 1.85 | W=0.417, T=0.407, F=0.172, S=0.299, Sh=0.601
+eval=12675 | loss=  0.0319 | feat= 0.0131 | near=0.000474 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.85 | W=0.417, T=0.407, F=0.172, S=0.299, Sh=0.599
+eval=12700 | loss=  0.0319 | feat= 0.0131 | near=0.000473 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.85 | W=0.417, T=0.407, F=0.172, S=0.300, Sh=0.599
+eval=12725 | loss=  0.0319 | feat= 0.0132 | near=0.000472 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.85 | W=0.417, T=0.407, F=0.172, S=0.300, Sh=0.599
+eval=12750 | loss=  0.0318 | feat= 0.0132 | near=0.000471 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.85 | W=0.417, T=0.406, F=0.171, S=0.300, Sh=0.599
+eval=12775 | loss=  0.0329 | feat= 0.0145 | near=0.000469 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.85 | W=0.419, T=0.404, F=0.171, S=0.301, Sh=0.587
+eval=12800 | loss=  0.0318 | feat= 0.0132 | near=0.000470 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.85 | W=0.417, T=0.406, F=0.171, S=0.301, Sh=0.599
+eval=12825 | loss=  0.0317 | feat= 0.0132 | near=0.000470 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.85 | W=0.417, T=0.405, F=0.171, S=0.301, Sh=0.599
+eval=12850 | loss=  0.0317 | feat= 0.0134 | near=0.000468 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.86 | W=0.416, T=0.404, F=0.171, S=0.300, Sh=0.600
+eval=12875 | loss=  0.0317 | feat= 0.0133 | near=0.000469 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.85 | W=0.417, T=0.405, F=0.171, S=0.301, Sh=0.599
+eval=12900 | loss=  0.0317 | feat= 0.0133 | near=0.000468 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.86 | W=0.418, T=0.404, F=0.171, S=0.301, Sh=0.600
+eval=12925 | loss=  0.0372 | feat= 0.0192 | near=0.000448 | ratio= 1.00 | plen= 0.000 | maxd= 0.045 | warp= 1.88 | W=0.413, T=0.407, F=0.171, S=0.309, Sh=0.572
+eval=12950 | loss=  0.0317 | feat= 0.0133 | near=0.000466 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.86 | W=0.417, T=0.404, F=0.171, S=0.302, Sh=0.599
+eval=12975 | loss=  0.0317 | feat= 0.0134 | near=0.000463 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.86 | W=0.417, T=0.404, F=0.171, S=0.303, Sh=0.599
+eval=13000 | loss=  0.0317 | feat= 0.0133 | near=0.000465 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.86 | W=0.417, T=0.404, F=0.171, S=0.303, Sh=0.600
+eval=13025 | loss=  0.0317 | feat= 0.0133 | near=0.000467 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.86 | W=0.419, T=0.404, F=0.171, S=0.303, Sh=0.598
+eval=13050 | loss=  0.0316 | feat= 0.0133 | near=0.000465 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.86 | W=0.418, T=0.404, F=0.171, S=0.303, Sh=0.600
+eval=13075 | loss=  0.0325 | feat= 0.0131 | near=0.000470 | ratio= 1.01 | plen= 0.000 | maxd= 0.047 | warp= 1.87 | W=0.423, T=0.410, F=0.173, S=0.307, Sh=0.600
+eval=13100 | loss=  0.0316 | feat= 0.0133 | near=0.000467 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.86 | W=0.420, T=0.404, F=0.171, S=0.303, Sh=0.600
+eval=13125 | loss=  0.0316 | feat= 0.0132 | near=0.000466 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.86 | W=0.418, T=0.405, F=0.171, S=0.302, Sh=0.600
+eval=13150 | loss=  0.0316 | feat= 0.0132 | near=0.000466 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.86 | W=0.418, T=0.405, F=0.171, S=0.302, Sh=0.600
+eval=13175 | loss=  0.0746 | feat= 0.0562 | near=0.000443 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.98 | W=0.401, T=0.426, F=0.178, S=0.309, Sh=0.481
+eval=13200 | loss=  0.0315 | feat= 0.0132 | near=0.000466 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.87 | W=0.417, T=0.407, F=0.172, S=0.302, Sh=0.598
+eval=13225 | loss=  0.0314 | feat= 0.0130 | near=0.000470 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.87 | W=0.419, T=0.406, F=0.172, S=0.300, Sh=0.599
+eval=13250 | loss=  0.0314 | feat= 0.0130 | near=0.000471 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.87 | W=0.419, T=0.407, F=0.172, S=0.299, Sh=0.599
+eval=13275 | loss=  0.0314 | feat= 0.0130 | near=0.000471 | ratio= 1.01 | plen= 0.000 | maxd= 0.047 | warp= 1.88 | W=0.419, T=0.408, F=0.172, S=0.299, Sh=0.600
+eval=13300 | loss=  0.0314 | feat= 0.0130 | near=0.000471 | ratio= 1.01 | plen= 0.000 | maxd= 0.047 | warp= 1.88 | W=0.420, T=0.408, F=0.172, S=0.300, Sh=0.600
+eval=13325 | loss=  0.0314 | feat= 0.0130 | near=0.000470 | ratio= 1.01 | plen= 0.000 | maxd= 0.047 | warp= 1.88 | W=0.420, T=0.409, F=0.172, S=0.300, Sh=0.600
+eval=13350 | loss=  0.0314 | feat= 0.0130 | near=0.000469 | ratio= 1.01 | plen= 0.000 | maxd= 0.047 | warp= 1.89 | W=0.420, T=0.409, F=0.172, S=0.301, Sh=0.600
+eval=13375 | loss=  0.0314 | feat= 0.0130 | near=0.000468 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.89 | W=0.420, T=0.409, F=0.172, S=0.301, Sh=0.600
+eval=13400 | loss=  0.0314 | feat= 0.0130 | near=0.000468 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.89 | W=0.420, T=0.409, F=0.172, S=0.301, Sh=0.599
+eval=13425 | loss=  0.0313 | feat= 0.0131 | near=0.000467 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.89 | W=0.420, T=0.409, F=0.172, S=0.301, Sh=0.599
+eval=13450 | loss=  0.0313 | feat= 0.0130 | near=0.000468 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.89 | W=0.420, T=0.409, F=0.172, S=0.301, Sh=0.599
+eval=13475 | loss=  0.0313 | feat= 0.0130 | near=0.000469 | ratio= 1.00 | plen= 0.000 | maxd= 0.047 | warp= 1.89 | W=0.421, T=0.408, F=0.172, S=0.300, Sh=0.600
+eval=13500 | loss=  0.0313 | feat= 0.0131 | near=0.000468 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.89 | W=0.420, T=0.409, F=0.172, S=0.300, Sh=0.600
+eval=13525 | loss=  0.0313 | feat= 0.0131 | near=0.000468 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.89 | W=0.419, T=0.408, F=0.172, S=0.299, Sh=0.600
+eval=13550 | loss=  0.0313 | feat= 0.0131 | near=0.000468 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.89 | W=0.419, T=0.408, F=0.172, S=0.299, Sh=0.600
+eval=13575 | loss=  0.0313 | feat= 0.0130 | near=0.000468 | ratio= 1.00 | plen= 0.000 | maxd= 0.047 | warp= 1.89 | W=0.419, T=0.409, F=0.172, S=0.299, Sh=0.600
+eval=13600 | loss=  0.0354 | feat= 0.0173 | near=0.000460 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.91 | W=0.419, T=0.413, F=0.173, S=0.299, Sh=0.576
+eval=13625 | loss=  0.0312 | feat= 0.0130 | near=0.000467 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.89 | W=0.419, T=0.408, F=0.172, S=0.299, Sh=0.600
+eval=13650 | loss=  0.0312 | feat= 0.0130 | near=0.000467 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.90 | W=0.419, T=0.408, F=0.172, S=0.299, Sh=0.599
+eval=13675 | loss=  0.0312 | feat= 0.0130 | near=0.000466 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.90 | W=0.419, T=0.408, F=0.172, S=0.299, Sh=0.599
+eval=13700 | loss=  0.0316 | feat= 0.0134 | near=0.000459 | ratio= 1.01 | plen= 0.000 | maxd= 0.046 | warp= 1.90 | W=0.420, T=0.410, F=0.172, S=0.301, Sh=0.597
+eval=13725 | loss=  0.0312 | feat= 0.0130 | near=0.000466 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.90 | W=0.419, T=0.408, F=0.172, S=0.299, Sh=0.599
+eval=13750 | loss=  0.0311 | feat= 0.0129 | near=0.000461 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.91 | W=0.419, T=0.409, F=0.173, S=0.301, Sh=0.599
+eval=13775 | loss=  0.0769 | feat= 0.0583 | near=0.000438 | ratio= 1.01 | plen= 0.000 | maxd= 0.044 | warp= 1.78 | W=0.436, T=0.393, F=0.166, S=0.332, Sh=0.479
+eval=13800 | loss=  0.0311 | feat= 0.0129 | near=0.000461 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.91 | W=0.419, T=0.409, F=0.172, S=0.301, Sh=0.599
+eval=13825 | loss=  0.0311 | feat= 0.0129 | near=0.000462 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.91 | W=0.420, T=0.409, F=0.173, S=0.300, Sh=0.600
+eval=13850 | loss=  0.0311 | feat= 0.0129 | near=0.000463 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.91 | W=0.420, T=0.410, F=0.173, S=0.300, Sh=0.598
+eval=13875 | loss=  0.0310 | feat= 0.0128 | near=0.000463 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.91 | W=0.420, T=0.410, F=0.173, S=0.300, Sh=0.599
+eval=13900 | loss=  0.0310 | feat= 0.0128 | near=0.000463 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.91 | W=0.421, T=0.410, F=0.173, S=0.300, Sh=0.600
+eval=13925 | loss=  0.0312 | feat= 0.0131 | near=0.000455 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.416, T=0.410, F=0.173, S=0.300, Sh=0.599
+eval=13950 | loss=  0.0310 | feat= 0.0130 | near=0.000458 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.419, T=0.410, F=0.173, S=0.300, Sh=0.597
+eval=13975 | loss=  0.0310 | feat= 0.0129 | near=0.000460 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.92 | W=0.419, T=0.410, F=0.173, S=0.300, Sh=0.599
+eval=14000 | loss=  0.0310 | feat= 0.0128 | near=0.000460 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.411, F=0.173, S=0.301, Sh=0.599
+eval=14025 | loss=  0.0310 | feat= 0.0128 | near=0.000460 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.411, F=0.173, S=0.301, Sh=0.599
+eval=14050 | loss=  0.0310 | feat= 0.0128 | near=0.000459 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.411, F=0.173, S=0.301, Sh=0.600
+eval=14075 | loss=  0.0309 | feat= 0.0128 | near=0.000459 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.411, F=0.173, S=0.301, Sh=0.600
+eval=14100 | loss=  0.0309 | feat= 0.0128 | near=0.000459 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.411, F=0.173, S=0.301, Sh=0.600
+eval=14125 | loss=  0.0309 | feat= 0.0128 | near=0.000459 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.410, F=0.173, S=0.301, Sh=0.600
+eval=14150 | loss=  0.0309 | feat= 0.0128 | near=0.000459 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.410, F=0.173, S=0.301, Sh=0.600
+eval=14175 | loss=  0.0309 | feat= 0.0128 | near=0.000459 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.410, F=0.173, S=0.301, Sh=0.600
+eval=14200 | loss=  0.0309 | feat= 0.0128 | near=0.000459 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.410, F=0.173, S=0.301, Sh=0.600
+eval=14225 | loss=  0.0309 | feat= 0.0128 | near=0.000459 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.410, F=0.173, S=0.301, Sh=0.600
+eval=14250 | loss=  0.0309 | feat= 0.0128 | near=0.000459 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.410, F=0.173, S=0.301, Sh=0.600
+eval=14275 | loss=  0.0309 | feat= 0.0128 | near=0.000459 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.410, F=0.173, S=0.301, Sh=0.600
+eval=14300 | loss=  0.0309 | feat= 0.0128 | near=0.000459 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.410, F=0.173, S=0.301, Sh=0.600
+eval=14325 | loss=  0.0309 | feat= 0.0128 | near=0.000459 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.410, F=0.173, S=0.301, Sh=0.600
+eval=14350 | loss=  0.0309 | feat= 0.0128 | near=0.000459 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.410, F=0.173, S=0.301, Sh=0.600
+eval=14375 | loss=  0.0309 | feat= 0.0128 | near=0.000459 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.410, F=0.173, S=0.301, Sh=0.600
+eval=14400 | loss=  0.0309 | feat= 0.0128 | near=0.000459 | ratio= 1.00 | plen= 0.000 | maxd= 0.046 | warp= 1.93 | W=0.420, T=0.410, F=0.173, S=0.301, Sh=0.600
+
+======================================================================================================
+SPATIOTEMPORAL DIRECT OPTIMISER RESULT
+======================================================================================================
+Total loss:              0.030943
+Feature loss:            0.012844
+Joint preservation err:  0.007181
+Nearest-path MSE:        0.000459
+Nearest-path max dist:   0.046278
+Pointwise cart MSE:      0.005720
+Endpoint error:          0.001139
+Direction error:         0.000000
+Path length ratio:       1.001706
+Spatial length ratio:    1.002181
+Path length error:       0.000003
+Spatial length error:    0.000005
+Detour error:            0.000000
+Max dev error:           0.000000
+Time warp deviation:     0.00000910
+Time roughness:          0.00000674
+Log speed range:         1.929470
+Smoothness err:          0.120199
+Joint limit err:         0.000000
+Spatial coeff err:       0.130355
+Timing coeff err:        0.144557
+
+Timing coefficients:
+[-0.59215812  0.33140852  0.02645246 -0.34211998]
+
+Target vs variant normalised features:
+  weight                : target=0.4200 | variant=0.4202 | ref=0.1508
+  time                  : target=0.4000 | variant=0.4105 | ref=0.1399
+  flow_boundness        : target=0.2000 | variant=0.1733 | ref=0.0608
+  space_indirectness    : target=0.3000 | variant=0.3009 | ref=0.5377
+  shape_arcness         : target=0.6000 | variant=0.6000 | ref=0.3019
+
+======================================================================================================
+SAVED OUTPUTS
+======================================================================================================
+Saved to: C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\outputs\final_clean_evaluation_v1\outer\wave\friendly\seed_97\validation\initial_profile\optimiser_outputs
+Variant-only MP4 rendered in original animation style: duration=2.000s | fps=20.500 | frames=41
+Traceback (most recent call last):
+  File "C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\src\laban_rl\perceptual_bandit\gemini_evaluator.py", line 324, in evaluate
+    response = self.client.models.generate_content(
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\site-packages\google\genai\models.py", line 6549, in generate_content
+    response = self._generate_content(
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\site-packages\google\genai\models.py", line 4977, in _generate_content
+    response = self._api_client.request(
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\site-packages\google\genai\_api_client.py", line 1650, in request
+    response = self._request(http_request, http_options, stream=False)
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\site-packages\google\genai\_api_client.py", line 1443, in _request
+    return self._retry(self._request_once, http_request, stream)  # type: ignore[no-any-return]
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\site-packages\tenacity\__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\site-packages\tenacity\__init__.py", line 371, in iter
+    result = action(retry_state)
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\site-packages\tenacity\__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\site-packages\tenacity\__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\concurrent\futures\_base.py", line 451, in result
+    return self.__get_result()
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\concurrent\futures\_base.py", line 403, in __get_result
+    raise self._exception
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\site-packages\tenacity\__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\site-packages\google\genai\_api_client.py", line 1420, in _request_once
+    errors.APIError.raise_for_response(response)
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\site-packages\google\genai\errors.py", line 155, in raise_for_response
+    cls.raise_error(response.status_code, response_json, response)
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\site-packages\google\genai\errors.py", line 186, in raise_error
+    raise ServerError(status_code, response_json, response)
+google.genai.errors.ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\src\laban_rl\perceptual_bandit\environment.py", line 591, in step
+    evaluation = self.evaluator.evaluate(
+  File "C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\src\laban_rl\perceptual_bandit\gemini_evaluator.py", line 364, in evaluate
+    print(
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+UnicodeEncodeError: 'charmap' codec can't encode character '\u26a0' in position 0: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\scripts\train_cem_contextual_bandit.py", line 956, in <module>
+    main()
+  File "C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\scripts\train_cem_contextual_bandit.py", line 612, in main
+    evaluate_validation("initial_profile", dict(initial_profile or cem.get_mean_profile()))
+  File "C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\scripts\train_cem_contextual_bandit.py", line 598, in evaluate_validation
+    result = validation_environment.step(
+  File "C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\src\laban_rl\perceptual_bandit\environment.py", line 651, in step
+    print(f"\u26a0 Evaluator failed: {evaluator_error}")
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+UnicodeEncodeError: 'charmap' codec can't encode character '\u26a0' in position 0: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\scripts\evaluation\run_comprehensive_evaluation.py", line 436, in <module>
+    main()
+  File "C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\scripts\evaluation\run_comprehensive_evaluation.py", line 430, in main
+    elif phase == "outer": run_outer(args, base)
+  File "C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\scripts\evaluation\run_comprehensive_evaluation.py", line 212, in run_outer
+    run(command, dry_run=args.dry_run)
+  File "C:\Users\dsya0006\Downloads\Updated_CEM_Live_Retest_V2\scripts\evaluation\run_comprehensive_evaluation.py", line 107, in run
+    subprocess.run(command, cwd=ROOT, check=True)
+  File "C:\Users\dsya0006\anaconda3\envs\laban_rl\lib\subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['C:\\Users\\dsya0006\\anaconda3\\envs\\laban_rl\\python.exe', 'scripts/train_cem_contextual_bandit.py', '--gesture', 'wave', '--target-state', 'friendly', '--seed', '97', '--out', 'C:\\Users\\dsya0006\\Downloads\\Updated_CEM_Live_Retest_V2\\outputs\\final_clean_evaluation_v1\\outer\\wave\\friendly\\seed_97', '--evaluator', 'gemini', '--model', 'gemini-2.5-flash', '--temperature', '0.2', '--rounds', '5', '--cem-samples-per-round', '6', '--repeats', '3', '--validation-top-k', '3', '--validation-repeats', '10', '--maxiter', '90', '--popsize', '8', '--local-maxiter', '300', '--max-feature-error-threshold', '0.1']' returned non-zero exit status 1.

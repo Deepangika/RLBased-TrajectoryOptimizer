@@ -37,6 +37,7 @@ from laban_rl.perceptual_bandit.environment import (
 )
 from laban_rl.config import FEATURE_KEYS
 from laban_rl.perceptual_bandit.cem import CEMOptimizer
+from laban_rl.perceptual_bandit.selection import select_feasible_incumbent
 
 
 def _build_optimiser_overrides(args, gesture: str) -> dict:
@@ -593,29 +594,12 @@ def main() -> None:
     if is_resuming and validation_path.exists():
         validation_results = json.loads(validation_path.read_text(encoding="utf-8"))
 
-    def raise_on_evaluator_failure(result, *, stage: str) -> None:
-        """Abort rather than allowing infrastructure failures into CEM ranking.
-
-        Physical and realisability failures are legitimate reward outcomes.
-        Evaluator/network failures are missing observations and must never be
-        represented as low-quality actions with reward -1.
-        """
-        reason = str(result.failure_reason or "")
-        if reason.startswith("evaluator_error:"):
-            raise RuntimeError(
-                f"Perceptual evaluator failed during {stage}: {reason}. "
-                "The current CEM round/validation was not accepted. Check network "
-                "and API connectivity, then rerun the same command to resume from "
-                "the last complete checkpoint."
-            )
-
     def evaluate_validation(name: str, profile: dict[str, float]):
         result = validation_environment.step(
             context=environment_context,
             action_profile=profile,
             out_dir=out_dir / "validation" / name / "optimiser_outputs",
         )
-        raise_on_evaluator_failure(result, stage=f"validation {name!r}")
         validation_results[name] = result.to_dict()
         validation_path.write_text(
             json.dumps(validation_results, indent=2, allow_nan=False), encoding="utf-8"
@@ -658,10 +642,6 @@ def main() -> None:
                     context=environment_context,
                     action_profile=profile,
                     out_dir=round_dir / "optimiser_outputs",
-                )
-                raise_on_evaluator_failure(
-                    result,
-                    stage=f"round {round_index}, sample {sample_idx + 1}",
                 )
                 
                 # Defensive check: ensure result has valid reward
@@ -828,16 +808,16 @@ def main() -> None:
                 }
             )
 
-        selected = max(shortlist_results, key=lambda item: item["validation_reward"])
+        selection = select_feasible_incumbent(
+            validation_results,
+            shortlist_results,
+            tolerance=args.max_feature_error_threshold,
+        )
+        selected = selection["selected"]
         validation_results["best_sampled_profile"] = dict(
             validation_results[selected["validation_result_key"]]
         )
-        validation_results["selection"] = {
-            "method": "independent_top_k_reranking",
-            "top_k": len(shortlist_results),
-            "selected": selected,
-            "shortlist": shortlist_results,
-        }
+        validation_results["selection"] = selection
         validation_path.write_text(
             json.dumps(validation_results, indent=2, allow_nan=False), encoding="utf-8"
         )

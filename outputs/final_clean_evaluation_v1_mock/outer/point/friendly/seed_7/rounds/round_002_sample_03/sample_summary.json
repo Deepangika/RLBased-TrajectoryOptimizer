@@ -1,0 +1,106 @@
+{
+  "sampled_profile": {
+    "weight": 0.3182574660573746,
+    "time": 0.4438884131869038,
+    "flow_boundness": 0.3151047778604653,
+    "space_indirectness": 0.1758799253668713,
+    "shape_arcness": 0.29476130047891425
+  },
+  "environment_result": {
+    "context": {
+      "gesture": "point",
+      "target_state": "friendly"
+    },
+    "requested_profile": {
+      "weight": 0.3182574660573746,
+      "time": 0.4438884131869038,
+      "flow_boundness": 0.3151047778604653,
+      "space_indirectness": 0.1758799253668713,
+      "shape_arcness": 0.29476130047891425
+    },
+    "achieved_profile": {
+      "weight": 0.4544669639499369,
+      "time": 0.42398350171047033,
+      "flow_boundness": 0.2611662551895745,
+      "space_indirectness": 0.20600734434123052,
+      "shape_arcness": 0.3262681502604913
+    },
+    "valid_realisation": true,
+    "failure_reason": null,
+    "invalid_features": [],
+    "path_preserved": true,
+    "joint_limits_satisfied": true,
+    "physically_acceptable": true,
+    "realisation_rmse": 0.06893321405848161,
+    "per_feature_abs_error": {
+      "weight": 0.13620949789256231,
+      "time": 0.019904911476433473,
+      "flow_boundness": 0.05393852267089083,
+      "space_indirectness": 0.03012741897435922,
+      "shape_arcness": 0.03150684978157703
+    },
+    "max_abs_feature_error": 0.13620949789256231,
+    "max_error_feature": "weight",
+    "feature_realisation_acceptable": false,
+    "inner_loss": 0.2758572393199695,
+    "inner_reward": -0.2758572393199695,
+    "perceptual_evaluations": [
+      {
+        "confident": 0.11340242496233884,
+        "calm": 0.2535895848870376,
+        "hesitant": 0.22426920390717078,
+        "friendly": 0.17457059566366956,
+        "confused": 0.13784006900284826,
+        "angry": 0.09632812157693502
+      },
+      {
+        "confident": 0.14452474490348774,
+        "calm": 0.24557025924570436,
+        "hesitant": 0.19705462876085877,
+        "friendly": 0.17859200176401435,
+        "confused": 0.1328446300018628,
+        "angry": 0.10141373532407201
+      },
+      {
+        "confident": 0.12503820044265743,
+        "calm": 0.2691439138082923,
+        "hesitant": 0.18302150679796736,
+        "friendly": 0.18898670478729782,
+        "confused": 0.1421018232208632,
+        "angry": 0.09170785094292197
+      }
+    ],
+    "mean_target_probability": 0.18071643407166058,
+    "mean_margin": -0.07538481857535083,
+    "mean_margin_clipped": 0.0,
+    "mean_perceptual_reward": 0.05266580774815487,
+    "mean_perceptual_reward_clipped": 0.09035821703583029,
+    "perceptual_reward_std": 0.003504150938564226,
+    "target_classification_rate": 0.0,
+    "winner_agreement_rate": 1.0,
+    "mean_probability_entropy": 1.740307896188882,
+    "outer_reward": 0.01645171755261226,
+    "outer_reward_clipped": 0.054144126840287674,
+    "optimiser_output_dir": "C:\\Users\\dsya0006\\Downloads\\Updated_CEM_Live_Retest_V2\\outputs\\final_clean_evaluation_v1_mock\\outer\\point\\friendly\\seed_7\\rounds\\round_002_sample_03\\optimiser_outputs",
+    "action_coefficients": [
+      0.2707356578266462,
+      0.08418695359709726,
+      -0.021743547409842884,
+      -0.00613571884390789,
+      -0.0005154579680607114,
+      -0.011396168398805721,
+      -0.3513873849203095,
+      -0.005073982136454191,
+      0.04936532480386264,
+      0.06824506377484102,
+      0.027030864102645352,
+      0.03700814986036599,
+      0.5760001592414563,
+      0.20715028120224785,
+      -0.2865288747042398,
+      0.6454871143761358,
+      -0.31190909391628746,
+      0.07897373217858464
+    ]
+  }
+}

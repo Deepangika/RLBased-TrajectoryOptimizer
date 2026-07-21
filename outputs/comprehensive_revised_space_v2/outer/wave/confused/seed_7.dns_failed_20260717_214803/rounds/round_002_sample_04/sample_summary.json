@@ -1,0 +1,77 @@
+{
+  "sampled_profile": {
+    "weight": 0.24545896232815678,
+    "time": 0.19020079852426372,
+    "flow_boundness": 0.13462202347339014,
+    "space_indirectness": 0.7280733598523762,
+    "shape_arcness": 0.47705312987652043
+  },
+  "environment_result": {
+    "context": {
+      "gesture": "wave",
+      "target_state": "confused"
+    },
+    "requested_profile": {
+      "weight": 0.24545896232815678,
+      "time": 0.19020079852426372,
+      "flow_boundness": 0.13462202347339014,
+      "space_indirectness": 0.7280733598523762,
+      "shape_arcness": 0.47705312987652043
+    },
+    "achieved_profile": {
+      "weight": 0.24411193287827598,
+      "time": 0.20541322768106082,
+      "flow_boundness": 0.0992251311897249,
+      "space_indirectness": 0.726825155129729,
+      "shape_arcness": 0.4765248507271208
+    },
+    "valid_realisation": true,
+    "failure_reason": "evaluator_error: Server disconnected without sending a response.",
+    "invalid_features": [],
+    "path_preserved": true,
+    "joint_limits_satisfied": true,
+    "physically_acceptable": true,
+    "realisation_rmse": 0.01725114237620307,
+    "per_feature_abs_error": {
+      "weight": 0.0013470294498807989,
+      "time": 0.015212429156797103,
+      "flow_boundness": 0.03539689228366524,
+      "space_indirectness": 0.0012482047226471948,
+      "shape_arcness": 0.0005282791493996242
+    },
+    "max_abs_feature_error": 0.03539689228366524,
+    "max_error_feature": "flow_boundness",
+    "feature_realisation_acceptable": true,
+    "inner_loss": 0.02712942314230238,
+    "inner_reward": -0.02712942314230238,
+    "perceptual_evaluations": [],
+    "mean_target_probability": null,
+    "mean_margin": null,
+    "mean_margin_clipped": null,
+    "mean_perceptual_reward": null,
+    "mean_perceptual_reward_clipped": null,
+    "perceptual_reward_std": null,
+    "target_classification_rate": null,
+    "winner_agreement_rate": null,
+    "mean_probability_entropy": null,
+    "outer_reward": -1.0,
+    "outer_reward_clipped": -1.0,
+    "optimiser_output_dir": "C:\\Users\\dsya0006\\Downloads\\Updated_CEM_Live_Retest_V2\\outputs\\comprehensive_revised_space_v2\\outer\\wave\\confused\\seed_7\\rounds\\round_002_sample_04\\optimiser_outputs",
+    "action_coefficients": [
+      -0.0330601862098802,
+      -0.4713190071902038,
+      -0.07530616805238209,
+      -0.08617253437693331,
+      0.03867766790003225,
+      0.21206911258679847,
+      -0.2286680684955288,
+      0.16593902052352622,
+      -0.5032275873301819,
+      0.27549609974939193,
+      -0.2634099526585032,
+      0.1924196036226277,
+      -0.19176865245340305,
+      0.009425522508816965
+    ]
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "sampled_profile": {
+    "weight": 0.3053900160754529,
+    "time": 0.7760578875806532,
+    "flow_boundness": 0.19252461126400872,
+    "space_indirectness": 4.947176990862957e-06,
+    "shape_arcness": 0.2944947410950617
+  },
+  "environment_result": {
+    "context": {
+      "gesture": "point",
+      "target_state": "confident"
+    },
+    "requested_profile": {
+      "weight": 0.3053900160754529,
+      "time": 0.7760578875806532,
+      "flow_boundness": 0.19252461126400872,
+      "space_indirectness": 4.947176990862957e-06,
+      "shape_arcness": 0.2944947410950617
+    },
+    "achieved_profile": {
+      "weight": 0.30147801588241085,
+      "time": 0.7675977207795129,
+      "flow_boundness": 0.21521862513884885,
+      "space_indirectness": 0.0023699812007231557,
+      "shape_arcness": 0.2944084824289703
+    },
+    "valid_realisation": true,
+    "failure_reason": "evaluator_error: Server disconnected without sending a response.",
+    "invalid_features": [],
+    "path_preserved": true,
+    "joint_limits_satisfied": true,
+    "physically_acceptable": true,
+    "realisation_rmse": 0.011022678985217707,
+    "per_feature_abs_error": {
+      "weight": 0.003912000193042053,
+      "time": 0.008460166801140256,
+      "flow_boundness": 0.02269401387484013,
+      "space_indirectness": 0.002365034023732293,
+      "shape_arcness": 8.625866609140997e-05
+    },
+    "max_abs_feature_error": 0.02269401387484013,
+    "max_error_feature": "flow_boundness",
+    "feature_realisation_acceptable": true,
+    "inner_loss": 0.022690946949485407,
+    "inner_reward": -0.022690946949485407,
+    "perceptual_evaluations": [],
+    "mean_target_probability": null,
+    "mean_margin": null,
+    "mean_margin_clipped": null,
+    "mean_perceptual_reward": null,
+    "mean_perceptual_reward_clipped": null,
+    "perceptual_reward_std": null,
+    "target_classification_rate": null,
+    "winner_agreement_rate": null,
+    "mean_probability_entropy": null,
+    "outer_reward": -1.0,
+    "outer_reward_clipped": -1.0,
+    "optimiser_output_dir": "C:\\Users\\dsya0006\\Downloads\\Updated_CEM_Live_Retest_V2\\outputs\\final_clean_evaluation_v1\\outer\\point\\confident\\seed_41\\rounds\\round_004_sample_04\\optimiser_outputs",
+    "action_coefficients": [
+      -0.03162787678572967,
+      -0.1561450558425103,
+      -0.0789613346714519,
+      -0.029847439705924836,
+      -0.015803036474002306,
+      -0.009269005354302742,
+      0.15669367600940162,
+      0.4364459055768856,
+      0.22934875506700683,
+      0.10046877802422698,
+      0.05085393079733518,
+      0.025657910399842093,
+      0.3541375405911705,
+      -0.6221890213704165,
+      -0.19567052559735254,
+      -0.6515218589437278,
+      0.1568942698222545,
+      -0.22314525145889863
+    ]
+  }
+}

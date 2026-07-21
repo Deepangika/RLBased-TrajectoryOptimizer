@@ -71,6 +71,36 @@ def experiment_dir(base: Path, gesture: str, state: str, seed: int) -> Path:
     return base / "outer" / gesture / state / f"seed_{seed}"
 
 
+def completed_outer_run(out: Path, args: argparse.Namespace) -> tuple[bool, str]:
+    """Validate a completed outer run instead of trusting file existence alone."""
+    required = [
+        out / "results_summary.json",
+        out / "independent_validation.json",
+        out / "selected_validated_profile.json",
+    ]
+    missing = [path.name for path in required if not path.exists()]
+    if missing:
+        return False, "missing:" + ",".join(missing)
+    try:
+        summary = json.loads(required[0].read_text(encoding="utf-8"))
+        validation = json.loads(required[1].read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return False, f"unreadable_metadata:{exc}"
+    if int(summary.get("num_rounds_completed", -1)) != int(args.rounds):
+        return False, "round_count_mismatch"
+    selection = summary.get("independent_selection") or validation.get("selection")
+    if not selection or not selection.get("selected"):
+        return False, "missing_independent_selection"
+    selected_key = selection["selected"].get("validation_result_key")
+    selected_result = validation.get(selected_key) if selected_key else None
+    if not isinstance(selected_result, dict):
+        return False, "missing_selected_validation_result"
+    repeats = selected_result.get("perceptual_evaluations") or []
+    if len(repeats) != int(args.validation_repeats):
+        return False, "selected_validation_repeat_mismatch"
+    return True, "complete"
+
+
 def run(command: list[str], *, dry_run: bool) -> None:
     print("\n$ " + " ".join(command), flush=True)
     if not dry_run:
@@ -157,10 +187,12 @@ def run_outer(args: argparse.Namespace, base: Path) -> None:
         for state in args.states:
             for seed in args.seeds:
                 out = experiment_dir(base, gesture, state, seed)
-                summary = out / "results_summary.json"
-                if summary.exists():
-                    print(f"SKIP completed outer run: {summary}")
+                complete, reason = completed_outer_run(out, args)
+                if complete:
+                    print(f"SKIP completed outer run: {out / 'results_summary.json'}")
                     continue
+                if out.exists() and any(out.iterdir()):
+                    print(f"RESUME incomplete outer run ({reason}): {out}")
                 command = [
                     sys.executable, "scripts/train_cem_contextual_bandit.py",
                     "--gesture", gesture, "--target-state", state,

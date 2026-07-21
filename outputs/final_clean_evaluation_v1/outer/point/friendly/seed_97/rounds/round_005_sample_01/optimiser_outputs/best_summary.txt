@@ -1,0 +1,121 @@
+Gesture: point
+Target: friendly_direct_laban_spatiotemporal
+Reward: -0.007117
+
+Action:
+[-3.67916498e-01 -1.22232894e-02  6.45965856e-02 -5.57117662e-02
+  1.65788921e-02 -5.39166336e-04  8.90403348e-01  6.65041620e-02
+ -1.61763099e-01  1.15917926e-01 -2.67680130e-02  5.38694622e-03
+  1.86931267e-02  1.33828669e-01  2.41526703e-01 -2.50266110e-02
+  3.19796669e-01 -6.47491809e-02]
+
+Style parameters:
+  method                      : spatiotemporal_direct_laban_feature_optimisation
+  target_profile_source       : external
+  target_profile_metadata     : {'source': 'external', 'description': 'Target profile supplied programmatically by an outer learner or experiment.'}
+  n_spatial_basis             : 6
+  n_timing_basis              : 4
+  max_delta_rad               : 0.35
+  max_total_delta_rad         : 0.5
+  max_end_delta_rad           : 0.22
+  endpoint_mode               : soft
+  time_scale                  : 1.6
+  local_method                : L-BFGS-B
+  n_coefficients              : 18
+  spatial_coefficients        : [-0.36791649845927454, -0.012223289439826411, 0.06459658556391938, -0.055711766218269024, 0.016578892089848283, -0.0005391663362668245, 0.8904033475584074, 0.06650416202757056, -0.1617630993098904, 0.1159179263981688, -0.02676801296879075, 0.005386946219528757, 0.018693126687331484, 0.13382866878966881]
+  timing_coefficients         : [0.24152670324807754, -0.025026610965040195, 0.31979666858375677, -0.06474918092970473]
+
+Target profile:
+  weight                : 0.1692
+  time                  : 0.4457
+  flow_boundness        : 0.1771
+  space_indirectness    : 0.0353
+  shape_arcness         : 0.3640
+
+Reference normalised features:
+  weight                : 0.36799189786926906
+  time                  : 0.17472027098643475
+  flow_boundness        : 0.0
+  space_indirectness    : 0.0
+  shape_arcness         : 0.0
+
+Variant normalised features:
+  weight                : 0.1691971157281638
+  time                  : 0.44565452304552217
+  flow_boundness        : 0.17707615800035637
+  space_indirectness    : 0.03527796480802681
+  shape_arcness         : 0.3640301654884238
+
+Reward diagnostics:
+  total_loss                  : 0.007116513905462824
+  feature_loss                : 8.895446427178906e-06
+  out_of_range_error          : 0.0
+  loss_components             : {'feature_loss': 8.895446427178906e-06, 'out_of_range': 0.0, 'joint_preservation': 0.001616340607097738, 'nearest_path': 0.00017857321292695294, 'endpoint': 0.001899873422624154, 'direction': 0.0012820526231836493, 'path_length': 0.0008350160636174752, 'detour': 0.0, 'max_deviation': 0.0, 'smoothness': 0.00016859373584881724, 'joint_limits': 0.0, 'spatial_coefficients': 0.0007135099363717408, 'timing_coefficients': 0.000413559613266543, 'time_warp': 3.220178571918691e-08, 'time_roughness': 6.704231285554861e-08, 'total_loss': 0.007116513905462824}
+  joint_preservation_error    : 0.03232681214195476
+  smoothness_error            : 0.016859373584881723
+  joint_limit_error           : 0.0
+  spatial_coeff_error         : 0.07135099363717408
+  timing_coeff_error          : 0.0413559613266543
+  n_spatial_basis             : 6
+  n_timing_basis              : 4
+  max_delta                   : 0.35
+  max_total_delta             : 0.5
+  max_end_delta               : 0.22
+  endpoint_mode               : soft
+  time_scale                  : 1.6
+  preserve_weight             : 0.05
+  nearest_path_weight         : 1.5
+  endpoint_weight             : 0.2
+  direction_weight            : 0.5
+  path_length_weight          : 1.0
+  detour_weight               : 0.5
+  max_dev_weight              : 1.0
+  smooth_weight               : 0.01
+  joint_limit_weight          : 5.0
+  coeff_weight                : 0.01
+  time_coeff_weight           : 0.01
+  time_warp_weight            : 0.01
+  time_roughness_weight       : 0.03
+  space_weight                : 1.0
+  shape_weight                : 1.0
+  detour_tolerance            : 0.4
+  max_dev_tolerance           : 0.08
+  nearest_path_mse            : 0.00011904880861796863
+  nearest_path_max_dist       : 0.017706045263657547
+  pointwise_cart_mse          : 0.0006458459684458121
+  endpoint_error              : 0.00949936711312077
+  direction_error             : 0.0025641052463672986
+  ref_path_length             : 0.10178668811232616
+  var_path_length             : 0.10472799214296144
+  spatial_path_length         : 0.10473775336551422
+  path_length_ratio           : 1.0288966445044658
+  spatial_path_length_ratio   : 1.0289925433078833
+  path_length_error           : 0.0008350160636174752
+  spatial_path_length_error   : 0.0008405675674594862
+  detour_error                : 0.0
+  max_dev_error               : 0.0
+  time_warp_deviation         : 3.2201785719186906e-06
+  time_roughness              : 2.2347437618516207e-06
+  log_speed_range             : 0.9694294230316622
+  weight_value                : 0.1691971157281638
+  weight_target               : 0.16919886332256695
+  weight_error                : -1.7475944031619672e-06
+  weight_abs_error            : 1.7475944031619672e-06
+  time_value                  : 0.44565452304552217
+  time_target                 : 0.4456579721941919
+  time_error                  : -3.449148669731894e-06
+  time_abs_error              : 3.449148669731894e-06
+  flow_boundness_value        : 0.17707615800035637
+  flow_boundness_target       : 0.17707465197403005
+  flow_boundness_error        : 1.506026326314469e-06
+  flow_boundness_abs_error    : 1.506026326314469e-06
+  space_indirectness_value    : 0.03527796480802681
+  space_indirectness_target   : 0.03526448921652422
+  space_indirectness_error    : 1.3475591502588868e-05
+  space_indirectness_abs_error: 1.3475591502588868e-05
+  shape_arcness_value         : 0.3640301654884238
+  shape_arcness_target        : 0.3640161357185718
+  shape_arcness_error         : 1.4029769852041962e-05
+  shape_arcness_abs_error     : 1.4029769852041962e-05
+  feature_rmse                : 8.895446436074352e-06
+  weighted_feature_rmse       : 8.895446427178906e-06

@@ -1,13 +1,11 @@
 Gesture: reach
 Target: confident_direct_laban_spatiotemporal
-Reward: -0.018348
+Reward: -0.018027
 
 Action:
-[-5.30014538e-02  6.76364884e-02  9.52109381e-02  3.47285335e-02
-  4.74393831e-03 -5.73829408e-04 -3.97670564e-01 -3.14788742e-01
- -9.65001775e-02 -1.48534531e-02 -4.18552570e-03  5.92404761e-04
- -5.16685954e-01  6.96118608e-01  9.67346358e-01  2.26099806e-01
-  1.01778231e-01 -1.55732717e-01]
+[ 0.18784598  0.30759258 -0.00075956 -0.01500766  0.0007755  -0.02049596
+ -0.39377319 -0.50613555  0.01927077  0.04407445 -0.00778455  0.03886084
+ -0.05179072 -0.24833704  0.46835547  0.14075783 -0.13096394 -0.19543885]
 
 Style parameters:
   method                      : spatiotemporal_direct_laban_feature_optimisation
@@ -22,15 +20,15 @@ Style parameters:
   time_scale                  : 1.6
   local_method                : L-BFGS-B
   n_coefficients              : 18
-  spatial_coefficients        : [-0.05300145380606707, 0.06763648839059165, 0.09521093813094586, 0.034728533516284514, 0.004743938307594651, -0.000573829407894931, -0.3976705635914501, -0.31478874233937587, -0.09650017747707264, -0.01485345312545116, -0.004185525700386042, 0.0005924047609810572, -0.516685954411661, 0.696118607575318]
-  timing_coefficients         : [0.9673463583782869, 0.22609980580336922, 0.10177823089177956, -0.15573271677867118]
+  spatial_coefficients        : [0.18784597595877395, 0.3075925764090993, -0.0007595576444037154, -0.015007659051350765, 0.0007754971039856118, -0.020495962185570867, -0.3937731857336481, -0.5061355462169618, 0.01927077476606895, 0.04407445442927687, -0.007784548672758098, 0.0388608379121069, -0.05179071612801094, -0.24833703996898873]
+  timing_coefficients         : [0.4683554696530634, 0.1407578349090162, -0.13096393693104902, -0.19543884922496263]
 
 Target profile:
-  weight                : 0.3510
-  time                  : 0.9330
-  flow_boundness        : 0.3013
-  space_indirectness    : 0.1758
-  shape_arcness         : 0.3156
+  weight                : 0.6362
+  time                  : 0.8642
+  flow_boundness        : 0.2671
+  space_indirectness    : 0.5041
+  shape_arcness         : 0.4123
 
 Reference normalised features:
   weight                : 0.04512744670470294
@@ -40,22 +38,22 @@ Reference normalised features:
   shape_arcness         : 0.0
 
 Variant normalised features:
-  weight                : 0.3509712744779569
-  time                  : 0.9329473309355236
-  flow_boundness        : 0.30127608658310795
-  space_indirectness    : 0.17582174337413925
-  shape_arcness         : 0.3156032449668693
+  weight                : 0.6361654502831295
+  time                  : 0.8641571502974142
+  flow_boundness        : 0.2670464007531291
+  space_indirectness    : 0.5040959382895521
+  shape_arcness         : 0.412297267323811
 
 Reward diagnostics:
-  total_loss                  : 0.018348098322444467
-  feature_loss                : 1.8788862476076766e-06
+  total_loss                  : 0.018026898067059833
+  feature_loss                : 6.238852457838353e-06
   out_of_range_error          : 0.0
-  loss_components             : {'feature_loss': 1.8788862476076766e-06, 'out_of_range': 0.0, 'joint_preservation': 0.0006298895465411108, 'nearest_path': 0.001009451659424115, 'endpoint': 0.005499942308261615, 'direction': 0.0015731169961749059, 'path_length': 0.00623390713633838, 'detour': 0.0, 'max_deviation': 0.0, 'smoothness': 0.00010596669940854557, 'joint_limits': 0.0, 'spatial_coefficients': 0.0007400056973710512, 'timing_coefficients': 0.0025537289665269513, 'time_warp': 1.0935639006370572e-07, 'time_roughness': 1.0106976012073176e-07, 'total_loss': 0.018348098322444467}
-  joint_preservation_error    : 0.012597790930822214
-  smoothness_error            : 0.010596669940854557
+  loss_components             : {'feature_loss': 6.238852457838353e-06, 'out_of_range': 0.0, 'joint_preservation': 0.000883066213324584, 'nearest_path': 0.0006320647360939923, 'endpoint': 0.0038766901461432263, 'direction': 0.007027152541633275, 'path_length': 0.0042650814556589095, 'detour': 0.0, 'max_deviation': 0.0, 'smoothness': 0.0001643609705664004, 'joint_limits': 0.0, 'spatial_coefficients': 0.0004357246837321083, 'timing_coefficients': 0.0007362937765126823, 'time_warp': 9.472121418470946e-08, 'time_roughness': 1.2996972263266253e-07, 'total_loss': 0.018026898067059833}
+  joint_preservation_error    : 0.01766132426649168
+  smoothness_error            : 0.01643609705664004
   joint_limit_error           : 0.0
-  spatial_coeff_error         : 0.07400056973710512
-  timing_coeff_error          : 0.25537289665269514
+  spatial_coeff_error         : 0.043572468373210826
+  timing_coeff_error          : 0.07362937765126823
   n_spatial_basis             : 6
   n_timing_basis              : 4
   max_delta                   : 0.35
@@ -80,42 +78,42 @@ Reward diagnostics:
   shape_weight                : 1.0
   detour_tolerance            : 0.4
   max_dev_tolerance           : 0.08
-  nearest_path_mse            : 0.0006729677729494101
-  nearest_path_max_dist       : 0.046087118978750126
-  pointwise_cart_mse          : 0.0010600551943267668
-  endpoint_error              : 0.027499711541308074
-  direction_error             : 0.0031462339923498117
+  nearest_path_mse            : 0.00042137649072932816
+  nearest_path_max_dist       : 0.027642123722496543
+  pointwise_cart_mse          : 0.0005384711906121322
+  endpoint_error              : 0.01938345073071613
+  direction_error             : 0.01405430508326655
   ref_path_length             : 0.11260163850920346
-  var_path_length             : 0.12149212244275634
-  spatial_path_length         : 0.12150611623806651
-  path_length_ratio           : 1.0789550956958345
-  spatial_path_length_ratio   : 1.0790793726979517
-  path_length_error           : 0.00623390713633838
-  spatial_path_length_error   : 0.006253547186301554
+  var_path_length             : 0.11995539092755095
+  spatial_path_length         : 0.11997330963237093
+  path_length_ratio           : 1.0653075911028642
+  spatial_path_length_ratio   : 1.0654667246951093
+  path_length_error           : 0.0042650814556589095
+  spatial_path_length_error   : 0.004285892042305231
   detour_error                : 0.0
   max_dev_error               : 0.0
-  time_warp_deviation         : 1.0935639006370571e-05
-  time_roughness              : 3.368992004024392e-06
-  log_speed_range             : 1.8838032916766974
-  weight_value                : 0.3509712744779569
-  weight_target               : 0.35097024765603585
-  weight_error                : 1.0268219210463059e-06
-  weight_abs_error            : 1.0268219210463059e-06
-  time_value                  : 0.9329473309355236
-  time_target                 : 0.9329502647350026
-  time_error                  : -2.933799479021282e-06
-  time_abs_error              : 2.933799479021282e-06
-  flow_boundness_value        : 0.30127608658310795
-  flow_boundness_target       : 0.30127331548571396
-  flow_boundness_error        : 2.7710973939942818e-06
-  flow_boundness_abs_error    : 2.7710973939942818e-06
-  space_indirectness_value    : 0.17582174337413925
-  space_indirectness_target   : 0.17582202773492986
-  space_indirectness_error    : -2.843607906088952e-07
-  space_indirectness_abs_error: 2.843607906088952e-07
-  shape_arcness_value         : 0.3156032449668693
-  shape_arcness_target        : 0.31560276571409085
-  shape_arcness_error         : 4.792527784625022e-07
-  shape_arcness_abs_error     : 4.792527784625022e-07
-  feature_rmse                : 1.8788862494865627e-06
-  weighted_feature_rmse       : 1.8788862476076766e-06
+  time_warp_deviation         : 9.472121418470945e-06
+  time_roughness              : 4.332324087755418e-06
+  log_speed_range             : 1.3779008631806673
+  weight_value                : 0.6361654502831295
+  weight_target               : 0.6361751327743936
+  weight_error                : -9.682491264095816e-06
+  weight_abs_error            : 9.682491264095816e-06
+  time_value                  : 0.8641571502974142
+  time_target                 : 0.8641500135499298
+  time_error                  : 7.136747484426387e-06
+  time_abs_error              : 7.136747484426387e-06
+  flow_boundness_value        : 0.2670464007531291
+  flow_boundness_target       : 0.26705305187649475
+  flow_boundness_error        : -6.651123365675193e-06
+  flow_boundness_abs_error    : 6.651123365675193e-06
+  space_indirectness_value    : 0.5040959382895521
+  space_indirectness_target   : 0.5040937522455488
+  space_indirectness_error    : 2.1860440033716344e-06
+  space_indirectness_abs_error: 2.1860440033716344e-06
+  shape_arcness_value         : 0.412297267323811
+  shape_arcness_target        : 0.41229822459503523
+  shape_arcness_error         : -9.572712242333914e-07
+  shape_arcness_abs_error     : 9.572712242333914e-07
+  feature_rmse                : 6.238852464077205e-06
+  weighted_feature_rmse       : 6.238852457838353e-06

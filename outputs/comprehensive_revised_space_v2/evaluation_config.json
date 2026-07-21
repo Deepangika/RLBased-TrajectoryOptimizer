@@ -1,10 +1,9 @@
 {
-  "phase": "outer",
+  "phase": "report",
   "out": "C:\\Users\\dsya0006\\Downloads\\Updated_CEM_Live_Retest_V2\\outputs\\comprehensive_revised_space_v2",
   "gestures": [
     "wave",
-    "reach",
-    "point"
+    "reach"
   ],
   "states": [
     "confident",
@@ -37,13 +36,13 @@
   "inner_matrix_popsize": 5,
   "inner_matrix_local_maxiter": 100,
   "tolerance": 0.1,
-  "confirm_live_cost": true,
+  "confirm_live_cost": false,
   "overwrite_holdout": false,
   "dry_run": false,
   "call_estimate": {
-    "context_seed_runs": 9,
-    "estimated_outer_calls": 1260,
-    "estimated_holdout_calls": 180,
-    "estimated_total_live_calls": 1440
+    "context_seed_runs": 6,
+    "estimated_outer_calls": 840,
+    "estimated_holdout_calls": 120,
+    "estimated_total_live_calls": 960
   }
 }

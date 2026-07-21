@@ -1,0 +1,151 @@
+{
+  "initial_profile": {
+    "context": {
+      "gesture": "wave",
+      "target_state": "friendly"
+    },
+    "requested_profile": {
+      "weight": 0.42,
+      "time": 0.4,
+      "flow_boundness": 0.2,
+      "space_indirectness": 0.3,
+      "shape_arcness": 0.6
+    },
+    "achieved_profile": {
+      "weight": 0.42017556927872685,
+      "time": 0.4104707093636486,
+      "flow_boundness": 0.1732728354104382,
+      "space_indirectness": 0.3009275253394149,
+      "shape_arcness": 0.5999992043648444
+    },
+    "valid_realisation": true,
+    "failure_reason": null,
+    "invalid_features": [],
+    "path_preserved": true,
+    "joint_limits_satisfied": true,
+    "physically_acceptable": true,
+    "realisation_rmse": 0.012844206554205281,
+    "per_feature_abs_error": {
+      "weight": 0.00017556927872686146,
+      "time": 0.010470709363648578,
+      "flow_boundness": 0.026727164589561814,
+      "space_indirectness": 0.0009275253394149252,
+      "shape_arcness": 7.956351555371555e-07
+    },
+    "max_abs_feature_error": 0.026727164589561814,
+    "max_error_feature": "flow_boundness",
+    "feature_realisation_acceptable": true,
+    "inner_loss": 0.030942679583005527,
+    "inner_reward": -0.030942679583005527,
+    "perceptual_evaluations": [
+      {
+        "confident": 0.0,
+        "calm": 0.05,
+        "hesitant": 0.05,
+        "friendly": 0.0,
+        "confused": 0.9,
+        "angry": 0.0
+      },
+      {
+        "confident": 0.02,
+        "calm": 0.4,
+        "hesitant": 0.02,
+        "friendly": 0.5,
+        "confused": 0.03,
+        "angry": 0.03
+      },
+      {
+        "confident": 0.05,
+        "calm": 0.35,
+        "hesitant": 0.05,
+        "friendly": 0.5,
+        "confused": 0.025,
+        "angry": 0.025
+      },
+      {
+        "confident": 0.0,
+        "calm": 0.04,
+        "hesitant": 0.15,
+        "friendly": 0.01,
+        "confused": 0.8,
+        "angry": 0.0
+      },
+      {
+        "confident": 0.01,
+        "calm": 0.2,
+        "hesitant": 0.03,
+        "friendly": 0.15,
+        "confused": 0.6,
+        "angry": 0.01
+      },
+      {
+        "confident": 0.05,
+        "calm": 0.3,
+        "hesitant": 0.01,
+        "friendly": 0.6,
+        "confused": 0.02,
+        "angry": 0.02
+      },
+      {
+        "confident": 0.05,
+        "calm": 0.3,
+        "hesitant": 0.0,
+        "friendly": 0.6,
+        "confused": 0.0,
+        "angry": 0.05
+      },
+      {
+        "confident": 0.0,
+        "calm": 0.15,
+        "hesitant": 0.05,
+        "friendly": 0.1,
+        "confused": 0.7,
+        "angry": 0.0
+      },
+      {
+        "confident": 0.0,
+        "calm": 0.05,
+        "hesitant": 0.1,
+        "friendly": 0.15,
+        "confused": 0.7,
+        "angry": 0.0
+      },
+      {
+        "confident": 0.05,
+        "calm": 0.4,
+        "hesitant": 0.01,
+        "friendly": 0.5,
+        "confused": 0.02,
+        "angry": 0.02
+      }
+    ],
+    "mean_target_probability": 0.311,
+    "mean_margin": -0.23399999999999999,
+    "mean_margin_clipped": 0.095,
+    "mean_perceptual_reward": 0.03849999999999999,
+    "mean_perceptual_reward_clipped": 0.20299999999999999,
+    "perceptual_reward_std": 0.33991212099600093,
+    "target_classification_rate": 0.5,
+    "winner_agreement_rate": 0.5,
+    "mean_probability_entropy": 0.930177834710092,
+    "outer_reward": -0.04968908188755156,
+    "outer_reward_clipped": 0.11481091811244844,
+    "optimiser_output_dir": "C:\\Users\\dsya0006\\Downloads\\Updated_CEM_Live_Retest_V2\\outputs\\final_clean_evaluation_v1\\outer\\wave\\friendly\\seed_97\\validation\\initial_profile\\optimiser_outputs",
+    "action_coefficients": [
+      0.9246209634967576,
+      0.2588641544797526,
+      0.19821056503046192,
+      -0.03494914915681822,
+      0.30494449588169886,
+      0.11278707187496165,
+      -0.47556376753973784,
+      -0.04895084378260557,
+      -0.028451028853904797,
+      0.07766088518451954,
+      -0.592158120802903,
+      0.33140851576780495,
+      0.026452461132485706,
+      -0.3421199845909272
+    ]
+  }
+}

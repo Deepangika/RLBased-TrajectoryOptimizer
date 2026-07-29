@@ -134,6 +134,31 @@ class CEMOptimizer:
     def get_best_elite(self) -> Elite | None:
         return max(self.elites, key=lambda elite: elite.reward) if self.elites else None
 
+    def diagnostics(self) -> dict[str, float | int | dict[str, float]]:
+        """Return generation-level quantities required for convergence plots."""
+        std_profile = self.get_std_profile()
+        rewards = np.asarray([elite.reward for elite in self.elites], dtype=float)
+        return {
+            "round": int(self.round_counter),
+            "mean_profile_std": float(np.mean(list(std_profile.values()))),
+            "min_profile_std": float(np.min(list(std_profile.values()))),
+            "max_profile_std": float(np.max(list(std_profile.values()))),
+            "log_search_volume": float(
+                np.sum(np.log(np.maximum(list(std_profile.values()), 1e-12)))
+            ),
+            "best_elite_reward": (
+                float(np.max(rewards)) if rewards.size else float("nan")
+            ),
+            "mean_elite_reward": (
+                float(np.mean(rewards)) if rewards.size else float("nan")
+            ),
+            "elite_reward_std": (
+                float(np.std(rewards, ddof=1)) if rewards.size > 1 else 0.0
+            ),
+            "profile_mean": self.get_mean_profile(),
+            "profile_std": std_profile,
+        }
+
     def state_dict(self) -> dict:
         return {
             "beta_params": self.beta_params,

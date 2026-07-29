@@ -16,7 +16,7 @@ def check_training_progress():
     
     combinations = [
         (g, s) for g in ["point", "wave", "reach"]
-        for s in ["confident", "calm", "hesitant", "friendly", "confused", "angry"]
+        for s in ["anger", "disgust", "fear", "happiness", "sadness", "surprise"]
     ]
     
     completed = []
@@ -52,18 +52,18 @@ def check_training_progress():
     print(f"Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("="*80)
     
-    print(f"\n✅ COMPLETED: {len(completed)}/12")
+    print(f"\n✅ COMPLETED: {len(completed)}/18")
     if completed:
         print(f"{'Combination':<25} {'Best Reward':<15} {'Rounds':<10}")
         print("-" * 50)
         for c in sorted(completed, key=lambda x: x["reward"], reverse=True):
             print(f"{c['name']:<25} {c['reward']:<15.4f} {c['rounds']:<10}")
     
-    print(f"\n⏳ IN PROGRESS: {len(in_progress)}/12")
+    print(f"\n⏳ IN PROGRESS: {len(in_progress)}/18")
     for name in in_progress:
         print(f"  - {name}")
     
-    print(f"\n⬜ NOT STARTED: {len(not_started)}/12")
+    print(f"\n⬜ NOT STARTED: {len(not_started)}/18")
     for name in not_started[:5]:  # Show first 5
         print(f"  - {name}")
     if len(not_started) > 5:

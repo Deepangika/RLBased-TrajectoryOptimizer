@@ -91,6 +91,8 @@ def main() -> None:
         popsize=int(summary["inner_popsize"]),
         local_maxiter=int(summary["inner_local_maxiter"]),
         seed=int(summary["seed"]),
+        de_mutation=float(summary.get("inner_de_mutation", 0.5)),
+        de_recombination=float(summary.get("inner_de_recombination", 0.65)),
         wave_flow_target_weight=float(summary.get("wave_flow_target_weight", 0.35)),
     )
     evaluator = GeminiProVideoEvaluator(model=model, temperature=temperature)

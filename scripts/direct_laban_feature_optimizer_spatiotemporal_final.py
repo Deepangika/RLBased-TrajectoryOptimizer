@@ -622,6 +622,7 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
     print_section("OPTIMISING")
     result_de = differential_evolution(
         objective, bounds=bounds, maxiter=args.maxiter, popsize=args.popsize,
+        mutation=args.de_mutation, recombination=args.de_recombination,
         seed=args.seed, polish=False, updating="immediate", workers=1, tol=1e-4,
         callback=de_callback,
     )
@@ -833,9 +834,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-end-delta", type=float, default=0.22, help="Maximum smooth learned endpoint offset in radians when endpoint mode is soft/free.")
     parser.add_argument("--endpoint-mode", choices=["hard", "soft", "free"], default="soft", help="hard forces final joint pose to match reference; soft/free allow a natural endpoint. soft still uses endpoint_weight as a penalty; free usually pairs with endpoint_weight=0.")
     parser.add_argument("--time-scale", type=float, default=1.6)
-    parser.add_argument("--maxiter", type=int, default=90)
-    parser.add_argument("--popsize", type=int, default=8)
-    parser.add_argument("--local-maxiter", type=int, default=300, help="Maximum L-BFGS-B polishing iterations. Lower values are useful for API smoke tests.")
+    parser.add_argument("--maxiter", type=int, default=45)
+    parser.add_argument("--popsize", type=int, default=5)
+    parser.add_argument("--local-maxiter", type=int, default=100, help="Maximum L-BFGS-B polishing iterations. Lower values are useful for API smoke tests.")
+    parser.add_argument("--de-mutation", type=float, default=0.5, help="Fixed DE differential weight F. Tuned application default: 0.5.")
+    parser.add_argument("--de-recombination", type=float, default=0.65, help="DE binomial crossover probability CR. Tuned application default: 0.65.")
     parser.add_argument("--local-method", choices=["L-BFGS-B", "Powell", "none"], default="L-BFGS-B", help="Bounded local polishing method. Powell remains available for ablation but is substantially more expensive.")
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--space-weight", type=float, default=1.0)

@@ -46,6 +46,8 @@ def parse_args():
     parser.add_argument("--maxiter", type=int, default=45)
     parser.add_argument("--popsize", type=int, default=5)
     parser.add_argument("--local-maxiter", type=int, default=100)
+    parser.add_argument("--de-mutation", type=float, default=0.5)
+    parser.add_argument("--de-recombination", type=float, default=0.65)
     parser.add_argument("--tolerance", type=float, default=0.10)
     parser.add_argument("--out", required=True)
     return parser.parse_args()
@@ -73,6 +75,8 @@ def main():
             args.maxiter = cli.maxiter
             args.popsize = cli.popsize
             args.local_maxiter = cli.local_maxiter
+            args.de_mutation = cli.de_mutation
+            args.de_recombination = cli.de_recombination
             # Include the gesture to prevent diagnostics from later gesture
             # runs overwriting an earlier gesture with the same state/seed.
             args.out = str(out_dir / "cases" / cli.gesture / state / f"seed_{seed}")

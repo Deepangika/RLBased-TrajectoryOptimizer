@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Batch runner for CEM training across all gesture-state combinations.
+Batch runner for CEM training across all gesture-emotion combinations.
 
-Runs CEM on all 9 combinations:
-  Gestures: point, wave, reach
-  States: friendly, confused, angry
+Runs CEM on all 18 combinations:
+    Gestures: point, wave, reach
+    Ekman emotions: anger, disgust, fear, happiness, sadness, surprise
 
 Generates comprehensive results summary and comparison.
 """
@@ -18,9 +18,8 @@ from datetime import datetime
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 
-# All combinations to run
 GESTURES = ["point", "wave", "reach"]
-STATES = ["confident", "calm", "hesitant", "friendly", "confused", "angry"]
+STATES = ["anger", "disgust", "fear", "happiness", "sadness", "surprise"]
 COMBINATIONS = [(g, s) for g in GESTURES for s in STATES]
 
 def run_cem_training(gesture: str, state: str, verbose: bool = True) -> dict:

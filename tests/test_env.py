@@ -12,7 +12,7 @@ def test_env_single_step():
 
     env = LabanTrajectoryStylerEnv(
         gestures=["point"],
-        targets=["confident"],
+        targets=["happiness"],
         arm=arm,
         filter_config=filter_config,
         ranges=ranges,
@@ -30,4 +30,4 @@ def test_env_single_step():
     assert np.isfinite(reward)
     assert "var_norm" in step_info
     assert step_info["gesture_type"] == "point"
-    assert step_info["target_name"] == "confident"
+    assert step_info["target_name"] == "happiness"

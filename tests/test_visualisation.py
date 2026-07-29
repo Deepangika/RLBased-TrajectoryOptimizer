@@ -13,7 +13,7 @@ def test_save_outputs_creates_files(tmp_path):
 
     result = run_random_search(
         gesture="point",
-        target_name="confident",
+        target_name="happiness",
         n_trials=3,
         arm=arm,
         filter_config=filter_config,

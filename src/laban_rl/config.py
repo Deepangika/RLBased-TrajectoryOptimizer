@@ -20,6 +20,16 @@ FEATURE_KEYS = [
 
 GESTURE_TYPES = ["wave", "reach", "point"]
 
+# Ekman's six basic emotions.
+EMOTION_STATES = [
+    "anger",
+    "disgust",
+    "fear",
+    "happiness",
+    "sadness",
+    "surprise",
+]
+
 
 # Feature-specific reward weights.
 #

@@ -24,7 +24,7 @@ from typing import Any, Mapping, Protocol, Sequence
 
 import numpy as np
 
-from laban_rl.config import FEATURE_KEYS, GESTURE_TYPES
+from laban_rl.config import EMOTION_STATES, FEATURE_KEYS, GESTURE_TYPES
 from laban_rl.optimiser_api import (
     LabanOptimisationResult,
     optimise_laban_target,
@@ -118,6 +118,11 @@ class EnvironmentRewardConfig:
     # measured and there is evidence that instability should be penalised.
     stability_penalty_weight: float = 0.0
 
+    # Infrastructure/API failures are not evidence that an action is poor.
+    # Raise by default so the caller can retry or checkpoint cleanly instead
+    # of contaminating the CEM ranking with an artificial -1 reward.
+    evaluator_failure_mode: str = "raise"
+
     # Reward margin mode: 'raw' or 'clipped'.
     # 'raw': use actual margin (can be negative if target loses)
     # 'clipped': use max(0, margin) to soften negative signals
@@ -145,6 +150,10 @@ class EnvironmentRewardConfig:
         if self.reward_margin_mode not in ("raw", "clipped"):
             raise ValueError(
                 f"reward_margin_mode must be 'raw' or 'clipped', got {self.reward_margin_mode!r}."
+            )
+        if self.evaluator_failure_mode not in ("raise", "penalise"):
+            raise ValueError(
+                "evaluator_failure_mode must be 'raise' or 'penalise'."
             )
 
         for name in (
@@ -232,31 +241,37 @@ class MockNoisyPerceptualEvaluator:
     """
 
     DEFAULT_IDEALS: dict[str, tuple[float, ...]] = {
+        # Earlier communicative-state set
         "confident": (0.82, 0.78, 0.60, 0.22, 0.78),
         "calm": (0.35, 0.28, 0.28, 0.45, 0.45),
         "hesitant": (0.25, 0.32, 0.35, 0.70, 0.28),
         "friendly": (0.55, 0.58, 0.55, 0.48, 0.72),
         "confused": (0.20, 0.30, 0.15, 0.80, 0.50),
         "angry": (0.90, 0.85, 0.85, 0.10, 0.15),
+        # Ekman emotion set. Values are synthetic mock targets used only for
+        # pipeline testing; they are not empirical affect annotations.
+        "anger": (0.80, 0.80, 0.75, 0.25, 0.30),
+        "disgust": (0.55, 0.45, 0.75, 0.20, 0.20),
+        "fear": (0.35, 0.75, 0.80, 0.65, 0.35),
+        "happiness": (0.60, 0.65, 0.25, 0.45, 0.70),
+        "sadness": (0.20, 0.20, 0.65, 0.35, 0.25),
+        "surprise": (0.65, 0.90, 0.30, 0.50, 0.55),
     }
 
     def __init__(
         self,
         *,
-        state_labels: Sequence[str] = (
-            "confident",
-            "calm",
-            "hesitant",
-            "friendly",
-            "confused",
-            "angry",
-        ),
+        state_labels: Sequence[str] | None = None,
         ideal_profiles: Mapping[str, Sequence[float]] | None = None,
         noise_std: float = 0.08,
         distance_scale: float = 8.0,
         seed: int = 7,
     ) -> None:
-        self.state_labels = tuple(state_labels)
+        self.state_labels = tuple(
+            EMOTION_STATES if state_labels is None else state_labels
+        )
+        if not self.state_labels:
+            raise ValueError("Mock evaluator requires at least one state label.")
         self.noise_std = float(noise_std)
         self.distance_scale = float(distance_scale)
         self.rng = np.random.default_rng(seed)
@@ -648,6 +663,11 @@ class PerceptualBanditEnvironment:
                     float(perceptual_reward_clipped)
                 )
         except Exception as evaluator_error:
+            if self.reward_config.evaluator_failure_mode == "raise":
+                raise RuntimeError(
+                    "Perceptual evaluator failed; candidate reward is missing "
+                    "and must not be used in the CEM update."
+                ) from evaluator_error
             print(f"⚠ Evaluator failed: {evaluator_error}")
             print(f"  Using fallback: penalizing with invalid_realisation_reward")
             # Return early with penalty reward

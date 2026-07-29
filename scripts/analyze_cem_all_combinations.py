@@ -25,7 +25,7 @@ def load_all_results() -> Dict[str, dict]:
     results = {}
     combinations = [
         (g, s) for g in ["point", "wave", "reach"] 
-        for s in ["confident", "calm", "hesitant", "friendly", "confused", "angry"]
+        for s in ["anger", "disgust", "fear", "happiness", "sadness", "surprise"]
     ]
     
     for gesture, state in combinations:
@@ -55,7 +55,7 @@ def print_summary_table(results: Dict[str, dict]):
     
     # Group by gesture
     gestures = ["point", "wave", "reach"]
-    states = ["friendly", "confused", "angry"]
+    states = ["anger", "disgust", "fear", "happiness", "sadness", "surprise"]
     
     for gesture in gestures:
         print(f"\n{'GESTURE: ' + gesture.upper():<50}")
@@ -84,7 +84,7 @@ def get_best_profiles_per_gesture(results: Dict[str, dict]) -> Dict[str, dict]:
     """Find best performing state for each gesture."""
     
     gestures = ["point", "wave", "reach"]
-    states = ["friendly", "confused", "angry"]
+    states = ["anger", "disgust", "fear", "happiness", "sadness", "surprise"]
     
     best_per_gesture = {}
     
@@ -116,7 +116,7 @@ def create_summary_plot(results: Dict[str, dict]):
     fig.suptitle("CEM Results: All Gesture-State Combinations", fontsize=16, fontweight='bold')
     
     gestures = ["point", "wave", "reach"]
-    states = ["friendly", "confused", "angry"]
+    states = ["anger", "disgust", "fear", "happiness", "sadness", "surprise"]
     
     # 1. Best rewards heatmap
     ax = axes[0, 0]
@@ -342,7 +342,7 @@ def main():
         ])
         
         for gesture in ["point", "wave", "reach"]:
-            for state in ["friendly", "confused", "angry"]:
+            for state in ["anger", "disgust", "fear", "happiness", "sadness", "surprise"]:
                 key = f"{gesture}_{state}"
                 if results[key]:
                     r = results[key]

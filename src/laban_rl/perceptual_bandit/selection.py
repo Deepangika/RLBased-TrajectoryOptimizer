@@ -36,6 +36,7 @@ def select_feasible_incumbent(
     shortlist: Sequence[Mapping[str, Any]],
     *,
     tolerance: float,
+    allow_diagnostic_fallback: bool = False,
 ) -> dict[str, Any]:
     """Select the best feasible result from initial, final-mean, and top-K pool.
 
@@ -92,6 +93,11 @@ def select_feasible_incumbent(
     if not pool:
         raise RuntimeError("No independently validated candidates were available.")
     eligible = [candidate for candidate in pool if candidate["strictly_realisable"]]
+    if not eligible and not allow_diagnostic_fallback:
+        raise RuntimeError(
+            "No independently validated candidate satisfied strict physical "
+            "and feature-level realisability. No profile was selected."
+        )
     selection_pool = eligible or pool
     selected = max(selection_pool, key=lambda item: item["validation_reward"])
     return {

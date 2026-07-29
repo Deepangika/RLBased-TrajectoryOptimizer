@@ -20,7 +20,7 @@ def identify_combos():
     
     combinations = [
         (g, s) for g in ["point", "wave", "reach"]
-        for s in ["confident", "calm", "hesitant", "friendly", "confused", "angry"]
+        for s in ["anger", "disgust", "fear", "happiness", "sadness", "surprise"]
     ]
     
     partial = []

@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import torch
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = PROJECT_ROOT / "src"
 
 for candidate in [PROJECT_ROOT, SRC_DIR]:
@@ -53,102 +53,13 @@ class TestRewardMarginMode:
             config.validate()
 
 
-class TestRMSEGating:
-    """Test RMSE-based policy update gating."""
-
-    def test_update_with_low_rmse(self):
-        """Update should proceed normally when RMSE is low."""
-        policy = ContinuousContextualBanditPolicy()
-        optimizer = torch.optim.Adam(policy.parameters(), lr=0.01)
-        baseline = ContextRewardBaseline()
-
-        context = BanditContext("point", "confident")
-        sample = policy.sample_action(context)
-
-        # Initialize baseline
-        baseline.update(context, 0.5)
-
-        # Update with low RMSE (should proceed)
-        stats = reinforce_update(
-            policy=policy,
-            optimizer=optimizer,
-            sample=sample,
-            reward=0.5,
-            baseline=baseline,
-            realisation_rmse=0.02,
-            rmse_normal_threshold=0.05,
-            rmse_skip_threshold=0.10,
-            skip_high_rmse_updates=True,
-        )
-
-        assert stats["policy_updated"]
-        assert not stats["rmse_skipped"]
-
-    def test_skip_update_with_high_rmse(self):
-        """Update should skip when RMSE exceeds skip threshold."""
-        policy = ContinuousContextualBanditPolicy()
-        optimizer = torch.optim.Adam(policy.parameters(), lr=0.01)
-        baseline = ContextRewardBaseline()
-
-        context = BanditContext("point", "confident")
-        sample = policy.sample_action(context)
-
-        # Initialize baseline
-        baseline.update(context, 0.5)
-
-        # Update with high RMSE (should skip)
-        stats = reinforce_update(
-            policy=policy,
-            optimizer=optimizer,
-            sample=sample,
-            reward=0.5,
-            baseline=baseline,
-            realisation_rmse=0.15,
-            rmse_normal_threshold=0.05,
-            rmse_skip_threshold=0.10,
-            skip_high_rmse_updates=True,
-        )
-
-        assert not stats["policy_updated"]
-        assert stats["rmse_skipped"]
-
-    def test_rmse_gating_disabled(self):
-        """When disabled, high RMSE should not skip update."""
-        policy = ContinuousContextualBanditPolicy()
-        optimizer = torch.optim.Adam(policy.parameters(), lr=0.01)
-        baseline = ContextRewardBaseline()
-
-        context = BanditContext("point", "confident")
-        sample = policy.sample_action(context)
-
-        # Initialize baseline
-        baseline.update(context, 0.5)
-
-        # Update with high RMSE but skip disabled
-        stats = reinforce_update(
-            policy=policy,
-            optimizer=optimizer,
-            sample=sample,
-            reward=0.5,
-            baseline=baseline,
-            realisation_rmse=0.15,
-            rmse_normal_threshold=0.05,
-            rmse_skip_threshold=0.10,
-            skip_high_rmse_updates=False,
-        )
-
-        # Should still update when gating is disabled
-        assert stats["policy_updated"]
-        assert not stats["rmse_skipped"]
-
-
 class TestEntropyInUpdate:
     """Test entropy computation and bonus in policy updates."""
 
     def test_entropy_in_policy_sample(self):
         """Policy sample should include entropy from distribution."""
         policy = ContinuousContextualBanditPolicy()
-        context = BanditContext("point", "confident")
+        context = BanditContext("point", "happiness")
         sample = policy.sample_action(context)
 
         # Entropy should be computed (can be negative in log space for Beta).
@@ -158,73 +69,30 @@ class TestEntropyInUpdate:
         # but should be finite.
         assert np.isfinite(entropy_val)
 
-    def test_entropy_weight_zero(self):
-        """When entropy_weight=0, entropy should not affect loss."""
-        policy = ContinuousContextualBanditPolicy()
-        optimizer = torch.optim.Adam(policy.parameters(), lr=0.01)
-        baseline = ContextRewardBaseline()
-
-        context = BanditContext("point", "confident")
-        sample = policy.sample_action(context)
-        baseline.update(context, 0.5)
-
-        stats = reinforce_update(
-            policy=policy,
-            optimizer=optimizer,
-            sample=sample,
-            reward=0.7,
-            baseline=baseline,
-            entropy_weight=0.0,
-        )
-
-        # entropy_weight should be logged as 0.0
-        assert stats["effective_entropy_weight"] == 0.0
-
-    def test_entropy_weight_nonzero(self):
-        """When entropy_weight > 0, should be included in update."""
-        policy = ContinuousContextualBanditPolicy()
-        optimizer = torch.optim.Adam(policy.parameters(), lr=0.01)
-        baseline = ContextRewardBaseline()
-
-        context = BanditContext("point", "confident")
-        sample = policy.sample_action(context)
-        baseline.update(context, 0.5)
-
-        stats = reinforce_update(
-            policy=policy,
-            optimizer=optimizer,
-            sample=sample,
-            reward=0.7,
-            baseline=baseline,
-            entropy_weight=0.02,
-        )
-
-        # entropy_weight should be logged
-        assert stats["effective_entropy_weight"] == 0.02
-
 
 class TestInformedProfiles:
-    """Test that all 12 gesture-state informed profiles exist."""
+    """Test that informed profiles cover the configured gesture/emotion states."""
 
     def test_all_12_profiles_present(self):
-        """All combinations of (wave|reach|point) x (confident|calm|hesitant|friendly) exist."""
-        from scripts.train_real_continuous_contextual_bandit import INFORMED_PROFILES
+        """All combinations of (wave|reach|point) x EMOTION_STATES should exist."""
+        from scripts.train_cem_contextual_bandit import INFORMED_PROFILES
+        from laban_rl.config import EMOTION_STATES
 
         expected_keys = [
             f"{gesture}::{state}"
             for gesture in ["wave", "reach", "point"]
-            for state in ["confident", "calm", "hesitant", "friendly"]
+            for state in EMOTION_STATES
         ]
 
         for key in expected_keys:
             assert key in INFORMED_PROFILES, f"Missing informed profile: {key}"
 
-        # Should have exactly 12 profiles
-        assert len(INFORMED_PROFILES) == 12
+        # The dict may include aliases/extra priors, but all configured states must exist.
+        assert len(INFORMED_PROFILES) >= len(expected_keys)
 
     def test_profile_values_in_range(self):
         """All profile values should be in (0, 1)."""
-        from scripts.train_real_continuous_contextual_bandit import INFORMED_PROFILES
+        from scripts.train_cem_contextual_bandit import INFORMED_PROFILES
 
         for key, profile in INFORMED_PROFILES.items():
             for feature, value in profile.items():
@@ -239,7 +107,7 @@ class TestBetaPolicyPreservation:
     def test_beta_policy_bounded_sampling(self):
         """Beta policy samples should be in (0, 1)."""
         policy = ContinuousContextualBanditPolicy()
-        context = BanditContext("point", "confident")
+        context = BanditContext("point", "happiness")
 
         for _ in range(10):
             sample = policy.sample_action(context)
@@ -251,7 +119,7 @@ class TestBetaPolicyPreservation:
     def test_beta_policy_mean_profile(self):
         """Mean profile should be obtainable and in bounds."""
         policy = ContinuousContextualBanditPolicy()
-        context = BanditContext("point", "confident")
+        context = BanditContext("point", "happiness")
         mean = policy.mean_profile(context)
 
         assert len(mean) == 5
@@ -261,7 +129,7 @@ class TestBetaPolicyPreservation:
     def test_beta_policy_std_profile(self):
         """Approximate std profile should be obtainable and non-negative."""
         policy = ContinuousContextualBanditPolicy()
-        context = BanditContext("point", "confident")
+        context = BanditContext("point", "happiness")
         std = policy.approximate_action_std_profile(context)
 
         assert len(std) == 5

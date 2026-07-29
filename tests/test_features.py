@@ -48,7 +48,7 @@ def test_feature_dict_to_array_shape():
 
 
 def test_target_dict_to_array_shape():
-    arr = target_dict_to_array(TARGET_PROFILES["confident"])
+    arr = target_dict_to_array(TARGET_PROFILES["happiness"])
 
     assert arr.shape == (5,)
     assert np.all(np.isfinite(arr))

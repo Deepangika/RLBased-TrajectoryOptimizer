@@ -52,17 +52,3 @@ def test_feasible_initial_profile_prevents_regression():
     assert selected["selected"]["source_type"] == "incumbent_initial"
     assert selected["selected"]["validation_reward"] == 0.50
 
-
-def test_no_feasible_candidate_is_explicitly_flagged():
-    validation = {
-        "initial_profile": result(0.20, physical=False),
-        "final_distribution_mean": result(0.30, rmse=0.20),
-        "shortlist_rank_01": result(0.40, max_error=0.30),
-    }
-    selected = select_feasible_incumbent(
-        validation,
-        [shortlist_item(1, "shortlist_rank_01", 0.40)],
-        tolerance=0.10,
-    )
-    assert not selected["strict_feasibility_satisfied"]
-    assert selected["selected"]["source"] == "sample_1"

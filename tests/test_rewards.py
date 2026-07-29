@@ -67,7 +67,7 @@ def test_reward_is_finite():
         q_ref=q_ref,
         q_var=q_var,
         features_norm=var_norm,
-        target_profile=TARGET_PROFILES["confident"],
+        target_profile=TARGET_PROFILES["happiness"],
         gesture_type="point",
         reward_weights=RewardWeights(),
         joint_limits=JointLimits(),
@@ -110,25 +110,25 @@ def test_style_reward_outweighs_action_penalty_for_confident_target():
         q_ref=q_ref,
         q_var=q_small,
         features_norm=var_small,
-        target_profile=TARGET_PROFILES["confident"],
+        target_profile=TARGET_PROFILES["happiness"],
         gesture_type="point",
         reward_weights=RewardWeights(),
         joint_limits=JointLimits(),
         arm=arm,
         action=action_small,
-        target_name="confident",
+        target_name="happiness",
     )
     reward_large, _ = compute_reward(
         q_ref=q_ref,
         q_var=q_large,
         features_norm=var_large,
-        target_profile=TARGET_PROFILES["confident"],
+        target_profile=TARGET_PROFILES["happiness"],
         gesture_type="point",
         reward_weights=RewardWeights(),
         joint_limits=JointLimits(),
         arm=arm,
         action=action_large,
-        target_name="confident",
+        target_name="happiness",
     )
 
     assert reward_large > reward_small

@@ -12,7 +12,7 @@ def test_random_search_returns_valid_result():
 
     result = run_random_search(
         gesture="point",
-        target_name="confident",
+        target_name="happiness",
         n_trials=5,
         arm=arm,
         filter_config=filter_config,

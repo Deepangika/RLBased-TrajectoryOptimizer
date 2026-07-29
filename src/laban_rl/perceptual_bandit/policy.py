@@ -26,6 +26,8 @@ import torch
 from torch import nn
 from torch.distributions import Beta
 
+from laban_rl.config import EMOTION_STATES
+
 FEATURE_KEYS: tuple[str, ...] = (
     "weight",
     "time",
@@ -41,12 +43,7 @@ DEFAULT_GESTURES: tuple[str, ...] = (
 )
 
 DEFAULT_STATES: tuple[str, ...] = (
-    "confident",
-    "calm",
-    "hesitant",
-    "friendly",
-    "confused",
-    "angry",
+    *EMOTION_STATES,
 )
 
 

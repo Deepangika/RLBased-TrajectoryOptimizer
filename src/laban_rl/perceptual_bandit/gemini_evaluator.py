@@ -1,4 +1,3 @@
-
 """Gemini evaluator using a same-style, variant-only rendered video.
 
 Drop into:
@@ -13,6 +12,7 @@ from typing import Literal
 import numpy as np
 from pydantic import BaseModel, Field, model_validator
 
+from laban_rl.config import EMOTION_STATES
 from laban_rl.optimiser_api import LabanOptimisationResult
 from laban_rl.perceptual_bandit.environment import (
     Context,
@@ -33,43 +33,43 @@ except ImportError as exc:
 
 
 STATE_LABELS = (
-    "confident",
-    "calm",
-    "hesitant",
-    "friendly",
-    "confused",
-    "angry",
+    "anger",
+    "disgust",
+    "fear",
+    "happiness",
+    "sadness",
+    "surprise",
 )
 
 
 class GeminiGestureAssessment(BaseModel):
     perceived_state: Literal[
-        "confident",
-        "calm",
-        "hesitant",
-        "friendly",
-        "confused",
-        "angry",
+        "anger",
+        "disgust",
+        "fear",
+        "happiness",
+        "sadness",
+        "surprise",
     ]
     confidence: float = Field(ge=0.0, le=1.0)
-    confident: float = Field(ge=0.0, le=1.0)
-    calm: float = Field(ge=0.0, le=1.0)
-    hesitant: float = Field(ge=0.0, le=1.0)
-    friendly: float = Field(ge=0.0, le=1.0)
-    confused: float = Field(ge=0.0, le=1.0)
-    angry: float = Field(ge=0.0, le=1.0)
+    anger: float = Field(ge=0.0, le=1.0)
+    disgust: float = Field(ge=0.0, le=1.0)
+    fear: float = Field(ge=0.0, le=1.0)
+    happiness: float = Field(ge=0.0, le=1.0)
+    sadness: float = Field(ge=0.0, le=1.0)
+    surprise: float = Field(ge=0.0, le=1.0)
     reasoning_summary: str
 
     @model_validator(mode="after")
     def validate_probabilities(self):
         values = np.asarray(
             [
-                self.confident,
-                self.calm,
-                self.hesitant,
-                self.friendly,
-                self.confused,
-                self.angry,
+                self.anger,
+                self.disgust,
+                self.fear,
+                self.happiness,
+                self.sadness,
+                self.surprise,
             ],
             dtype=float,
         )
@@ -98,12 +98,12 @@ class GeminiGestureAssessment(BaseModel):
     def probability_dict(self) -> dict[str, float]:
         values = np.asarray(
             [
-                self.confident,
-                self.calm,
-                self.hesitant,
-                self.friendly,
-                self.confused,
-                self.angry,
+                self.anger,
+                self.disgust,
+                self.fear,
+                self.happiness,
+                self.sadness,
+                self.surprise,
             ],
             dtype=float,
         )
@@ -128,6 +128,11 @@ class GeminiProVideoEvaluator:
         video_fps: float | None = None,
         keep_uploaded_files: bool = True,
     ) -> None:
+        if tuple(EMOTION_STATES) != STATE_LABELS:
+            raise ValueError(
+                "Gemini evaluator label schema does not match EMOTION_STATES. "
+                f"Evaluator={STATE_LABELS}, config={tuple(EMOTION_STATES)}"
+            )
         self.model = model
         self.temperature = float(temperature)
         self.upload_poll_seconds = float(upload_poll_seconds)
@@ -180,60 +185,52 @@ First, internally assess the visible movement cues:
 - endpoint commitment: whether the motion appears decisive or uncertain
 - hesitation cues: pauses, delays, wavering, retreat, undershoot, or correction
 
-Use the following rubric:
+Use the following movement-based rubric. Judge only cues visible in the arm
+motion; do not infer facial expression, speech, narrative, or task outcome.
 
-CONFIDENT:
-- decisive and committed movement
-- relatively direct path
-- clear endpoint intention
-- stronger or more assertive motion
-- may be faster or more forceful
-- not wavering or uncertain
+ANGER:
+- forceful, heavy, tense, and urgent
+- fast or sudden acceleration
+- direct, focused, sharp, or striking quality
+- sustained pressure or bound control
 
-CALM:
-- smooth, controlled, relaxed movement
-- low urgency
-- steady timing
-- not forceful
-- not interrupted
-- important: slow and smooth movement should usually be calm, not hesitant
+DISGUST:
+- visibly avoidant, rejecting, recoiling, or withdrawing
+- restrained or tense movement
+- may turn away, pull back, interrupt approach, or create distance
+- not merely slow: there should be a visible rejection/avoidance quality
 
-HESITANT:
-- visibly uncertain or uncommitted movement
-- may include delay, pause, interruption, wavering, retreat, correction, or undershoot
-- may appear cautious or unsure
-- important: do not classify as hesitant merely because it is slow; there must be visible uncertainty
+FEAR:
+- guarded, defensive, apprehensive, or retreating
+- may combine quick reactions with hesitation or withdrawal
+- tense or bound quality, reduced commitment, or protective contraction
+- not merely energetic: there should be visible threat avoidance
 
-FRIENDLY:
-- open, approachable, inviting movement
-- smooth and warm quality
-- moderate energy
-- rounded or welcoming motion
-- not overly forceful or uncertain
+HAPPINESS:
+- buoyant, lively, open, expansive, or celebratory
+- energetic but not aggressive
+- smooth, rhythmic, playful, or upward/outward quality
+- clear positive engagement rather than withdrawal
 
-CONFUSED:
-- uncertain, wandering, directionless movement
-- indirect, meandering path with no clear endpoint intention
-- free-flowing but disorganised quality
-- low force and energy
-- may appear lost or searching
-- important: not just slow — must appear spatially disoriented
+SADNESS:
+- low-energy, slow, sustained, contracted, or drooping
+- reduced amplitude or weak commitment
+- subdued, heavy, downward, or withdrawn quality
+- not merely calm: it should appear diminished or de-energised
 
-ANGRY:
-- forceful, heavy, urgent movement
-- fast and sudden with high urgency
-- bound (tense, controlled) quality
-- direct and focused path
-- sharp, angular motion
-- strong and assertive, not light or hesitant
+SURPRISE:
+- abrupt, sudden, reactive, or startle-like
+- rapid expansion, interruption, or change in movement
+- high temporal contrast with an immediate response
+- not merely fast: there should be an unexpected reactive quality
 
 Classify the expressive state using exactly one of:
-- confident
-- calm
-- hesitant
-- friendly
-- confused
-- angry
+- anger
+- disgust
+- fear
+- happiness
+- sadness
+- surprise
 
 Do not evaluate task correctness.
 No intended state is provided.

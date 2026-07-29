@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run CEM training for all 3 states on the wave gesture only."""
+"""Run CEM training for all Ekman emotions on the wave gesture only."""
 import subprocess
 import sys
 import os
@@ -12,7 +12,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 
 GESTURE = "wave"
-STATES = ["friendly", "confused", "angry"]
+STATES = ["anger", "disgust", "fear", "happiness", "sadness", "surprise"]
 
 def run_combo(state, timeout=14400):  # 4 hours instead of 1 hour
     key = f"{GESTURE}_{state}"

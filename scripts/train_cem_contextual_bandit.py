@@ -17,6 +17,7 @@ import csv
 import json
 import pickle
 import sys
+import time
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -35,7 +36,7 @@ from laban_rl.perceptual_bandit.environment import (
     MockNoisyPerceptualEvaluator,
     PerceptualBanditEnvironment,
 )
-from laban_rl.config import FEATURE_KEYS
+from laban_rl.config import EMOTION_STATES, FEATURE_KEYS
 from laban_rl.perceptual_bandit.cem import CEMOptimizer
 from laban_rl.perceptual_bandit.selection import select_feasible_incumbent
 
@@ -51,6 +52,8 @@ def _build_optimiser_overrides(args, gesture: str) -> dict:
         "maxiter": args.maxiter,
         "popsize": args.popsize,
         "local_maxiter": args.local_maxiter,
+        "de_mutation": args.de_mutation,
+        "de_recombination": args.de_recombination,
         "seed": args.seed,
     }
     
@@ -112,6 +115,20 @@ INFORMED_PROFILES = {
         "space_indirectness": 0.30,
         "shape_arcness": 0.60,
     },
+    "wave::happy": {
+        "weight": 0.50,
+        "time": 0.55,
+        "flow_boundness": 0.20,
+        "space_indirectness": 0.30,
+        "shape_arcness": 0.70,
+    },
+    "wave::sad": {
+        "weight": 0.12,
+        "time": 0.15,
+        "flow_boundness": 0.35,
+        "space_indirectness": 0.25,
+        "shape_arcness": 0.25,
+    },
     "wave::confused": {
         "weight": 0.20,
         "time": 0.30,
@@ -125,6 +142,13 @@ INFORMED_PROFILES = {
         "flow_boundness": 0.85,
         "space_indirectness": 0.20,
         "shape_arcness": 0.30,
+    },
+    "wave::fearful": {
+        "weight": 0.35,
+        "time": 0.80,
+        "flow_boundness": 0.75,
+        "space_indirectness": 0.65,
+        "shape_arcness": 0.25,
     },
     # Reach gesture: extending outward base movement
     "reach::confident": {
@@ -155,6 +179,20 @@ INFORMED_PROFILES = {
         "space_indirectness": 0.30,
         "shape_arcness": 0.55,
     },
+    "reach::happy": {
+        "weight": 0.50,
+        "time": 0.55,
+        "flow_boundness": 0.20,
+        "space_indirectness": 0.30,
+        "shape_arcness": 0.70,
+    },
+    "reach::sad": {
+        "weight": 0.12,
+        "time": 0.15,
+        "flow_boundness": 0.35,
+        "space_indirectness": 0.25,
+        "shape_arcness": 0.25,
+    },
     "reach::confused": {
         "weight": 0.20,
         "time": 0.35,
@@ -168,6 +206,13 @@ INFORMED_PROFILES = {
         "flow_boundness": 0.85,
         "space_indirectness": 0.10,
         "shape_arcness": 0.20,
+    },
+    "reach::fearful": {
+        "weight": 0.35,
+        "time": 0.80,
+        "flow_boundness": 0.75,
+        "space_indirectness": 0.65,
+        "shape_arcness": 0.25,
     },
     # Point gesture: direct, linear base movement
     "point::confident": {
@@ -198,6 +243,20 @@ INFORMED_PROFILES = {
         "space_indirectness": 0.10,
         "shape_arcness": 0.40,
     },
+    "point::happy": {
+        "weight": 0.50,
+        "time": 0.55,
+        "flow_boundness": 0.20,
+        "space_indirectness": 0.30,
+        "shape_arcness": 0.70,
+    },
+    "point::sad": {
+        "weight": 0.12,
+        "time": 0.15,
+        "flow_boundness": 0.35,
+        "space_indirectness": 0.25,
+        "shape_arcness": 0.25,
+    },
     "point::confused": {
         "weight": 0.15,
         "time": 0.30,
@@ -212,7 +271,76 @@ INFORMED_PROFILES = {
         "space_indirectness": 0.05,
         "shape_arcness": 0.15,
     },
+    "point::fearful": {
+        "weight": 0.35,
+        "time": 0.80,
+        "flow_boundness": 0.75,
+        "space_indirectness": 0.65,
+        "shape_arcness": 0.25,
+    },
 }
+
+# Map the previous internal labels to Ekman's six classes.
+_EKMAN_ALIAS_MAP = {
+    "anger": "angry",
+    "fear": "fearful",
+    "happiness": "happy",
+    "sadness": "sad",
+}
+
+for _gesture in ("wave", "reach", "point"):
+    for _ekman_state, _legacy_state in _EKMAN_ALIAS_MAP.items():
+        INFORMED_PROFILES[f"{_gesture}::{_ekman_state}"] = dict(
+            INFORMED_PROFILES[f"{_gesture}::{_legacy_state}"]
+        )
+
+# Add dedicated priors for Ekman-specific classes that did not exist before.
+INFORMED_PROFILES.update(
+    {
+        "wave::disgust": {
+            "weight": 0.45,
+            "time": 0.40,
+            "flow_boundness": 0.70,
+            "space_indirectness": 0.18,
+            "shape_arcness": 0.20,
+        },
+        "reach::disgust": {
+            "weight": 0.50,
+            "time": 0.45,
+            "flow_boundness": 0.75,
+            "space_indirectness": 0.12,
+            "shape_arcness": 0.18,
+        },
+        "point::disgust": {
+            "weight": 0.55,
+            "time": 0.50,
+            "flow_boundness": 0.80,
+            "space_indirectness": 0.08,
+            "shape_arcness": 0.12,
+        },
+        "wave::surprise": {
+            "weight": 0.60,
+            "time": 0.90,
+            "flow_boundness": 0.25,
+            "space_indirectness": 0.55,
+            "shape_arcness": 0.70,
+        },
+        "reach::surprise": {
+            "weight": 0.65,
+            "time": 0.92,
+            "flow_boundness": 0.30,
+            "space_indirectness": 0.45,
+            "shape_arcness": 0.55,
+        },
+        "point::surprise": {
+            "weight": 0.70,
+            "time": 0.95,
+            "flow_boundness": 0.30,
+            "space_indirectness": 0.25,
+            "shape_arcness": 0.40,
+        },
+    }
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -225,7 +353,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--target-state",
-        choices=["confident", "calm", "hesitant", "friendly", "confused", "angry"],
+        choices=list(EMOTION_STATES),
         required=True,
     )
     parser.add_argument("--rounds", type=int, default=15)
@@ -258,18 +386,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cem-min-std", type=float, default=0.03)
     parser.add_argument("--cem-min-elites", type=int, default=3)
 
-    parser.add_argument("--repeats", type=int, default=3)
-    parser.add_argument("--validation-repeats", type=int, default=5)
+    parser.add_argument("--repeats", type=int, default=5)
+    parser.add_argument("--validation-repeats", type=int, default=10)
     parser.add_argument("--validation-top-k", type=int, default=3)
+    parser.add_argument("--evaluator-max-attempts", type=int, default=3)
+    parser.add_argument("--evaluator-retry-base-seconds", type=float, default=2.0)
     parser.add_argument("--evaluator", choices=["gemini", "mock"], default="gemini")
     parser.add_argument("--model", default="gemini-2.5-flash")
     parser.add_argument("--temperature", type=float, default=0.2)
     parser.add_argument("--mock-noise-std", type=float, default=0.08)
     parser.add_argument("--mock-distance-scale", type=float, default=8.0)
 
-    parser.add_argument("--maxiter", type=int, default=90)
-    parser.add_argument("--popsize", type=int, default=8)
-    parser.add_argument("--local-maxiter", type=int, default=300)
+    parser.add_argument("--maxiter", type=int, default=45)
+    parser.add_argument("--popsize", type=int, default=5)
+    parser.add_argument("--local-maxiter", type=int, default=100)
+    parser.add_argument("--de-mutation", type=float, default=0.5)
+    parser.add_argument("--de-recombination", type=float, default=0.65)
     parser.add_argument("--seed", type=int, default=7)
 
     parser.add_argument(
@@ -279,12 +411,17 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--max-feature-error-threshold", type=float, default=0.10)
     parser.add_argument("--max-feature-error-penalty-weight", type=float, default=0.50)
-    parser.add_argument("--reject-excessive-feature-error", action="store_true")
+    parser.add_argument(
+        "--reject-excessive-feature-error",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Reject candidates with any feature error above tolerance before VLM evaluation.",
+    )
     parser.add_argument("--wave-flow-target-weight", type=float, default=0.35)
     parser.add_argument(
         "--stability-penalty-weight",
         type=float,
-        default=0.25,
+        default=0.0,
     )
 
     parser.add_argument(
@@ -362,7 +499,9 @@ def load_history_csv(csv_path: Path) -> list[dict]:
         "mean_realisation_rmse", "mean_max_abs_feature_error",
         "feature_realisation_acceptance_rate", "mean_target_classification_rate",
         "mean_winner_agreement_rate", "mean_probability_entropy",
-        "mean_exploration_std", "num_elites",
+        "mean_exploration_std", "min_exploration_std", "max_exploration_std",
+        "log_search_volume", "elite_reward_std", "mean_margin", "max_margin",
+        "max_target_probability", "physical_acceptance_rate", "num_elites",
         "invalid_or_infeasible_samples",
     }
     for row in rows:
@@ -405,6 +544,44 @@ def save_plots(rows: list[dict], out_dir: Path) -> None:
     plt.legend()
     plt.tight_layout()
     plt.savefig(out_dir / "reward_curve.png", dpi=160)
+    plt.close()
+
+    plt.figure(figsize=(8, 5))
+    plt.plot(
+        rounds,
+        [row["mean_margin"] for row in rows],
+        marker="o",
+        label="Mean raw margin",
+    )
+    plt.axhline(0.0, color="black", linestyle="--", linewidth=1)
+    plt.xlabel("Round")
+    plt.ylabel("Target minus strongest competitor")
+    plt.title("Perceptual classification margin")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(out_dir / "margin_curve.png", dpi=160)
+    plt.close()
+
+    plt.figure(figsize=(8, 5))
+    plt.plot(
+        rounds,
+        [row["mean_exploration_std"] for row in rows],
+        marker="o",
+        label="Mean sampling std",
+    )
+    plt.plot(
+        rounds,
+        [row["max_exploration_std"] for row in rows],
+        marker=".",
+        label="Maximum sampling std",
+    )
+    plt.xlabel("Round")
+    plt.ylabel("CEM distribution standard deviation")
+    plt.title("CEM exploration and distribution contraction")
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(out_dir / "cem_diversity_curve.png", dpi=160)
     plt.close()
 
     plt.figure(figsize=(8, 5))
@@ -533,6 +710,12 @@ def main() -> None:
             distance_scale=args.mock_distance_scale,
             seed=args.seed,
         )
+        if args.target_state not in evaluator.state_labels:
+            raise ValueError(
+                f"Mock evaluator does not support target state "
+                f"{args.target_state!r}. Available labels: "
+                f"{list(evaluator.state_labels)}"
+            )
 
     environment = PerceptualBanditEnvironment(
         evaluator=evaluator,
@@ -548,6 +731,7 @@ def main() -> None:
             stability_penalty_weight=(
                 args.stability_penalty_weight
             ),
+            evaluator_failure_mode="raise",
         ),
         optimiser_overrides=_build_optimiser_overrides(
             args=args,
@@ -564,6 +748,7 @@ def main() -> None:
             max_feature_error_penalty_weight=args.max_feature_error_penalty_weight,
             reject_excessive_feature_error=args.reject_excessive_feature_error,
             stability_penalty_weight=args.stability_penalty_weight,
+            evaluator_failure_mode="raise",
         ),
         optimiser_overrides=_build_optimiser_overrides(args=args, gesture=args.gesture),
     )
@@ -594,11 +779,36 @@ def main() -> None:
     if is_resuming and validation_path.exists():
         validation_results = json.loads(validation_path.read_text(encoding="utf-8"))
 
+    def evaluate_with_retry(env, *, context, profile, output_dir):
+        last_error = None
+        for attempt in range(1, args.evaluator_max_attempts + 1):
+            try:
+                return env.step(
+                    context=context,
+                    action_profile=profile,
+                    out_dir=output_dir,
+                )
+            except RuntimeError as error:
+                last_error = error
+                if attempt >= args.evaluator_max_attempts:
+                    break
+                delay = args.evaluator_retry_base_seconds * (2 ** (attempt - 1))
+                print(
+                    f"  Evaluator attempt {attempt} failed; retrying in "
+                    f"{delay:.1f}s. The failed call is not assigned a reward."
+                )
+                time.sleep(delay)
+        raise RuntimeError(
+            f"Evaluator failed after {args.evaluator_max_attempts} attempts. "
+            "Training stopped without updating CEM."
+        ) from last_error
+
     def evaluate_validation(name: str, profile: dict[str, float]):
-        result = validation_environment.step(
+        result = evaluate_with_retry(
+            validation_environment,
             context=environment_context,
-            action_profile=profile,
-            out_dir=out_dir / "validation" / name / "optimiser_outputs",
+            profile=profile,
+            output_dir=out_dir / "validation" / name / "optimiser_outputs",
         )
         validation_results[name] = result.to_dict()
         validation_path.write_text(
@@ -627,8 +837,10 @@ def main() -> None:
             round_rewards = []
             round_rmses = []
             round_target_probs = []
+            round_margins = []
             round_max_feature_errors = []
             round_feature_acceptance = []
+            round_physical_acceptance = []
             round_classification_rates = []
             round_winner_agreements = []
             round_entropies = []
@@ -638,10 +850,11 @@ def main() -> None:
 
                 round_dir = out_dir / "rounds" / f"round_{round_index:03d}_sample_{sample_idx:02d}"
 
-                result = environment.step(
+                result = evaluate_with_retry(
+                    environment,
                     context=environment_context,
-                    action_profile=profile,
-                    out_dir=round_dir / "optimiser_outputs",
+                    profile=profile,
+                    output_dir=round_dir / "optimiser_outputs",
                 )
                 
                 # Defensive check: ensure result has valid reward
@@ -658,9 +871,12 @@ def main() -> None:
                     round_rmses.append(result.realisation_rmse)
                 if result.mean_target_probability is not None:
                     round_target_probs.append(result.mean_target_probability)
+                if result.mean_margin is not None:
+                    round_margins.append(result.mean_margin)
                 if result.max_abs_feature_error is not None:
                     round_max_feature_errors.append(result.max_abs_feature_error)
                 round_feature_acceptance.append(float(result.feature_realisation_acceptable))
+                round_physical_acceptance.append(float(result.physically_acceptable))
                 if result.target_classification_rate is not None:
                     round_classification_rates.append(result.target_classification_rate)
                 if result.winner_agreement_rate is not None:
@@ -697,6 +913,7 @@ def main() -> None:
             # tracked separately and cannot lock the sampling distribution.
             cem.update_elites(candidates, elite_fraction=args.cem_elite_fraction)
             cem.decay_exploration(args.exploration_decay_rate)
+            cem_diagnostics = cem.diagnostics()
 
             # Record round statistics
             best_elite = cem.get_best_elite()
@@ -711,13 +928,21 @@ def main() -> None:
                 "max_sample_reward": float(np.max(round_rewards)),
                 "min_sample_reward": float(np.min(round_rewards)),
                 "mean_target_probability": float(np.mean(round_target_probs)) if round_target_probs else float("nan"),
+                "max_target_probability": float(np.max(round_target_probs)) if round_target_probs else float("nan"),
+                "mean_margin": float(np.mean(round_margins)) if round_margins else float("nan"),
+                "max_margin": float(np.max(round_margins)) if round_margins else float("nan"),
                 "mean_realisation_rmse": float(np.mean(round_rmses)) if round_rmses else float("nan"),
                 "mean_max_abs_feature_error": float(np.mean(round_max_feature_errors)) if round_max_feature_errors else float("nan"),
                 "feature_realisation_acceptance_rate": float(np.mean(round_feature_acceptance)) if round_feature_acceptance else float("nan"),
+                "physical_acceptance_rate": float(np.mean(round_physical_acceptance)) if round_physical_acceptance else float("nan"),
                 "mean_target_classification_rate": float(np.mean(round_classification_rates)) if round_classification_rates else float("nan"),
                 "mean_winner_agreement_rate": float(np.mean(round_winner_agreements)) if round_winner_agreements else float("nan"),
                 "mean_probability_entropy": float(np.mean(round_entropies)) if round_entropies else float("nan"),
                 "mean_exploration_std": float(np.mean(list(current_std.values()))),
+                "min_exploration_std": float(cem_diagnostics["min_profile_std"]),
+                "max_exploration_std": float(cem_diagnostics["max_profile_std"]),
+                "log_search_volume": float(cem_diagnostics["log_search_volume"]),
+                "elite_reward_std": float(cem_diagnostics["elite_reward_std"]),
                 "invalid_or_infeasible_samples": int(sum(reward <= -1.0 for reward in round_rewards)),
                 "num_elites": len(cem.elites),
             }
@@ -926,6 +1151,10 @@ def main() -> None:
         "inner_maxiter": args.maxiter,
         "inner_popsize": args.popsize,
         "inner_local_maxiter": args.local_maxiter,
+        "inner_de_mutation": args.de_mutation,
+        "inner_de_recombination": args.de_recombination,
+        "evaluator_max_attempts": args.evaluator_max_attempts,
+        "evaluator_retry_base_seconds": args.evaluator_retry_base_seconds,
         "seed": args.seed,
     }
 

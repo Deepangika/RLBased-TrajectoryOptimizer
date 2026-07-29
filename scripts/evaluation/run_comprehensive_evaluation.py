@@ -50,13 +50,15 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--temperature", type=float, default=0.2)
     p.add_argument("--rounds", type=int, default=5)
     p.add_argument("--samples-per-round", type=int, default=6)
-    p.add_argument("--training-repeats", type=int, default=3)
+    p.add_argument("--training-repeats", type=int, default=5)
     p.add_argument("--validation-top-k", type=int, default=3)
     p.add_argument("--validation-repeats", type=int, default=10)
     p.add_argument("--holdout-repeats", type=int, default=20)
-    p.add_argument("--maxiter", type=int, default=90)
-    p.add_argument("--popsize", type=int, default=8)
-    p.add_argument("--local-maxiter", type=int, default=300)
+    p.add_argument("--maxiter", type=int, default=45)
+    p.add_argument("--popsize", type=int, default=5)
+    p.add_argument("--local-maxiter", type=int, default=100)
+    p.add_argument("--de-mutation", type=float, default=0.5)
+    p.add_argument("--de-recombination", type=float, default=0.65)
     p.add_argument("--inner-matrix-maxiter", type=int, default=45)
     p.add_argument("--inner-matrix-popsize", type=int, default=5)
     p.add_argument("--inner-matrix-local-maxiter", type=int, default=100)
@@ -176,6 +178,8 @@ def run_inner(args: argparse.Namespace, base: Path) -> None:
             "--maxiter", str(args.inner_matrix_maxiter),
             "--popsize", str(args.inner_matrix_popsize),
             "--local-maxiter", str(args.inner_matrix_local_maxiter),
+            "--de-mutation", str(args.de_mutation),
+            "--de-recombination", str(args.de_recombination),
             "--tolerance", str(args.tolerance),
             "--out", str(out),
         ]
@@ -206,6 +210,8 @@ def run_outer(args: argparse.Namespace, base: Path) -> None:
                     "--validation-repeats", str(args.validation_repeats),
                     "--maxiter", str(args.maxiter), "--popsize", str(args.popsize),
                     "--local-maxiter", str(args.local_maxiter),
+                    "--de-mutation", str(args.de_mutation),
+                    "--de-recombination", str(args.de_recombination),
                     "--max-feature-error-threshold", str(args.tolerance),
                 ]
                 # A non-empty folder with a checkpoint resumes automatically.

@@ -265,9 +265,13 @@ Return:
 
     def _upload_video(self, video_path):
         cache_key = str(video_path.resolve())
+        current_mtime = video_path.stat().st_mtime
 
         if cache_key in self._upload_cache:
-            return self._upload_cache[cache_key]
+            cached_mtime, cached_upload = self._upload_cache[cache_key]
+            if cached_mtime == current_mtime:
+                return cached_upload
+            # File has been overwritten since the last upload; discard stale entry.
 
         uploaded = self.client.files.upload(file=video_path)
         deadline = time.monotonic() + self.upload_timeout_seconds
@@ -295,7 +299,7 @@ Return:
             time.sleep(self.upload_poll_seconds)
             uploaded = self.client.files.get(name=uploaded.name)
 
-        self._upload_cache[cache_key] = uploaded
+        self._upload_cache[cache_key] = (current_mtime, uploaded)
         return uploaded
 
     def evaluate(
@@ -377,7 +381,7 @@ Return:
 
     def close(self) -> None:
         if not self.keep_uploaded_files:
-            for uploaded in self._upload_cache.values():
+            for _mtime, uploaded in self._upload_cache.values():
                 try:
                     self.client.files.delete(name=uploaded.name)
                 except Exception:

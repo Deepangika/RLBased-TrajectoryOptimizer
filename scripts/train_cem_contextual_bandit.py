@@ -450,25 +450,26 @@ def safe_output_folder(out_dir: Path, overwrite: bool, allow_resume: bool = Fals
     """
     Ensure output folder is safe. Returns True if resuming from checkpoint.
     
-    If allow_resume and checkpoint exists, preserve it and return True.
-    Otherwise, delete and recreate (if overwrite) or raise error.
+    --overwrite always takes priority: if set, the folder is wiped and a fresh
+    run begins, even when a checkpoint is present.  Without --overwrite, if a
+    checkpoint exists the run resumes; otherwise an error is raised.
     """
     checkpoint_path = out_dir / "latest_checkpoint.pt"
     has_checkpoint = checkpoint_path.exists()
     
     if out_dir.exists() and list(out_dir.iterdir()):
-        if has_checkpoint and allow_resume:
-            # Preserve checkpoint, but clean up round outputs that may be incomplete
+        if overwrite:
+            # Explicit restart requested; remove everything and start fresh.
+            import shutil
+            shutil.rmtree(out_dir)
+        elif has_checkpoint and allow_resume:
             print(f"  Resuming from checkpoint: {checkpoint_path}")
             return True
-        
-        if not overwrite:
+        else:
             raise RuntimeError(
                 f"Output folder {out_dir} is non-empty and --overwrite not set. "
                 "Either use --overwrite, choose a different output path, or delete the existing folder."
             )
-        import shutil
-        shutil.rmtree(out_dir)
     
     out_dir.mkdir(parents=True, exist_ok=True)
     return False
@@ -650,7 +651,10 @@ def save_plots(rows: list[dict], out_dir: Path) -> None:
 def main() -> None:
     args = parse_args()
 
-    np.random.seed(args.seed)
+    # Note: CEMOptimizer and MockNoisyPerceptualEvaluator use
+    # np.random.default_rng(seed) internally, which is seeded through their
+    # constructors.  The legacy np.random.seed() has no effect on default_rng
+    # instances, so it is not called here.
 
     out_dir = Path(args.out)
     if not out_dir.is_absolute():
@@ -669,6 +673,17 @@ def main() -> None:
     if is_resuming:
         checkpoint_path = out_dir / "latest_checkpoint.pt"
         checkpoint_data = load_checkpoint(checkpoint_path)
+        # Verify the checkpoint belongs to the same experiment context so a
+        # checkpoint from one run cannot silently continue as a different one.
+        saved_context = checkpoint_data.get("context", {})
+        if (saved_context.get("gesture") != args.gesture
+                or saved_context.get("target_state") != args.target_state):
+            raise RuntimeError(
+                f"Checkpoint context {saved_context!r} does not match the "
+                f"current arguments (gesture={args.gesture!r}, "
+                f"target_state={args.target_state!r}). "
+                "Use --overwrite to start a new experiment."
+            )
         print(f"  Resuming from round {checkpoint_data['round']} of {args.rounds}")
 
     # Get informed profile or raise error if missing and not allowed.
@@ -758,12 +773,8 @@ def main() -> None:
         history = load_history_csv(out_dir / "training_history.csv")
         best_reward = checkpoint_data["best_reward"]
         best_profile = checkpoint_data["best_profile"]
-        best_round_index = None
-        # Find the round where best_reward was achieved
-        for row in history:
-            if abs(row.get("best_round_reward", float("-inf")) - best_reward) < 1e-6:
-                best_round_index = int(row["round"]) if row.get("round") is not None else None
-                break
+        # best_round_index is stored directly in the checkpoint (see save below)
+        best_round_index = checkpoint_data.get("best_round_index")
         start_round = checkpoint_data["round"] + 1
         print(f"  Loaded history from {len(history)} previous rounds")
         print(f"  Best reward so far: {best_reward:.6f} (from round {best_round_index})")
@@ -780,13 +791,26 @@ def main() -> None:
         validation_results = json.loads(validation_path.read_text(encoding="utf-8"))
 
     def evaluate_with_retry(env, *, context, profile, output_dir):
+        """Run inner optimiser once; retry only the evaluation on API failures.
+
+        The expensive inner optimiser (DE/CEM + video rendering) is called
+        exactly once.  Only the perceptual evaluation phase (Gemini API call)
+        is retried, so a transient 503 does not repeat the full optimisation.
+        """
+        # Phase 1 – run the inner optimiser once; not retried.
+        opt_result = env.run_inner_step(
+            context=context,
+            action_profile=profile,
+            out_dir=output_dir,
+        )
+
+        # Phase 2 – retry only the evaluation on transient API failures.
         last_error = None
         for attempt in range(1, args.evaluator_max_attempts + 1):
             try:
-                return env.step(
+                return env.step_from_result(
                     context=context,
-                    action_profile=profile,
-                    out_dir=output_dir,
+                    optimisation_result=opt_result,
                 )
             except RuntimeError as error:
                 last_error = error
@@ -795,13 +819,14 @@ def main() -> None:
                 delay = args.evaluator_retry_base_seconds * (2 ** (attempt - 1))
                 print(
                     f"  Evaluator attempt {attempt} failed; retrying in "
-                    f"{delay:.1f}s. The failed call is not assigned a reward."
+                    f"{delay:.1f}s. The inner optimiser result is reused."
                 )
                 time.sleep(delay)
         raise RuntimeError(
             f"Evaluator failed after {args.evaluator_max_attempts} attempts. "
             "Training stopped without updating CEM."
         ) from last_error
+
 
     def evaluate_validation(name: str, profile: dict[str, float]):
         result = evaluate_with_retry(
@@ -817,7 +842,10 @@ def main() -> None:
         return result
 
     try:
-        if not is_resuming:
+        # Evaluate the informed initial profile if not already recorded.
+        # This also covers a resume after a crash that happened before the
+        # initial evaluation completed.
+        if "initial_profile" not in validation_results:
             print("\nEvaluating informed initial profile independently...")
             evaluate_validation("initial_profile", dict(initial_profile or cem.get_mean_profile()))
 
@@ -833,7 +861,8 @@ def main() -> None:
             sampled_profiles = cem.sample_batch(args.cem_samples_per_round)
 
             # Evaluate each sampled profile
-            candidates = []
+            candidates = []       # all (profile, reward) for CEM fallback
+            valid_candidates = [] # only feasible ones for CEM update
             round_rewards = []
             round_rmses = []
             round_target_probs = []
@@ -856,7 +885,7 @@ def main() -> None:
                     profile=profile,
                     output_dir=round_dir / "optimiser_outputs",
                 )
-                
+
                 # Defensive check: ensure result has valid reward
                 if result.outer_reward is None:
                     raise RuntimeError(
@@ -866,6 +895,12 @@ def main() -> None:
                     )
 
                 candidates.append((profile, result.outer_reward))
+                # A candidate is eligible for CEM updates only when the
+                # realisation is physically valid and the evaluator produced
+                # a real perceptual reward (not the -1 penalty).
+                if result.valid_realisation and result.physically_acceptable:
+                    valid_candidates.append((profile, result.outer_reward))
+
                 round_rewards.append(result.outer_reward)
                 if result.realisation_rmse is not None:
                     round_rmses.append(result.realisation_rmse)
@@ -891,12 +926,22 @@ def main() -> None:
                     f"valid: {result.valid_realisation}"
                 )
 
-                if result.outer_reward > best_reward:
+                # Only update best_profile with strictly feasible candidates
+                # (valid realisation + physical acceptance + RMSE within
+                # tolerance) so that best_profile.json always describes a
+                # profile that passes the same criteria as the final selection.
+                is_feasible_best = (
+                    result.valid_realisation
+                    and result.physically_acceptable
+                    and result.realisation_rmse is not None
+                    and result.realisation_rmse <= args.max_feature_error_threshold
+                )
+                if is_feasible_best and result.outer_reward > best_reward:
                     best_reward = float(result.outer_reward)
                     best_profile = dict(profile)
                     best_round_index = round_index
 
-                # Save per-sample summary
+                # Save per-sample summary (use allow_nan=False for valid JSON)
                 (round_dir / "sample_summary.json").write_text(
                     json.dumps(
                         {
@@ -904,15 +949,28 @@ def main() -> None:
                             "environment_result": result.to_dict(),
                         },
                         indent=2,
-                        allow_nan=True,
+                        allow_nan=False,
                     ),
                     encoding="utf-8",
                 )
 
-            # Current-round elites update the distribution. Best-so-far is
-            # tracked separately and cannot lock the sampling distribution.
-            cem.update_elites(candidates, elite_fraction=args.cem_elite_fraction)
-            cem.decay_exploration(args.exploration_decay_rate)
+            # Update CEM distribution using only physically valid candidates
+            # so that infeasible profiles (rewarded at -1) do not pull the
+            # Beta distributions toward infeasible regions.  Fall back to the
+            # full candidate set only when fewer valid candidates exist than
+            # the minimum required number of elites.
+            cem_update_candidates = (
+                valid_candidates
+                if len(valid_candidates) >= cem.min_elites
+                else candidates
+            )
+            cem.update_elites(cem_update_candidates, elite_fraction=args.cem_elite_fraction)
+            # Only contract the exploration distribution when there is genuine
+            # signal (at least one feasible candidate this round).  This
+            # prevents premature convergence in rounds where every sample was
+            # rejected.
+            if valid_candidates:
+                cem.decay_exploration(args.exploration_decay_rate)
             cem_diagnostics = cem.diagnostics()
 
             # Record round statistics
@@ -922,7 +980,10 @@ def main() -> None:
 
             row = {
                 "round": round_index,
-                "best_round_reward": float(best_reward),
+                # best_round_reward is the best reward seen in THIS round only
+                # (not a cumulative maximum).  The cumulative best is stored
+                # separately in best_profile.json.
+                "best_round_reward": float(np.max(round_rewards)),
                 "num_samples_evaluated": len(sampled_profiles),
                 "mean_sample_reward": float(np.mean(round_rewards)),
                 "max_sample_reward": float(np.max(round_rewards)),
@@ -976,6 +1037,7 @@ def main() -> None:
                     },
                     "best_reward": best_reward,
                     "best_profile": best_profile,
+                    "best_round_index": best_round_index,
                 }, handle)
 
             (out_dir / "best_profile.json").write_text(

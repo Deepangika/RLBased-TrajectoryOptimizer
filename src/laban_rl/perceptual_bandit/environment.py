@@ -369,6 +369,28 @@ class PerceptualBanditEnvironment:
             optimiser_overrides or {}
         )
 
+    def run_inner_step(
+        self,
+        *,
+        context: Context,
+        action_profile: Mapping[str, float],
+        out_dir: str | Path,
+    ) -> LabanOptimisationResult:
+        """Run only the inner trajectory optimiser without perceptual evaluation.
+
+        Returns the raw ``LabanOptimisationResult`` so that the caller can
+        subsequently pass it to :meth:`step_from_result`, allowing evaluator
+        retries without repeating the expensive inner optimisation.
+        """
+        context.validate()
+        return optimise_laban_target(
+            gesture=context.gesture,
+            target_state=context.target_state,
+            target_profile=action_profile,
+            out_dir=out_dir,
+            optimiser_overrides=self.optimiser_overrides,
+        )
+
     def step(
         self,
         *,
@@ -398,6 +420,23 @@ class PerceptualBanditEnvironment:
             optimiser_overrides=self.optimiser_overrides,
         )
 
+        return self.step_from_result(
+            context=context,
+            optimisation_result=optimisation_result,
+        )
+
+    def step_from_result(
+        self,
+        *,
+        context: Context,
+        optimisation_result: LabanOptimisationResult,
+    ) -> EnvironmentStepResult:
+        """Run only the evaluation phase on an already-computed optimisation result.
+
+        Use this method when the inner optimiser has already been called and you
+        want to retry only the (cheaper) perceptual evaluation, for example after
+        a transient API failure.
+        """
         invalid_features = [
             key
             for key in FEATURE_KEYS
@@ -663,65 +702,70 @@ class PerceptualBanditEnvironment:
                     float(perceptual_reward_clipped)
                 )
         except Exception as evaluator_error:
-            if self.reward_config.evaluator_failure_mode == "raise":
+            if probability_records:
+                # At least one repetition succeeded. Use the partial results
+                # rather than discarding paid evaluations. The reward will
+                # have higher variance but is still valid signal.
+                pass
+            elif self.reward_config.evaluator_failure_mode == "raise":
                 raise RuntimeError(
-                    "Perceptual evaluator failed; candidate reward is missing "
-                    "and must not be used in the CEM update."
+                    "Perceptual evaluator failed on every repetition; "
+                    "candidate reward is unavailable."
                 ) from evaluator_error
-            print(f"⚠ Evaluator failed: {evaluator_error}")
-            print(f"  Using fallback: penalizing with invalid_realisation_reward")
-            # Return early with penalty reward
-            return EnvironmentStepResult(
-                context=context,
-                requested_profile=dict(
-                    optimisation_result.requested_profile
-                ),
-                achieved_profile=dict(
-                    optimisation_result.achieved_profile
-                ),
-                valid_realisation=True,  # Realisation was valid, evaluator failed
-                failure_reason=f"evaluator_error: {str(evaluator_error)}",
-                invalid_features=[],
-                path_preserved=path_preserved,
-                joint_limits_satisfied=joint_limits_satisfied,
-                physically_acceptable=physically_acceptable,
-                realisation_rmse=realisation_rmse,
-                per_feature_abs_error=per_feature_abs_error,
-                max_abs_feature_error=max_abs_feature_error,
-                max_error_feature=max_error_feature,
-                feature_realisation_acceptable=feature_realisation_acceptable,
-                inner_loss=float(
-                    optimisation_result.inner_loss
-                ),
-                inner_reward=float(
-                    optimisation_result.inner_reward
-                ),
-                perceptual_evaluations=[],
-                mean_target_probability=None,
-                mean_margin=None,
-                mean_margin_clipped=None,
-                mean_perceptual_reward=None,
-                mean_perceptual_reward_clipped=None,
-                perceptual_reward_std=None,
-                target_classification_rate=None,
-                winner_agreement_rate=None,
-                mean_probability_entropy=None,
-                outer_reward=float(
-                    self.reward_config.invalid_realisation_reward
-                ),
-                outer_reward_clipped=float(
-                    self.reward_config.invalid_realisation_reward
-                ),
-                optimiser_output_dir=str(
-                    optimisation_result.output_dir
-                ),
-                action_coefficients=(
-                    optimisation_result
-                    .action_coefficients
-                    .astype(float)
-                    .tolist()
-                ),
-            )
+            else:
+                print(f"⚠ Evaluator failed on every repetition: {evaluator_error}")
+                print(f"  Using fallback: penalizing with invalid_realisation_reward")
+                return EnvironmentStepResult(
+                    context=context,
+                    requested_profile=dict(
+                        optimisation_result.requested_profile
+                    ),
+                    achieved_profile=dict(
+                        optimisation_result.achieved_profile
+                    ),
+                    valid_realisation=True,  # Realisation was valid, evaluator failed
+                    failure_reason=f"evaluator_error: {str(evaluator_error)}",
+                    invalid_features=[],
+                    path_preserved=path_preserved,
+                    joint_limits_satisfied=joint_limits_satisfied,
+                    physically_acceptable=physically_acceptable,
+                    realisation_rmse=realisation_rmse,
+                    per_feature_abs_error=per_feature_abs_error,
+                    max_abs_feature_error=max_abs_feature_error,
+                    max_error_feature=max_error_feature,
+                    feature_realisation_acceptable=feature_realisation_acceptable,
+                    inner_loss=float(
+                        optimisation_result.inner_loss
+                    ),
+                    inner_reward=float(
+                        optimisation_result.inner_reward
+                    ),
+                    perceptual_evaluations=[],
+                    mean_target_probability=None,
+                    mean_margin=None,
+                    mean_margin_clipped=None,
+                    mean_perceptual_reward=None,
+                    mean_perceptual_reward_clipped=None,
+                    perceptual_reward_std=None,
+                    target_classification_rate=None,
+                    winner_agreement_rate=None,
+                    mean_probability_entropy=None,
+                    outer_reward=float(
+                        self.reward_config.invalid_realisation_reward
+                    ),
+                    outer_reward_clipped=float(
+                        self.reward_config.invalid_realisation_reward
+                    ),
+                    optimiser_output_dir=str(
+                        optimisation_result.output_dir
+                    ),
+                    action_coefficients=(
+                        optimisation_result
+                        .action_coefficients
+                        .astype(float)
+                        .tolist()
+                    ),
+                )
 
         mean_target_probability = float(
             np.mean(target_probabilities)

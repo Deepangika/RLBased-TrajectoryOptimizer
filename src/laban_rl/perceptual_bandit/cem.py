@@ -112,7 +112,7 @@ class CEMOptimizer:
         for feature in self.feature_keys:
             values = np.asarray([profile[feature] for profile, _ in selected], dtype=float)
             elite_mean = float(np.mean(values))
-            elite_std = float(np.std(values, ddof=0))
+            elite_std = float(np.std(values, ddof=1) if len(values) > 1 else 0.0)
             old = self.beta_params[feature]
             old["mean"] = float(np.clip((1.0 - alpha) * old["mean"] + alpha * elite_mean, 0.01, 0.99))
             old["std"] = float(np.clip((1.0 - alpha) * old["std"] + alpha * elite_std,
@@ -180,3 +180,13 @@ class CEMOptimizer:
         self.round_counter = int(state.get("round_counter", 0))
         if "rng_state" in state:
             self.rng.bit_generator.state = state["rng_state"]
+        # Restore hyperparameters so resumed runs behave identically to the
+        # original run, regardless of whatever flags the caller passed.
+        if "smoothing" in state:
+            self.smoothing = float(state["smoothing"])
+        if "min_std" in state:
+            self.min_std = float(state["min_std"])
+        if "max_std" in state:
+            self.max_std = float(state["max_std"])
+        if "min_elites" in state:
+            self.min_elites = int(state["min_elites"])

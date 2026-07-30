@@ -437,6 +437,7 @@ class PerceptualBanditEnvironment:
         want to retry only the (cheaper) perceptual evaluation, for example after
         a transient API failure.
         """
+        context.validate()
         invalid_features = [
             key
             for key in FEATURE_KEYS

@@ -80,6 +80,16 @@ def _build_optimiser_overrides(args, gesture: str) -> dict:
             "shape_arcness_target_weight": 0.05,       # Very gentle: shape_arcness
             "time_target_weight": 0.1,                 # Gentle: prevent time overshooting
         })
+
+    if gesture == "celebratory_pump":
+        overrides.update({
+            # Pump expressivity is predominantly temporal. Extra timing
+            # resolution improves Flow without permitting larger spatial
+            # departures from the raised-arm pumping path.
+            "n_timing_basis": 5,
+            "time_scale": 2.0,
+            "flow_weight": 3.0,
+        })
     
     return overrides
 

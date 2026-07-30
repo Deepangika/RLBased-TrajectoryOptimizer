@@ -273,11 +273,15 @@ def weighted_feature_rmse(var_norm: Dict[str, float], target_profile: Dict[str, 
     return weighted_rmse, diagnostics
 
 
-def make_feature_weights(space_weight: float, shape_weight: float) -> Dict[str, float]:
+def make_feature_weights(
+    space_weight: float,
+    shape_weight: float,
+    flow_weight: float = 1.0,
+) -> Dict[str, float]:
     return {
         "weight": 1.0,
         "time": 1.0,
-        "flow_boundness": 1.0,
+        "flow_boundness": float(flow_weight),
         "space_indirectness": float(space_weight),
         "shape_arcness": float(shape_weight),
     }
@@ -487,7 +491,11 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
         )
     spatial_basis = make_sine_basis(arm.n_points, args.n_spatial_basis)
     joint_limits = JointLimits()
-    feature_weights = make_feature_weights(args.space_weight, args.shape_weight)
+    feature_weights = make_feature_weights(
+        args.space_weight,
+        args.shape_weight,
+        args.flow_weight,
+    )
 
     history = []
     generation_history = []
@@ -714,6 +722,7 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
         "time_coeff_weight": args.time_coeff_weight,
         "time_warp_weight": args.time_warp_weight,
         "time_roughness_weight": args.time_roughness_weight,
+        "flow_weight": args.flow_weight,
         "space_weight": args.space_weight,
         "shape_weight": args.shape_weight,
         "detour_tolerance": args.detour_tolerance,
@@ -843,6 +852,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--space-weight", type=float, default=1.0)
     parser.add_argument("--shape-weight", type=float, default=1.0)
+    parser.add_argument(
+        "--flow-weight",
+        type=float,
+        default=1.0,
+        help="Relative Flow feature weight in the inner optimizer.",
+    )
     parser.add_argument("--preserve-weight", type=float, default=0.05)
     parser.add_argument("--nearest-path-weight", type=float, default=1.5)
     parser.add_argument("--endpoint-weight", type=float, default=0.2)

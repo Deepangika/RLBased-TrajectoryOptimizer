@@ -94,6 +94,31 @@ Run the test suite:
 
 Current suite status after cleanup: all tests passing.
 
+## Normalization calibration
+
+The gesture-specific range file includes robust 5th-95th percentile ranges for
+circle, beckon, and celebratory-pump. They were generated deterministically with:
+
+  python scripts/calibrate_new_gesture_ranges.py \
+    --samples 9000 \
+    --seed 20260731 \
+    --low-percentile 5 \
+    --high-percentile 95
+
+The sweep uses the existing balanced sampler (3,000 semantic variants per
+gesture), the standard 160-point/2-second arm and 5 Hz Butterworth feature
+pipeline, and the parameter bounds in
+`robust_laban_normalisation_balanced_3gestures.py`. The calibration command
+updates only those three gesture entries; the legacy balanced, wave, reach, and
+point ranges remain unchanged.
+
+Circle previously inherited the balanced range, whose shape-arcness lower bound
+was above the circle reference value and therefore clipped the reference to
+zero. Its dedicated range places the reference inside the calibrated region.
+Celebratory-pump also receives five timing bases, a `2.0` timing scale, and
+stronger Flow tracking in the CEM inner optimizer; its spatial and path
+constraints are unchanged.
+
 ## Notes
 
 - The repository is experiment-heavy by design; many scripts are operational entry points.

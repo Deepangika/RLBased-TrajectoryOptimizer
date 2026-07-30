@@ -90,7 +90,7 @@ def optimise_laban_target(
     Parameters
     ----------
     gesture:
-        Reference gesture identity: ``wave``, ``reach`` or ``point``.
+        Reference gesture identity from ``GESTURE_TYPES``.
     target_state:
         Human-readable intended state. It is metadata for the outer learner; it
         does not determine the target profile inside the optimiser.

@@ -379,6 +379,98 @@ def generate_small_gesture_trajectory(
     return q.astype(np.float64)
 
 
+def generate_circle_trajectory(
+    n_points: int,
+    shoulder_amp_scale: float = 1.0,
+    elbow_amp_scale: float = 1.0,
+    speed_scale: float = 1.0,
+    phase_offset: float = 0.0,
+    noise_scale: float = 0.0,
+    rng: Optional[np.random.Generator] = None,
+) -> np.ndarray:
+    """Circular gesture with coordinated shoulder and elbow oscillation."""
+    if rng is None:
+        rng = np.random.default_rng()
+
+    phase = 2.0 * np.pi * speed_scale * np.linspace(0.0, 1.0, n_points)
+    shoulder = 0.50 + 0.22 * shoulder_amp_scale * np.sin(phase)
+    elbow = 0.95 + 0.30 * elbow_amp_scale * np.cos(phase + phase_offset)
+    q = np.column_stack([shoulder, elbow])
+
+    if noise_scale > 0.0:
+        q += rng.normal(0.0, noise_scale, size=q.shape)
+
+    return q.astype(np.float64)
+
+
+def generate_beckon_trajectory(
+    n_points: int,
+    extension_scale: float = 1.0,
+    curl_scale: float = 1.0,
+    speed_shape: float = 1.0,
+    noise_scale: float = 0.0,
+    rng: Optional[np.random.Generator] = None,
+) -> np.ndarray:
+    """Extend the arm, perform two inward curls, then return to rest."""
+    if rng is None:
+        rng = np.random.default_rng()
+
+    u = np.linspace(0.0, 1.0, n_points)
+    q_rest = np.array([0.25, 1.25])
+    q_extended = q_rest + extension_scale * np.array([0.30, -0.63])
+
+    extend = smoothstep(np.clip(u / 0.25, 0.0, 1.0))
+    retract = smoothstep(np.clip((u - 0.82) / 0.18, 0.0, 1.0))
+    q = (1.0 - extend[:, None]) * q_rest + extend[:, None] * q_extended
+
+    active = np.clip((u - 0.25) / 0.57, 0.0, 1.0)
+    shaped_active = np.power(active, speed_shape)
+    window = np.sin(np.pi * active) ** 2
+    curls = np.sin(4.0 * np.pi * shaped_active) ** 2
+    q[:, 0] -= 0.05 * curl_scale * window * curls
+    q[:, 1] += 0.42 * curl_scale * window * curls
+    q = (1.0 - retract[:, None]) * q + retract[:, None] * q_rest
+
+    if noise_scale > 0.0:
+        q += rng.normal(0.0, noise_scale, size=q.shape)
+
+    return q.astype(np.float64)
+
+
+def generate_celebratory_pump_trajectory(
+    n_points: int,
+    raise_scale: float = 1.0,
+    pump_scale: float = 1.0,
+    speed_shape: float = 1.0,
+    noise_scale: float = 0.0,
+    rng: Optional[np.random.Generator] = None,
+) -> np.ndarray:
+    """Raise the arm and perform two emphatic upward pumping motions."""
+    if rng is None:
+        rng = np.random.default_rng()
+
+    u = np.linspace(0.0, 1.0, n_points)
+    q_rest = np.array([0.20, 1.20])
+    q_raised = q_rest + raise_scale * np.array([0.85, -0.38])
+
+    rise = smoothstep(np.clip(u / 0.28, 0.0, 1.0))
+    settle = smoothstep(np.clip((u - 0.88) / 0.12, 0.0, 1.0))
+    q = (1.0 - rise[:, None]) * q_rest + rise[:, None] * q_raised
+
+    active = np.clip((u - 0.28) / 0.60, 0.0, 1.0)
+    shaped_active = np.power(active, speed_shape)
+    window = np.sin(np.pi * active) ** 2
+    pumps = np.sin(4.0 * np.pi * shaped_active)
+    q[:, 0] += 0.16 * pump_scale * window * pumps
+    q[:, 1] -= 0.28 * pump_scale * window * pumps
+    q = (1.0 - settle[:, None]) * q + settle[:, None] * q_raised
+
+    if noise_scale > 0.0:
+        q += rng.normal(0.0, noise_scale, size=q.shape)
+
+    return q.astype(np.float64)
+
+
 def generate_random_gesture(
     gesture_type: str,
     n_points: int,
@@ -436,6 +528,34 @@ def generate_random_gesture(
             "noise_scale": rng.uniform(0.0, 0.003),
         }
         q = generate_small_gesture_trajectory(n_points=n_points, rng=rng, **params)
+
+    elif gesture_type == "circle":
+        params = {
+            "shoulder_amp_scale": rng.uniform(0.55, 1.45),
+            "elbow_amp_scale": rng.uniform(0.55, 1.45),
+            "speed_scale": rng.uniform(0.65, 1.55),
+            "phase_offset": rng.uniform(-0.5 * np.pi, 0.5 * np.pi),
+            "noise_scale": rng.uniform(0.0, 0.002),
+        }
+        q = generate_circle_trajectory(n_points=n_points, rng=rng, **params)
+
+    elif gesture_type == "beckon":
+        params = {
+            "extension_scale": rng.uniform(0.65, 1.25),
+            "curl_scale": rng.uniform(0.55, 1.35),
+            "speed_shape": rng.uniform(0.70, 1.40),
+            "noise_scale": rng.uniform(0.0, 0.002),
+        }
+        q = generate_beckon_trajectory(n_points=n_points, rng=rng, **params)
+
+    elif gesture_type == "celebratory_pump":
+        params = {
+            "raise_scale": rng.uniform(0.75, 1.15),
+            "pump_scale": rng.uniform(0.55, 1.35),
+            "speed_shape": rng.uniform(0.70, 1.40),
+            "noise_scale": rng.uniform(0.0, 0.002),
+        }
+        q = generate_celebratory_pump_trajectory(n_points=n_points, rng=rng, **params)
 
     else:
         raise ValueError(f"Unknown gesture_type: {gesture_type}")

@@ -265,7 +265,7 @@ Return:
 
     def _upload_video(self, video_path):
         cache_key = str(video_path.resolve())
-        current_mtime = video_path.stat().st_mtime
+        current_mtime = video_path.stat().st_mtime_ns
 
         if cache_key in self._upload_cache:
             cached_mtime, cached_upload = self._upload_cache[cache_key]

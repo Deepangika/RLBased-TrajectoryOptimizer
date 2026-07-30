@@ -19,11 +19,11 @@ Laban-based contextual bandit pipeline for gesture style optimization and percep
 - src/laban_rl/perceptual_bandit
   - CEM optimizer, policy logic, perceptual environment, evaluator integration, and candidate selection
 - scripts
-  - Main training, batch runs, monitoring, plotting, and utility workflows
+  - Main training, calibration, visualization, and utility workflows
 - scripts/debug
-  - Diagnostics and targeted investigation scripts
+  - Current realizability, holdout, and achievable-region diagnostics
 - scripts/evaluation
-  - Evaluation pipelines and DE transfer/ablation workflows
+  - Paired evaluation, reward ablation, compatibility, and readiness workflows
 - tests
   - Automated pytest suite for core behavior and regression checks
 - configs

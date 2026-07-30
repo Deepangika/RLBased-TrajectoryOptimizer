@@ -32,6 +32,20 @@ def observation_to_dict(observation: Any) -> dict[str, Any]:
             else float(_field(observation, "confidence"))
         ),
         "perceived_state": _field(observation, "perceived_state"),
+        "category_status": (
+            _field(observation, "category_status")
+            or (
+                "complete"
+                if _field(observation, "probabilities", {})
+                else "missing"
+            )
+        ),
+        "category_intensities": {
+            key: float(value)
+            for key, value in dict(
+                _field(observation, "category_intensities", {})
+            ).items()
+        },
         "reasoning_summary": _field(observation, "reasoning_summary"),
     }
 
@@ -79,6 +93,8 @@ def score_perceptual_observations(
     winning_labels: list[str] = []
     probability_entropies: list[float] = []
     confidences: list[float] = []
+    category_statuses: list[str] = []
+    category_intensity_records: list[dict[str, float]] = []
 
     for observation in observations:
         affect = validate_vad(
@@ -101,9 +117,35 @@ def score_perceptual_observations(
         probabilities = _validate_probabilities(
             dict(_field(observation, "probabilities", {}))
         )
+        category_status = str(
+            _field(observation, "category_status")
+            or ("complete" if probabilities else "missing")
+        )
+        if category_status not in ("complete", "ambiguous", "missing"):
+            raise ValueError(f"Unknown category_status {category_status!r}.")
+        category_statuses.append(category_status)
+        intensities = {
+            str(label): float(value)
+            for label, value in dict(
+                _field(observation, "category_intensities", {})
+            ).items()
+        }
+        if intensities:
+            values = np.asarray(list(intensities.values()), dtype=float)
+            if (
+                not np.all(np.isfinite(values))
+                or np.any(values < 0.0)
+                or np.any(values > 1.0)
+            ):
+                raise ValueError(
+                    "Category intensities must be finite and in [0, 1]."
+                )
+            category_intensity_records.append(intensities)
         if not probabilities:
             continue
         probability_records.append(probabilities)
+        if category_status != "complete":
+            continue
         winning_labels.append(max(probabilities, key=probabilities.get))
         probability_values = np.asarray(list(probabilities.values()), dtype=float)
         probability_entropies.append(
@@ -176,6 +218,10 @@ def score_perceptual_observations(
     winner_counts = Counter(winning_labels)
     repeat_count = len(observations)
     categorical_repeat_count = len(categorical_rewards)
+    distribution_repeat_count = len(probability_records)
+    complete_category_count = category_statuses.count("complete")
+    ambiguous_category_count = category_statuses.count("ambiguous")
+    missing_category_count = category_statuses.count("missing")
     categorical_complete = bool(
         target_state is not None and categorical_repeat_count == repeat_count
     )
@@ -183,6 +229,7 @@ def score_perceptual_observations(
     return {
         "affective_evaluations": affective_records,
         "perceptual_evaluations": probability_records,
+        "category_intensity_evaluations": category_intensity_records,
         "mean_observed_vad": {
             key: float(mean_affect[index]) for index, key in enumerate(VAD_KEYS)
         },
@@ -227,6 +274,14 @@ def score_perceptual_observations(
         ),
         "categorical_repeat_count": categorical_repeat_count,
         "categorical_coverage": float(categorical_repeat_count / repeat_count),
+        "categorical_distribution_coverage": float(
+            distribution_repeat_count / repeat_count
+        ),
+        "categorical_unambiguous_coverage": float(
+            complete_category_count / repeat_count
+        ),
+        "ambiguous_category_count": ambiguous_category_count,
+        "missing_category_count": missing_category_count,
         "categorical_complete": categorical_complete,
         "mean_target_probability": (
             float(np.mean(target_probabilities)) if target_probabilities else None

@@ -184,6 +184,70 @@ variability, and confidence variability. ICC(2,1) is emitted only when at least
 two clips and two repeats make it identifiable; low-repeat and zero-variance
 cases are explicitly marked unavailable rather than represented as NaN.
 
+Secondary category output is explicitly `complete`, `ambiguous`, or `missing`.
+The evaluator may report independent per-category intensities without forcing a
+winner; normalized six-state probabilities remain available for legacy
+diagnostics when intensities have a positive sum. Reports separately expose
+distribution coverage and unambiguous coverage. Direct VAD targets never require
+category output.
+
+## Reward and feasibility ablations
+
+Rescore an existing paired result without new evaluator calls:
+
+```text
+python scripts/evaluation/rescore_paired_ablations.py \
+  --paired-results outputs/paired/paired_results.json \
+  --configurations configs/ablation_grid.json \
+  --out outputs/paired/ablation_comparison.json
+```
+
+The configuration file is a JSON array whose `settings` may vary VAD weights,
+realization/stability penalties, feature-error thresholds, and feasibility
+gates. Output ranks VAD and categorical views independently because their raw
+magnitudes are not equivalent. Settings that alter the inner optimizer, require
+observations previously skipped by a gate, or lack raw legacy gate measurements
+are marked as requiring an inner-optimizer rerun.
+
+Keep `stability_penalty_weight=0` until multi-clip repeated evaluation has
+measured test-retest reliability. Non-zero stability ablations require at least
+two repeats per clip and an identifiable reliability result. Apply the penalty
+only to repeat dispersion; do not also encode that same evaluator uncertainty
+in a second confidence penalty. No empirical stability constant is assumed.
+
+## Checkpoint and cache compatibility
+
+Current CEM checkpoints include format, feature-order, state-schema, and complete
+named/direct-VAD target fingerprint metadata. Legacy learned-policy weights
+without observation-shape metadata are rejected rather than reinterpreted.
+Pre-VAD CEM checkpoints missing complete context/config metadata are also
+rejected. Eligible CEM checkpoints can receive metadata only in a new file:
+
+```text
+python scripts/evaluation/migrate_checkpoint_metadata.py \
+  --checkpoint outputs/old/latest_checkpoint.pt \
+  --out outputs/migrated/latest_checkpoint.pt
+```
+
+Evaluator cache format and Gemini prompt/schema versions are content-addressed.
+Old entries are never silently reused after category-schema changes.
+
+## Pre-human readiness audit
+
+Create a manifest pointing to the calibration JSON, paired matrix/results,
+realisability summary, evaluator cache, and recorded full-test status, then run:
+
+```text
+python scripts/evaluation/pre_human_readiness.py \
+  --manifest configs/pre_human_readiness.json \
+  --out outputs/readiness/pre_human_readiness.json
+```
+
+The command emits JSON plus a concise terminal report and exits nonzero for
+blocking calibration, matrix coverage, realizability, repeat reliability,
+ambiguity coverage, cache compatibility, test-status, credential, or artifact
+hygiene failures. It does not call Gemini.
+
 If you use Gemini evaluation, set your API key first:
 
   set GOOGLE_API_KEY=your_key_here
@@ -191,6 +255,12 @@ If you use Gemini evaluation, set your API key first:
 or in PowerShell:
 
   $env:GOOGLE_API_KEY="your_key_here"
+
+Keep keys in the process environment, never in source, matrix files, prompts, or
+cache settings. Remove them after live collection with
+`Remove-Item Env:GOOGLE_API_KEY` (PowerShell) or `set GOOGLE_API_KEY=` (cmd).
+The readiness audit reports only variable names and suspect file paths; it never
+prints credential values.
 
 ## Testing
 

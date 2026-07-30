@@ -14,8 +14,14 @@ from laban_rl.optimiser_api import LabanOptimisationResult
 from laban_rl.perceptual_bandit.scoring import observation_to_dict
 
 
-CACHE_FORMAT_VERSION = 1
+CACHE_FORMAT_VERSION = 2
 _SECRET_MARKERS = ("api_key", "apikey", "secret", "token", "credential", "password")
+_SECRET_ENV_NAMES = (
+    "GOOGLE_API_KEY",
+    "GEMINI_API_KEY",
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY",
+)
 
 
 class CacheCompatibilityError(RuntimeError):
@@ -72,6 +78,18 @@ def _reject_secrets(value: Any, path: str = "") -> None:
     elif isinstance(value, (list, tuple)):
         for index, child in enumerate(value):
             _reject_secrets(child, f"{path}[{index}]")
+    elif isinstance(value, str):
+        import os
+
+        configured_secrets = {
+            os.environ[name]
+            for name in _SECRET_ENV_NAMES
+            if os.environ.get(name)
+        }
+        if value in configured_secrets:
+            raise ValueError(
+                f"Evaluator cache identity contains a credential value at {path}."
+            )
 
 
 def _canonical_bytes(payload: Mapping[str, Any]) -> bytes:
@@ -175,6 +193,28 @@ class PerceptualObservationCache:
                         or not np.isclose(float(np.sum(values)), 1.0, atol=1e-5)
                     ):
                         raise ValueError("invalid probability vector")
+                status = observation.get(
+                    "category_status",
+                    "complete" if probabilities else "missing",
+                )
+                if status not in ("complete", "ambiguous", "missing"):
+                    raise ValueError("invalid category status")
+                if status == "missing" and probabilities:
+                    raise ValueError(
+                        "missing categorical result contains probabilities"
+                    )
+                intensities = observation.get("category_intensities", {})
+                if not isinstance(intensities, dict):
+                    raise ValueError("category_intensities must be an object")
+                intensity_values = np.asarray(
+                    list(intensities.values()), dtype=float
+                )
+                if intensities and (
+                    not np.all(np.isfinite(intensity_values))
+                    or np.any(intensity_values < 0.0)
+                    or np.any(intensity_values > 1.0)
+                ):
+                    raise ValueError("invalid category intensities")
                 confidence = observation.get("confidence")
                 if confidence is not None and (
                     not np.isfinite(float(confidence))

@@ -39,6 +39,11 @@ from laban_rl.perceptual_bandit.environment import (
 from laban_rl.affect import VAD_KEYS, VAD_TARGETS
 from laban_rl.config import EMOTION_STATES, FEATURE_KEYS, GESTURE_TYPES
 from laban_rl.perceptual_bandit.cem import CEMOptimizer
+from laban_rl.perceptual_bandit.compatibility import (
+    checkpoint_metadata,
+    migrate_metadata_only_checkpoint,
+    validate_checkpoint,
+)
 from laban_rl.perceptual_bandit.selection import select_feasible_incumbent
 
 
@@ -669,6 +674,17 @@ def load_checkpoint(checkpoint_path: Path) -> dict:
     """Load training state from checkpoint."""
     with checkpoint_path.open("rb") as handle:
         checkpoint = pickle.load(handle)
+    checkpoint, migrated = migrate_metadata_only_checkpoint(checkpoint)
+    validate_checkpoint(
+        checkpoint,
+        expected_kind="cem",
+        context=checkpoint.get("context"),
+    )
+    if migrated:
+        print(
+            "  Loaded eligible legacy CEM checkpoint with metadata migrated "
+            "in memory; use the migration CLI to persist a converted copy."
+        )
     print(f"  Loaded checkpoint from round {checkpoint['round']}")
     return checkpoint
 
@@ -1293,6 +1309,9 @@ def main() -> None:
             # Save checkpoint
             with (out_dir / "latest_checkpoint.pt").open("wb") as handle:
                 pickle.dump({
+                    "metadata": checkpoint_metadata(
+                        "cem", context=environment_context.to_dict()
+                    ),
                     "round": round_index,
                     "cem_state": cem.state_dict(),
                     "context": environment_context.to_dict(),

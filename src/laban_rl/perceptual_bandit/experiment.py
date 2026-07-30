@@ -28,7 +28,7 @@ from laban_rl.perceptual_bandit.scoring import (
 )
 
 
-EXPERIMENT_FORMAT_VERSION = 1
+EXPERIMENT_FORMAT_VERSION = 2
 REWARD_SCALE_NOTE = (
     "VAD and categorical reward scales are not directly comparable; compare "
     "candidate rankings, repeat stability, feasibility, and selected identity."
@@ -176,6 +176,12 @@ def _realisation_metrics(
     )
     return {
         "valid_realisation": finite,
+        "path_length_ratio": (
+            path_ratio if np.isfinite(path_ratio) else None
+        ),
+        "joint_limit_error": (
+            joint_error if np.isfinite(joint_error) else None
+        ),
         "path_preserved": path_preserved,
         "joint_limits_satisfied": joints_ok,
         "physically_acceptable": path_preserved and joints_ok,

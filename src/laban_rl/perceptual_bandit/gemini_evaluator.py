@@ -44,8 +44,8 @@ STATE_LABELS = (
     "sadness",
     "surprise",
 )
-PROMPT_VERSION = "lma-vad-category-v1"
-SCHEMA_VERSION = "gemini-gesture-assessment-v1"
+PROMPT_VERSION = "lma-vad-category-ambiguity-v2"
+SCHEMA_VERSION = "gemini-gesture-assessment-v2"
 RENDERER_VERSION = "variant-only-mp4-v1"
 
 
@@ -72,7 +72,10 @@ class GeminiGestureAssessment(BaseModel):
         "happiness",
         "sadness",
         "surprise",
+        "ambiguous",
+        "none",
     ]
+    category_status: Literal["complete", "ambiguous", "missing"]
     confidence: float = Field(ge=0.0, le=1.0)
     anger: float = Field(ge=0.0, le=1.0)
     disgust: float = Field(ge=0.0, le=1.0)
@@ -97,23 +100,31 @@ class GeminiGestureAssessment(BaseModel):
         )
 
         total = float(np.sum(values))
-        if not np.isfinite(total) or total <= 0.0:
-            raise ValueError("State probabilities must have a finite positive sum.")
+        if not np.isfinite(total) or total < 0.0:
+            raise ValueError("State intensities must have a finite non-negative sum.")
 
         # Gemini commonly emits rounded probabilities (for example a total of
         # 0.95). Treat them as non-negative scores and normalise them rather
         # than throwing away an otherwise usable evaluation.
-        values = values / total
-
-        expected = STATE_LABELS[int(np.argmax(values))]
-        if self.perceived_state != expected:
-            # Instead of failing, auto-correct to match the highest probability
-            # This handles cases where Gemini's reasoning and probabilities disagree
-            print(
-                f"⚠️  Correcting perceived_state: {self.perceived_state!r} → {expected!r} "
-                f"(highest probability label)"
+        if self.category_status == "complete":
+            if total <= 0.0:
+                raise ValueError(
+                    "Complete category output requires positive intensities."
+                )
+            expected = STATE_LABELS[int(np.argmax(values))]
+            if self.perceived_state != expected:
+                raise ValueError(
+                    "Complete perceived_state must match the strongest intensity."
+                )
+        elif self.category_status == "ambiguous":
+            if self.perceived_state != "ambiguous":
+                raise ValueError(
+                    "Ambiguous category output requires perceived_state='ambiguous'."
+                )
+        elif self.perceived_state != "none":
+            raise ValueError(
+                "Missing category output requires perceived_state='none'."
             )
-            object.__setattr__(self, "perceived_state", expected)
 
         return self
 
@@ -129,7 +140,10 @@ class GeminiGestureAssessment(BaseModel):
             ],
             dtype=float,
         )
-        values = values / np.sum(values)
+        total = float(np.sum(values))
+        if total <= 0.0 or self.category_status == "missing":
+            return {}
+        values = values / total
 
         return {
             label: float(value)
@@ -138,6 +152,12 @@ class GeminiGestureAssessment(BaseModel):
 
     def affect_dict(self) -> dict[str, float]:
         return {key: float(getattr(self, key)) for key in VAD_KEYS}
+
+    def intensity_dict(self) -> dict[str, float]:
+        return {
+            label: float(getattr(self, label))
+            for label in STATE_LABELS
+        }
 
 
 class GeminiProVideoEvaluator:
@@ -273,13 +293,17 @@ SURPRISE:
 - high temporal contrast with an immediate response
 - not merely fast: there should be an unexpected reactive quality
 
-Classify the expressive state using exactly one of:
+If one category is clearly strongest, classify it using:
 - anger
 - disgust
 - fear
 - happiness
 - sadness
 - surprise
+
+If multiple categories are similarly plausible, use perceived_state "ambiguous"
+and category_status "ambiguous". If no category is supported by visible evidence,
+use perceived_state "none" and category_status "missing". Do not force a winner.
 
 Do not evaluate task correctness.
 No intended state is provided.
@@ -288,8 +312,9 @@ Do not use filenames, folder names, or hidden metadata as evidence.
 Return:
 - valence, arousal, and dominance as continuous values from 0 to 1
 - perceived_state
+- category_status
 - confidence from 0 to 1
-- probabilities for all 6 states that sum to 1
+- independent 0-to-1 intensity ratings for all 6 states; they need not sum to 1
 - a brief reasoning summary that mentions the key visible cues used
 """.strip()
 
@@ -429,6 +454,8 @@ Return:
                     probabilities=assessment.probability_dict(),
                     confidence=float(assessment.confidence),
                     perceived_state=assessment.perceived_state,
+                    category_status=assessment.category_status,
+                    category_intensities=assessment.intensity_dict(),
                     reasoning_summary=assessment.reasoning_summary,
                 )
                 

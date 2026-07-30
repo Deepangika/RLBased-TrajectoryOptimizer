@@ -159,18 +159,44 @@ class PerceptualEvaluation:
     probabilities: dict[str, float] = field(default_factory=dict)
     confidence: float | None = None
     perceived_state: str | None = None
+    category_status: Literal["complete", "ambiguous", "missing"] | None = None
+    category_intensities: dict[str, float] = field(default_factory=dict)
     reasoning_summary: str | None = None
 
     def validate(self, target_state: str | None = None) -> None:
         validate_vad(self.affect_ratings, name="Evaluator VAD")
+        resolved_status = self.category_status or (
+            "complete" if self.probabilities else "missing"
+        )
+        if resolved_status not in ("complete", "ambiguous", "missing"):
+            raise ValueError(
+                "category_status must be 'complete', 'ambiguous', or 'missing'."
+            )
+        intensity_values = np.asarray(
+            list(self.category_intensities.values()), dtype=float
+        )
+        if self.category_intensities and (
+            not np.all(np.isfinite(intensity_values))
+            or np.any(intensity_values < 0.0)
+            or np.any(intensity_values > 1.0)
+        ):
+            raise ValueError("Category intensities must be finite and in [0, 1].")
 
         if not self.probabilities:
+            if resolved_status == "complete":
+                raise ValueError(
+                    "Complete categorical output requires normalized probabilities."
+                )
             if self.confidence is not None and (
                 not np.isfinite(self.confidence)
                 or not 0.0 <= self.confidence <= 1.0
             ):
                 raise ValueError("Evaluator confidence must be finite and in [0, 1].")
             return
+        if resolved_status == "missing":
+            raise ValueError(
+                "Missing categorical output must not contain probabilities."
+            )
         if target_state is not None and target_state not in self.probabilities:
             raise ValueError(
                 f"Evaluator output does not contain target state "
@@ -377,6 +403,14 @@ class EnvironmentStepResult:
     mean_confidence: float | None = None
     confidence_std: float | None = None
     repeat_reliability: dict[str, Any] = field(default_factory=dict)
+    category_intensity_evaluations: list[dict[str, float]] = field(
+        default_factory=list
+    )
+    categorical_distribution_coverage: float = 0.0
+    categorical_unambiguous_coverage: float = 0.0
+    ambiguous_category_count: int = 0
+    missing_category_count: int = 0
+    categorical_complete: bool = False
 
     def __post_init__(self) -> None:
         if self.target_vad is None:
@@ -1024,4 +1058,16 @@ class PerceptualBanditEnvironment:
             mean_confidence=paired["mean_confidence"],
             confidence_std=paired["confidence_std"],
             repeat_reliability=paired["repeat_reliability"],
+            category_intensity_evaluations=paired[
+                "category_intensity_evaluations"
+            ],
+            categorical_distribution_coverage=paired[
+                "categorical_distribution_coverage"
+            ],
+            categorical_unambiguous_coverage=paired[
+                "categorical_unambiguous_coverage"
+            ],
+            ambiguous_category_count=paired["ambiguous_category_count"],
+            missing_category_count=paired["missing_category_count"],
+            categorical_complete=paired["categorical_complete"],
         )

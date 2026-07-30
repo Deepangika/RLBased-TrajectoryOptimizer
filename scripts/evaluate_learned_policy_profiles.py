@@ -36,6 +36,7 @@ from laban_rl.perceptual_bandit.policy import (
     ContinuousContextualBanditPolicy,
     FEATURE_KEYS,
 )
+from laban_rl.perceptual_bandit.compatibility import validate_checkpoint
 
 INFORMED_PROFILES = {
     "point::confident": {
@@ -184,6 +185,11 @@ def main() -> None:
     checkpoint = torch.load(
         training_dir / "latest_checkpoint.pt",
         map_location="cpu",
+    )
+    validate_checkpoint(
+        checkpoint,
+        expected_kind="learned_policy",
+        context=checkpoint.get("context"),
     )
 
     gesture = str(checkpoint["context"]["gesture"])

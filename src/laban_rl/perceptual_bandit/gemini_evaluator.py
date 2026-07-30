@@ -13,6 +13,7 @@ import numpy as np
 from pydantic import BaseModel, Field, model_validator
 
 from laban_rl.config import EMOTION_STATES
+from laban_rl.affect import VAD_KEYS
 from laban_rl.optimiser_api import LabanOptimisationResult
 from laban_rl.perceptual_bandit.environment import (
     Context,
@@ -43,6 +44,21 @@ STATE_LABELS = (
 
 
 class GeminiGestureAssessment(BaseModel):
+    valence: float = Field(
+        ge=0.0,
+        le=1.0,
+        description="0 is very unpleasant/negative; 1 is very pleasant/positive.",
+    )
+    arousal: float = Field(
+        ge=0.0,
+        le=1.0,
+        description="0 is calm/inactive; 1 is highly energized/activated.",
+    )
+    dominance: float = Field(
+        ge=0.0,
+        le=1.0,
+        description="0 is weak/submissive; 1 is powerful/dominant.",
+    )
     perceived_state: Literal[
         "anger",
         "disgust",
@@ -114,6 +130,9 @@ class GeminiGestureAssessment(BaseModel):
             for label, value in zip(STATE_LABELS, values)
         }
 
+    def affect_dict(self) -> dict[str, float]:
+        return {key: float(getattr(self, key)) for key in VAD_KEYS}
+
 
 class GeminiProVideoEvaluator:
     def __init__(
@@ -174,7 +193,8 @@ Gesture category: {gesture.upper()}
 
 The video shows only the generated styled robot-arm motion. The intended state is NOT provided.
 
-Your task is to judge which expressive state is most clearly conveyed by the visible movement style.
+Your primary task is to rate the visible movement continuously on three
+affective dimensions. The category judgment is secondary.
 
 First, internally assess the visible movement cues:
 - speed and urgency
@@ -185,7 +205,13 @@ First, internally assess the visible movement cues:
 - endpoint commitment: whether the motion appears decisive or uncertain
 - hesitation cues: pauses, delays, wavering, retreat, undershoot, or correction
 
-Use the following movement-based rubric. Judge only cues visible in the arm
+Rate each primary dimension from 0 to 1:
+- valence: 0 = very unpleasant/negative, 1 = very pleasant/positive
+- arousal: 0 = calm/inactive, 1 = highly energized/activated
+- dominance: 0 = weak/submissive, 1 = powerful/dominant
+
+Use the following movement-based rubric for the secondary category judgment.
+Judge only cues visible in the arm
 motion; do not infer facial expression, speech, narrative, or task outcome.
 
 ANGER:
@@ -237,6 +263,7 @@ No intended state is provided.
 Do not use filenames, folder names, or hidden metadata as evidence.
 
 Return:
+- valence, arousal, and dominance as continuous values from 0 to 1
 - perceived_state
 - confidence from 0 to 1
 - probabilities for all 6 states that sum to 1
@@ -343,6 +370,7 @@ Return:
                 )
                 self.last_assessment = assessment
                 return PerceptualEvaluation(
+                    affect_ratings=assessment.affect_dict(),
                     probabilities=assessment.probability_dict()
                 )
                 

@@ -26,7 +26,7 @@ import torch
 from torch import nn
 from torch.distributions import Beta
 
-from laban_rl.config import EMOTION_STATES
+from laban_rl.config import EMOTION_STATES, GESTURE_TYPES
 
 FEATURE_KEYS: tuple[str, ...] = (
     "weight",
@@ -36,11 +36,7 @@ FEATURE_KEYS: tuple[str, ...] = (
     "shape_arcness",
 )
 
-DEFAULT_GESTURES: tuple[str, ...] = (
-    "wave",
-    "reach",
-    "point",
-)
+DEFAULT_GESTURES: tuple[str, ...] = tuple(GESTURE_TYPES)
 
 DEFAULT_STATES: tuple[str, ...] = (
     *EMOTION_STATES,

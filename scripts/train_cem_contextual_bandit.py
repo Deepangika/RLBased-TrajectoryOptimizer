@@ -36,7 +36,7 @@ from laban_rl.perceptual_bandit.environment import (
     MockNoisyPerceptualEvaluator,
     PerceptualBanditEnvironment,
 )
-from laban_rl.config import EMOTION_STATES, FEATURE_KEYS
+from laban_rl.config import EMOTION_STATES, FEATURE_KEYS, GESTURE_TYPES
 from laban_rl.perceptual_bandit.cem import CEMOptimizer
 from laban_rl.perceptual_bandit.selection import select_feasible_incumbent
 
@@ -342,13 +342,25 @@ INFORMED_PROFILES.update(
     }
 )
 
+# New gestures inherit a semantically similar prior until enough evaluations
+# are available to establish gesture-specific initialization profiles.
+for _gesture, _source in {
+    "circle": "wave",
+    "beckon": "reach",
+    "celebratory_pump": "point",
+}.items():
+    for _state in EMOTION_STATES:
+        INFORMED_PROFILES[f"{_gesture}::{_state}"] = dict(
+            INFORMED_PROFILES[f"{_source}::{_state}"]
+        )
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
         "--gesture",
-        choices=["wave", "reach", "point"],
+        choices=GESTURE_TYPES,
         required=True,
     )
     parser.add_argument(
@@ -424,6 +436,15 @@ def parse_args() -> argparse.Namespace:
         default=0.0,
     )
 
+    parser.add_argument(
+        "--perceptual-reward-mode",
+        choices=["vad", "categorical"],
+        default="vad",
+        help="Primary perceptual objective. VAD is recommended; categorical reproduces legacy runs.",
+    )
+    parser.add_argument("--valence-weight", type=float, default=0.20)
+    parser.add_argument("--arousal-weight", type=float, default=0.40)
+    parser.add_argument("--dominance-weight", type=float, default=0.40)
     parser.add_argument(
         "--reward-margin-mode",
         choices=["raw", "clipped"],
@@ -504,6 +525,9 @@ def load_history_csv(csv_path: Path) -> list[dict]:
         "log_search_volume", "elite_reward_std", "mean_margin", "max_margin",
         "max_target_probability", "physical_acceptance_rate", "num_elites",
         "invalid_or_infeasible_samples",
+        "mean_vad_reward", "mean_vad_error", "mean_vad_reward_std",
+        "mean_observed_valence", "mean_observed_arousal",
+        "mean_observed_dominance",
     }
     for row in rows:
         for field in numeric_fields:
@@ -523,7 +547,9 @@ def save_history_csv(rows: list[dict], path: Path) -> None:
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(
             handle,
-            fieldnames=list(rows[0].keys()),
+            fieldnames=list(dict.fromkeys(
+                key for row in rows for key in row
+            )),
         )
         writer.writeheader()
         writer.writerows(rows)
@@ -546,6 +572,29 @@ def save_plots(rows: list[dict], out_dir: Path) -> None:
     plt.tight_layout()
     plt.savefig(out_dir / "reward_curve.png", dpi=160)
     plt.close()
+
+    if any("mean_vad_reward" in row for row in rows):
+        plt.figure(figsize=(8, 5))
+        plt.plot(
+            rounds,
+            [row.get("mean_vad_reward", float("nan")) for row in rows],
+            marker="o",
+            label="Mean VAD reward",
+        )
+        plt.plot(
+            rounds,
+            [row.get("mean_vad_error", float("nan")) for row in rows],
+            marker=".",
+            label="Mean weighted VAD error",
+        )
+        plt.xlabel("Round")
+        plt.ylabel("Score")
+        plt.title("VAD perceptual objective")
+        plt.grid(True)
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(out_dir / "vad_reward_curve.png", dpi=160)
+        plt.close()
 
     plt.figure(figsize=(8, 5))
     plt.plot(
@@ -689,6 +738,24 @@ def main() -> None:
                 )
         else:
             print("  Warning: checkpoint has no saved context; skipping context validation.")
+        saved_reward_config = checkpoint_data.get("perceptual_reward_config")
+        current_reward_config = {
+            "mode": args.perceptual_reward_mode,
+            "valence_weight": args.valence_weight,
+            "arousal_weight": args.arousal_weight,
+            "dominance_weight": args.dominance_weight,
+        }
+        if saved_reward_config is None:
+            raise RuntimeError(
+                "This checkpoint predates VAD reward metadata and cannot be resumed "
+                "safely. Use --overwrite to start a new experiment."
+            )
+        if saved_reward_config != current_reward_config:
+            raise RuntimeError(
+                f"Checkpoint reward config {saved_reward_config!r} does not match "
+                f"the current config {current_reward_config!r}. "
+                "Use matching arguments or --overwrite."
+            )
         print(f"  Resuming from round {checkpoint_data['round']} of {args.rounds}")
 
     # Get informed profile or raise error if missing and not allowed.
@@ -741,6 +808,10 @@ def main() -> None:
         evaluator=evaluator,
         reward_config=EnvironmentRewardConfig(
             repeat_evaluations=args.repeats,
+            perceptual_reward_mode=args.perceptual_reward_mode,
+            valence_weight=args.valence_weight,
+            arousal_weight=args.arousal_weight,
+            dominance_weight=args.dominance_weight,
             reward_margin_mode=args.reward_margin_mode,
             realisation_penalty_weight=(
                 args.realisation_penalty_weight
@@ -762,6 +833,10 @@ def main() -> None:
         evaluator=evaluator,
         reward_config=EnvironmentRewardConfig(
             repeat_evaluations=args.validation_repeats,
+            perceptual_reward_mode=args.perceptual_reward_mode,
+            valence_weight=args.valence_weight,
+            arousal_weight=args.arousal_weight,
+            dominance_weight=args.dominance_weight,
             reward_margin_mode=args.reward_margin_mode,
             realisation_penalty_weight=args.realisation_penalty_weight,
             max_feature_error_threshold=args.max_feature_error_threshold,
@@ -878,6 +953,10 @@ def main() -> None:
             round_classification_rates = []
             round_winner_agreements = []
             round_entropies = []
+            round_vad_rewards = []
+            round_vad_errors = []
+            round_vad_reward_stds = []
+            round_observed_vad = {key: [] for key in ("valence", "arousal", "dominance")}
 
             for sample_idx, profile in enumerate(sampled_profiles):
                 print(f"\n  Sample {sample_idx + 1}/{args.cem_samples_per_round}: {profile}")
@@ -904,7 +983,9 @@ def main() -> None:
                 # realisation is physically valid and at least one perceptual
                 # evaluation succeeded (i.e., not a fallback penalty).
                 if (
-                    result.valid_realisation and result.physically_acceptable and result.perceptual_evaluations
+                    result.valid_realisation
+                    and result.physically_acceptable
+                    and result.affective_evaluations
                 ):
                     valid_candidates.append((profile, result.outer_reward))
 
@@ -925,9 +1006,19 @@ def main() -> None:
                     round_winner_agreements.append(result.winner_agreement_rate)
                 if result.mean_probability_entropy is not None:
                     round_entropies.append(result.mean_probability_entropy)
+                if result.mean_vad_reward is not None:
+                    round_vad_rewards.append(result.mean_vad_reward)
+                if result.mean_vad_error is not None:
+                    round_vad_errors.append(result.mean_vad_error)
+                if result.vad_reward_std is not None:
+                    round_vad_reward_stds.append(result.vad_reward_std)
+                if result.mean_observed_vad is not None:
+                    for axis in round_observed_vad:
+                        round_observed_vad[axis].append(result.mean_observed_vad[axis])
 
                 print(
                     f"    Reward: {result.outer_reward:.6f}, "
+                    f"VAD reward: {result.mean_vad_reward if result.mean_vad_reward is not None else 'N/A'}, "
                     f"Target prob: {result.mean_target_probability if result.mean_target_probability is not None else 'N/A'}, "
                     f"RMSE: {result.realisation_rmse if result.realisation_rmse is not None else 'N/A'}, "
                     f"valid: {result.valid_realisation}"
@@ -1006,6 +1097,12 @@ def main() -> None:
                 "mean_target_classification_rate": float(np.mean(round_classification_rates)) if round_classification_rates else float("nan"),
                 "mean_winner_agreement_rate": float(np.mean(round_winner_agreements)) if round_winner_agreements else float("nan"),
                 "mean_probability_entropy": float(np.mean(round_entropies)) if round_entropies else float("nan"),
+                "mean_vad_reward": float(np.mean(round_vad_rewards)) if round_vad_rewards else float("nan"),
+                "mean_vad_error": float(np.mean(round_vad_errors)) if round_vad_errors else float("nan"),
+                "mean_vad_reward_std": float(np.mean(round_vad_reward_stds)) if round_vad_reward_stds else float("nan"),
+                "mean_observed_valence": float(np.mean(round_observed_vad["valence"])) if round_observed_vad["valence"] else float("nan"),
+                "mean_observed_arousal": float(np.mean(round_observed_vad["arousal"])) if round_observed_vad["arousal"] else float("nan"),
+                "mean_observed_dominance": float(np.mean(round_observed_vad["dominance"])) if round_observed_vad["dominance"] else float("nan"),
                 "mean_exploration_std": float(np.mean(list(current_std.values()))),
                 "min_exploration_std": float(cem_diagnostics["min_profile_std"]),
                 "max_exploration_std": float(cem_diagnostics["max_profile_std"]),
@@ -1041,6 +1138,12 @@ def main() -> None:
                     "context": {
                         "gesture": args.gesture,
                         "target_state": args.target_state,
+                    },
+                    "perceptual_reward_config": {
+                        "mode": args.perceptual_reward_mode,
+                        "valence_weight": args.valence_weight,
+                        "arousal_weight": args.arousal_weight,
+                        "dominance_weight": args.dominance_weight,
                     },
                     "best_reward": best_reward,
                     "best_profile": best_profile,
@@ -1164,10 +1267,10 @@ def main() -> None:
     for sample_path in (out_dir / "rounds").glob("round_*_sample_*/sample_summary.json"):
         payload = json.loads(sample_path.read_text(encoding="utf-8"))
         successful_vlm_evaluations += len(
-            payload["environment_result"].get("perceptual_evaluations") or []
+            payload["environment_result"].get("affective_evaluations") or []
         )
     successful_vlm_evaluations += sum(
-        len(result.get("perceptual_evaluations") or [])
+        len(result.get("affective_evaluations") or [])
         for name, result in validation_results.items()
         if name not in {"best_sampled_profile", "selection"}
     )
@@ -1197,6 +1300,12 @@ def main() -> None:
         "independent_selection": validation_results.get("selection"),
         "num_elites_at_end": len(cem.elites),
         "reward_margin_mode": args.reward_margin_mode,
+        "perceptual_reward_mode": args.perceptual_reward_mode,
+        "vad_weights": {
+            "valence": args.valence_weight,
+            "arousal": args.arousal_weight,
+            "dominance": args.dominance_weight,
+        },
         "cem_elite_fraction": args.cem_elite_fraction,
         "cem_initial_width": args.cem_initial_width,
         "cem_smoothing": args.cem_smoothing,

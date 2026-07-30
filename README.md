@@ -7,7 +7,10 @@ Laban-based contextual bandit pipeline for gesture style optimization and percep
 - Optimizes gesture style profiles with a CEM outer loop
 - Uses a direct inner optimizer for trajectory realization
 - Supports mock and Gemini evaluators for perceptual feedback
+- Uses valence-arousal-dominance (VAD) as the primary perceptual reward
+- Retains Ekman emotion probabilities as secondary diagnostics
 - Provides evaluation and debugging scripts for diagnostics and ablations
+- Includes wave, reach, point, circle, beckon, and celebratory-pump references
 
 ## Project layout
 
@@ -70,6 +73,10 @@ Run a small CEM training example:
     --reward-margin-mode raw \
     --seed 7 \
     --out outputs/live_wave_surprise_diagnostic_v1
+
+The default perceptual objective is weighted VAD distance (`0.2` valence,
+`0.4` arousal, `0.4` dominance). Legacy categorical-margin experiments can
+be reproduced with `--perceptual-reward-mode categorical`.
 
 If you use Gemini evaluation, set your API key first:
 

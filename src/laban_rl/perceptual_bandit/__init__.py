@@ -8,6 +8,7 @@ from .environment import (
     PerceptualBanditEnvironment,
     PerceptualEvaluation,
 )
+from laban_rl.affect import VAD_KEYS, VAD_TARGETS
 
 __all__ = [
     "Context",
@@ -16,4 +17,6 @@ __all__ = [
     "MockNoisyPerceptualEvaluator",
     "PerceptualBanditEnvironment",
     "PerceptualEvaluation",
+    "VAD_KEYS",
+    "VAD_TARGETS",
 ]

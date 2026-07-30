@@ -19,10 +19,10 @@ Observation:
     reference normalised features  : 5
     target profile                 : 5
     feature mask                   : 5
-    gesture one-hot                : 3
+    gesture one-hot                : number of configured gestures
 
 Total observation size:
-    18
+    4 * number of Laban features + 3 reference statistics + gesture count
 """
 
 from __future__ import annotations
@@ -51,6 +51,8 @@ from .features import (
     get_feature_mask,
 )
 from .rewards import compute_reward
+
+OBSERVATION_SIZE = 4 * len(FEATURE_KEYS) + 3 + len(GESTURE_TYPES)
 
 
 class LabanTrajectoryStylerEnv(gym.Env if gym is not None else object):
@@ -102,7 +104,7 @@ class LabanTrajectoryStylerEnv(gym.Env if gym is not None else object):
         self.observation_space = spaces.Box(
             low=-np.inf,
             high=np.inf,
-            shape=(26,),
+            shape=(OBSERVATION_SIZE,),
             dtype=np.float32,
         )
 

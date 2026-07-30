@@ -18,7 +18,7 @@ import numpy as np
 
 import robust_laban_normalisation_balanced_3gestures as laban
 
-from .config import FEATURE_KEYS
+from .config import CYCLIC_GESTURES, FEATURE_KEYS
 
 
 def compute_raw_and_norm_features(
@@ -81,12 +81,12 @@ def get_feature_mask(
     A value of 1 means the feature is included in the style reward.
     A value of 0 means the feature is ignored.
 
-    Space is ignored for wave because wave is cyclic and can make
+    Space is ignored for cyclic gestures because they can make
     space_indirectness unstable or undefined.
     """
     mask = np.ones(len(FEATURE_KEYS), dtype=np.float32)
 
-    if gesture_type == "wave":
+    if gesture_type in CYCLIC_GESTURES:
         mask[FEATURE_KEYS.index("space_indirectness")] = 0.0
 
     for idx, key in enumerate(FEATURE_KEYS):

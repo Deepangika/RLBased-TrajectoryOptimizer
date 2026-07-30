@@ -52,6 +52,11 @@ class TestRewardMarginMode:
         with pytest.raises(ValueError, match="reward_margin_mode"):
             config.validate()
 
+    def test_vad_is_default_reward_mode(self):
+        config = EnvironmentRewardConfig()
+        config.validate()
+        assert config.perceptual_reward_mode == "vad"
+
 
 class TestEntropyInUpdate:
     """Test entropy computation and bonus in policy updates."""
@@ -76,11 +81,11 @@ class TestInformedProfiles:
     def test_all_12_profiles_present(self):
         """All combinations of (wave|reach|point) x EMOTION_STATES should exist."""
         from scripts.train_cem_contextual_bandit import INFORMED_PROFILES
-        from laban_rl.config import EMOTION_STATES
+        from laban_rl.config import EMOTION_STATES, GESTURE_TYPES
 
         expected_keys = [
             f"{gesture}::{state}"
-            for gesture in ["wave", "reach", "point"]
+            for gesture in GESTURE_TYPES
             for state in EMOTION_STATES
         ]
 

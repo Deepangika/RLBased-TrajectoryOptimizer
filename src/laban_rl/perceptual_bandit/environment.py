@@ -18,13 +18,14 @@ Drop this file into:
 """
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Mapping, Protocol, Sequence
 
 import numpy as np
 
 from laban_rl.config import EMOTION_STATES, FEATURE_KEYS, GESTURE_TYPES
+from laban_rl.affect import VAD_KEYS, VAD_TARGETS, target_vad, validate_vad
 from laban_rl.optimiser_api import (
     LabanOptimisationResult,
     optimise_laban_target,
@@ -46,15 +47,21 @@ class Context:
             )
         if not self.target_state.strip():
             raise ValueError("target_state must be a non-empty string.")
+        target_vad(self.target_state)
 
 
 @dataclass(frozen=True)
 class PerceptualEvaluation:
     """One evaluator observation for one generated gesture."""
 
-    probabilities: dict[str, float]
+    affect_ratings: dict[str, float]
+    probabilities: dict[str, float] = field(default_factory=dict)
 
     def validate(self, target_state: str) -> None:
+        validate_vad(self.affect_ratings, name="Evaluator VAD")
+
+        if not self.probabilities:
+            return
         if target_state not in self.probabilities:
             raise ValueError(
                 f"Evaluator output does not contain target state "
@@ -98,6 +105,13 @@ class EnvironmentRewardConfig:
     """Weights for the outer perceptual reward."""
 
     repeat_evaluations: int = 3
+
+    # VAD is the primary perceptual objective. Categorical mode remains
+    # available so legacy experiments can be reproduced.
+    perceptual_reward_mode: str = "vad"
+    valence_weight: float = 0.20
+    arousal_weight: float = 0.40
+    dominance_weight: float = 0.40
 
     # Perceptual score:
     # alpha * P(target) + beta * classification margin.
@@ -146,6 +160,19 @@ class EnvironmentRewardConfig:
             raise ValueError(
                 "repeat_evaluations must be at least 1."
             )
+
+        if self.perceptual_reward_mode not in ("vad", "categorical"):
+            raise ValueError(
+                "perceptual_reward_mode must be 'vad' or 'categorical'."
+            )
+        vad_weights = np.asarray(
+            [self.valence_weight, self.arousal_weight, self.dominance_weight],
+            dtype=float,
+        )
+        if not np.all(np.isfinite(vad_weights)) or np.any(vad_weights < 0.0):
+            raise ValueError("VAD reward weights must be finite and non-negative.")
+        if not np.isclose(float(np.sum(vad_weights)), 1.0, atol=1e-8):
+            raise ValueError("VAD reward weights must sum to 1.0.")
 
         if self.reward_margin_mode not in ("raw", "clipped"):
             raise ValueError(
@@ -222,6 +249,15 @@ class EnvironmentStepResult:
 
     optimiser_output_dir: str
     action_coefficients: list[float]
+
+    target_vad: dict[str, float] | None = None
+    affective_evaluations: list[dict[str, float]] = field(default_factory=list)
+    mean_observed_vad: dict[str, float] | None = None
+    per_axis_vad_error: dict[str, float] = field(default_factory=dict)
+    mean_vad_error: float | None = None
+    mean_vad_reward: float | None = None
+    vad_reward_std: float | None = None
+    categorical_reward: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
@@ -336,8 +372,18 @@ class MockNoisyPerceptualEvaluator:
         logits_array -= np.max(logits_array)
         exp_logits = np.exp(logits_array)
         probabilities = exp_logits / np.sum(exp_logits)
+        affect_ratings = {
+            axis: float(
+                sum(
+                    probability * VAD_TARGETS[label][axis]
+                    for label, probability in zip(self.state_labels, probabilities)
+                )
+            )
+            for axis in VAD_KEYS
+        }
 
         return PerceptualEvaluation(
+            affect_ratings=affect_ratings,
             probabilities={
                 label: float(probability)
                 for label, probability in zip(
@@ -631,13 +677,29 @@ class PerceptualBanditEnvironment:
             )
 
         probability_records: list[dict[str, float]] = []
+        affective_records: list[dict[str, float]] = []
         target_probabilities: list[float] = []
         margins: list[float] = []
         margins_clipped: list[float] = []
         perceptual_rewards: list[float] = []
         perceptual_rewards_clipped: list[float] = []
+        vad_rewards: list[float] = []
+        categorical_rewards: list[float] = []
         winning_labels: list[str] = []
         probability_entropies: list[float] = []
+        affect_target = target_vad(context.target_state)
+        affect_target_vector = np.asarray(
+            [affect_target[key] for key in VAD_KEYS],
+            dtype=float,
+        )
+        affect_weights = np.asarray(
+            [
+                self.reward_config.valence_weight,
+                self.reward_config.arousal_weight,
+                self.reward_config.dominance_weight,
+            ],
+            dtype=float,
+        )
 
         try:
             for _ in range(
@@ -649,61 +711,75 @@ class PerceptualBanditEnvironment:
                 )
                 evaluation.validate(context.target_state)
 
+                affect_ratings = validate_vad(
+                    evaluation.affect_ratings,
+                    name="Evaluator VAD",
+                )
+                affective_records.append(affect_ratings)
+                affect_vector = np.asarray(
+                    [affect_ratings[key] for key in VAD_KEYS],
+                    dtype=float,
+                )
+                vad_error = float(
+                    np.sum(affect_weights * np.abs(affect_vector - affect_target_vector))
+                )
+                vad_reward = 1.0 - vad_error
+                vad_rewards.append(vad_reward)
+
                 probabilities = dict(evaluation.probabilities)
-                probability_records.append(probabilities)
-                winning_labels.append(max(probabilities, key=probabilities.get))
-                probability_values = np.asarray(list(probabilities.values()), dtype=float)
-                probability_entropies.append(float(-np.sum(
-                    probability_values * np.log(probability_values + 1e-12)
-                )))
+                categorical_reward = None
+                categorical_reward_clipped = None
+                if probabilities:
+                    probability_records.append(probabilities)
+                    winning_labels.append(max(probabilities, key=probabilities.get))
+                    probability_values = np.asarray(
+                        list(probabilities.values()),
+                        dtype=float,
+                    )
+                    probability_entropies.append(float(-np.sum(
+                        probability_values * np.log(probability_values + 1e-12)
+                    )))
 
-                target_probability = float(
-                    probabilities[context.target_state]
-                )
-                best_competitor = max(
-                    probability
-                    for label, probability in probabilities.items()
-                    if label != context.target_state
-                )
-                margin = (
-                    target_probability - best_competitor
-                )
-                margin_clipped = max(0.0, margin)
+                    target_probability = float(probabilities[context.target_state])
+                    best_competitor = max(
+                        probability
+                        for label, probability in probabilities.items()
+                        if label != context.target_state
+                    )
+                    margin = target_probability - best_competitor
+                    margin_clipped = max(0.0, margin)
+                    use_clipped = (
+                        self.reward_config.reward_margin_mode == "clipped"
+                        or self.reward_config.clip_negative_margin
+                    )
+                    effective_margin = margin_clipped if use_clipped else margin
+                    categorical_reward = (
+                        self.reward_config.target_probability_weight * target_probability
+                        + self.reward_config.margin_weight * effective_margin
+                    )
+                    categorical_reward_clipped = (
+                        self.reward_config.target_probability_weight * target_probability
+                        + self.reward_config.margin_weight * margin_clipped
+                    )
+                    target_probabilities.append(target_probability)
+                    margins.append(margin)
+                    margins_clipped.append(margin_clipped)
+                    categorical_rewards.append(float(categorical_reward))
 
-                # Use raw or clipped margin for perceptual reward.
-                use_clipped = (
-                    self.reward_config.reward_margin_mode == "clipped"
-                    or self.reward_config.clip_negative_margin
-                )
-                effective_margin = (
-                    margin_clipped if use_clipped else margin
-                )
-
-                perceptual_reward = (
-                    self.reward_config.target_probability_weight
-                    * target_probability
-                    + self.reward_config.margin_weight
-                    * effective_margin
-                )
-
-                perceptual_reward_clipped = (
-                    self.reward_config.target_probability_weight
-                    * target_probability
-                    + self.reward_config.margin_weight
-                    * margin_clipped
-                )
-
-                target_probabilities.append(target_probability)
-                margins.append(margin)
-                margins_clipped.append(margin_clipped)
-                perceptual_rewards.append(
-                    float(perceptual_reward)
-                )
-                perceptual_rewards_clipped.append(
-                    float(perceptual_reward_clipped)
-                )
+                if self.reward_config.perceptual_reward_mode == "vad":
+                    perceptual_rewards.append(vad_reward)
+                    perceptual_rewards_clipped.append(vad_reward)
+                else:
+                    if categorical_reward is None or categorical_reward_clipped is None:
+                        raise ValueError(
+                            "Categorical reward mode requires evaluator probabilities."
+                        )
+                    perceptual_rewards.append(float(categorical_reward))
+                    perceptual_rewards_clipped.append(
+                        float(categorical_reward_clipped)
+                    )
         except Exception as evaluator_error:
-            if probability_records:
+            if perceptual_rewards:
                 # At least one repetition succeeded. Use the partial results
                 # rather than discarding paid evaluations. The reward will
                 # have higher variance but is still valid signal.
@@ -768,11 +844,13 @@ class PerceptualBanditEnvironment:
                     ),
                 )
 
-        mean_target_probability = float(
-            np.mean(target_probabilities)
+        mean_target_probability = (
+            float(np.mean(target_probabilities)) if target_probabilities else None
         )
-        mean_margin = float(np.mean(margins))
-        mean_margin_clipped = float(np.mean(margins_clipped))
+        mean_margin = float(np.mean(margins)) if margins else None
+        mean_margin_clipped = (
+            float(np.mean(margins_clipped)) if margins_clipped else None
+        )
         mean_perceptual_reward = float(
             np.mean(perceptual_rewards)
         )
@@ -782,14 +860,55 @@ class PerceptualBanditEnvironment:
         perceptual_reward_std = float(
             np.std(perceptual_rewards)
         )
-        target_classification_rate = float(np.mean([
-            label == context.target_state for label in winning_labels
-        ]))
+        target_classification_rate = (
+            float(np.mean([
+                label == context.target_state for label in winning_labels
+            ]))
+            if winning_labels
+            else None
+        )
         winner_counts = {
             label: winning_labels.count(label) for label in set(winning_labels)
         }
-        winner_agreement_rate = float(max(winner_counts.values()) / len(winning_labels))
-        mean_probability_entropy = float(np.mean(probability_entropies))
+        winner_agreement_rate = (
+            float(max(winner_counts.values()) / len(winning_labels))
+            if winning_labels
+            else None
+        )
+        mean_probability_entropy = (
+            float(np.mean(probability_entropies))
+            if probability_entropies
+            else None
+        )
+        affect_matrix = np.asarray(
+            [
+                [record[key] for key in VAD_KEYS]
+                for record in affective_records
+            ],
+            dtype=float,
+        )
+        mean_affect_vector = np.mean(affect_matrix, axis=0)
+        mean_observed_vad = {
+            key: float(mean_affect_vector[index])
+            for index, key in enumerate(VAD_KEYS)
+        }
+        per_axis_vad_error = {
+            key: float(abs(mean_affect_vector[index] - affect_target_vector[index]))
+            for index, key in enumerate(VAD_KEYS)
+        }
+        mean_vad_error = float(
+            np.sum(
+                affect_weights
+                * np.asarray([per_axis_vad_error[key] for key in VAD_KEYS])
+            )
+        )
+        mean_vad_reward = float(np.mean(vad_rewards))
+        vad_reward_std = float(np.std(vad_rewards))
+        mean_categorical_reward = (
+            float(np.mean(categorical_rewards))
+            if categorical_rewards
+            else None
+        )
 
         # Always compute both raw and clipped for logging.
         outer_reward = (
@@ -864,4 +983,12 @@ class PerceptualBanditEnvironment:
                 .astype(float)
                 .tolist()
             ),
+            target_vad=affect_target,
+            affective_evaluations=affective_records,
+            mean_observed_vad=mean_observed_vad,
+            per_axis_vad_error=per_axis_vad_error,
+            mean_vad_error=mean_vad_error,
+            mean_vad_reward=mean_vad_reward,
+            vad_reward_std=vad_reward_std,
+            categorical_reward=mean_categorical_reward,
         )

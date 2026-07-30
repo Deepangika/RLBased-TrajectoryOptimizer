@@ -65,7 +65,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 import robust_laban_normalisation_balanced_3gestures as laban
 
-from laban_rl.config import FEATURE_KEYS, JointLimits
+from laban_rl.config import FEATURE_KEYS, GESTURE_TYPES, JointLimits
 from laban_rl.targets import TARGET_PROFILES
 from laban_rl.llm_profiles import resolve_target_profile, save_laban_profile_json
 from laban_rl.io_utils import load_ranges_or_default
@@ -813,7 +813,7 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--gesture", default="point", choices=["wave", "reach", "point"])
+    parser.add_argument("--gesture", default="point", choices=GESTURE_TYPES)
     parser.add_argument("--target", default="confident", help="Affective target name. With --profile-source predefined, this must exist in TARGET_PROFILES. With --profile-source llm, this can be a new state such as curious or encouraging.")
     parser.add_argument(
         "--ranges",

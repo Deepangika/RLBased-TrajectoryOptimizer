@@ -48,6 +48,12 @@ def load_ranges_or_default(path: str | Path, gesture: str | None = None) -> Dict
         return ranges
 
     if gesture not in ranges:
+        if "balanced" in ranges:
+            print(
+                f"Warning: no normalisation ranges calibrated for {gesture!r}; "
+                "using balanced ranges."
+            )
+            return ranges["balanced"]
         raise ValueError(
             f"Gesture-specific normalisation ranges do not contain values for gesture {gesture!r}. "
             f"Available gestures: {sorted(ranges)}"

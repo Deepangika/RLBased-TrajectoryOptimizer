@@ -18,7 +18,16 @@ FEATURE_KEYS = [
     "shape_arcness",
 ]
 
-GESTURE_TYPES = ["wave", "reach", "point"]
+GESTURE_TYPES = [
+    "wave",
+    "reach",
+    "point",
+    "circle",
+    "beckon",
+    "celebratory_pump",
+]
+
+CYCLIC_GESTURES = {"wave", "circle"}
 
 # Ekman's six basic emotions.
 EMOTION_STATES = [

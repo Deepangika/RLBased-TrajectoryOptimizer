@@ -27,6 +27,8 @@ from typing import Dict, Tuple
 
 import numpy as np
 
+from .config import CYCLIC_GESTURES
+
 
 def resample_trajectory(q: np.ndarray, new_progress: np.ndarray) -> np.ndarray:
     """Resample q at progress values in [0, 1]."""
@@ -239,8 +241,8 @@ def apply_style_action(
     pause_fraction = 0.35 * ((action[3] + 1.0) / 2.0)
     smooth_strength = 0.65 * ((action[4] + 1.0) / 2.0)
 
-    # Wave is cyclic; final hold is often semantically odd.
-    if gesture_type == "wave":
+    # Final holds are often semantically odd for cyclic gestures.
+    if gesture_type in CYCLIC_GESTURES:
         pause_fraction *= 0.25
 
     # 1. Time warp.
@@ -255,7 +257,7 @@ def apply_style_action(
     q = q + amp_delta * amp_env[:, None] * movement_from_start
 
     # 3. Mid-trajectory curve / arc.
-    curve_scale_for_gesture = 0.5 if gesture_type == "wave" else 1.0
+    curve_scale_for_gesture = 0.5 if gesture_type in CYCLIC_GESTURES else 1.0
     q[:, 0] += curve_scale_for_gesture * curve_strength * curve_env
     q[:, 1] -= curve_scale_for_gesture * 0.75 * curve_strength * curve_env
 

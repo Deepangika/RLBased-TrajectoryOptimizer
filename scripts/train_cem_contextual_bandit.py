@@ -675,15 +675,20 @@ def main() -> None:
         checkpoint_data = load_checkpoint(checkpoint_path)
         # Verify the checkpoint belongs to the same experiment context so a
         # checkpoint from one run cannot silently continue as a different one.
-        saved_context = checkpoint_data.get("context", {})
-        if (saved_context.get("gesture") != args.gesture
-                or saved_context.get("target_state") != args.target_state):
-            raise RuntimeError(
-                f"Checkpoint context {saved_context!r} does not match the "
-                f"current arguments (gesture={args.gesture!r}, "
-                f"target_state={args.target_state!r}). "
-                "Use --overwrite to start a new experiment."
-            )
+        saved_context = checkpoint_data.get("context")
+        if saved_context is not None:
+            if (
+                saved_context.get("gesture") != args.gesture
+                or saved_context.get("target_state") != args.target_state
+            ):
+                raise RuntimeError(
+                    f"Checkpoint context {saved_context!r} does not match the "
+                    f"current arguments (gesture={args.gesture!r}, "
+                    f"target_state={args.target_state!r}). "
+                    "Use --overwrite to start a new experiment."
+                )
+        else:
+            print("  Warning: checkpoint has no saved context; skipping context validation.")
         print(f"  Resuming from round {checkpoint_data['round']} of {args.rounds}")
 
     # Get informed profile or raise error if missing and not allowed.

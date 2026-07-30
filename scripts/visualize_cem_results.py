@@ -61,6 +61,33 @@ TARGET_PROFILES = {
 DIMENSIONS = ["weight", "time", "flow_boundness", "space_indirectness", "shape_arcness"]
 
 
+def target_label(summary: Dict) -> str:
+    if summary.get("target_state") is not None:
+        return str(summary["target_state"])
+    vad = summary["target_vad"]
+    return (
+        f"VAD ({vad['valence']:.2f}, "
+        f"{vad['arousal']:.2f}, {vad['dominance']:.2f})"
+    )
+
+
+def reference_profile(summary: Dict) -> Dict:
+    initial_validation = summary.get("initial_profile_validation") or {}
+    profile = initial_validation.get("requested_profile")
+    if profile is not None:
+        return profile
+    state = summary.get("target_state")
+    if state in TARGET_PROFILES:
+        return TARGET_PROFILES[state]
+    return summary["final_distribution_mean"]
+
+
+def format_optional_probability(value) -> str:
+    if value is None:
+        return "N/A"
+    return f"{value:.4f} ({value * 100:.1f}%)"
+
+
 def load_results(experiment_dir: Path) -> Tuple[pd.DataFrame, Dict]:
     """Load training history CSV and results summary JSON."""
     history_csv = experiment_dir / "training_history.csv"
@@ -77,7 +104,7 @@ def plot_reward_progression(history: pd.DataFrame, summary: Dict, output_path: P
     """Plot reward progression over rounds."""
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     fig.suptitle(
-        f"{summary['gesture'].title()} + {summary['target_state'].title()} | CEM Training Progress",
+        f"{summary['gesture'].title()} + {target_label(summary)} | CEM Training Progress",
         fontsize=16, fontweight="bold"
     )
     
@@ -94,17 +121,30 @@ def plot_reward_progression(history: pd.DataFrame, summary: Dict, output_path: P
     
     # Target probability
     ax = axes[0, 1]
-    ax.plot(history["round"], history["mean_target_probability"], "s-", linewidth=2, markersize=7, label="Mean Target Prob", color="#F18F01")
-    ax.fill_between(history["round"], 0, history["mean_target_probability"], alpha=0.2, color="#F18F01")
+    if summary.get("target_state") is None:
+        metric_column = "mean_vad_reward"
+        metric_label = "Mean VAD reward"
+        metric_title = "Continuous VAD target reward"
+    else:
+        metric_column = "mean_target_probability"
+        metric_label = "Mean target probability"
+        metric_title = "Target state probability"
+    ax.plot(history["round"], history[metric_column], "s-", linewidth=2, markersize=7, label=metric_label, color="#F18F01")
+    ax.fill_between(history["round"], 0, history[metric_column], alpha=0.2, color="#F18F01")
     ax.set_xlabel("Round", fontsize=11, fontweight="bold")
-    ax.set_ylabel(f"P({summary['target_state']})", fontsize=11, fontweight="bold")
-    ax.set_title("Target State Probability", fontsize=12, fontweight="bold")
+    ax.set_ylabel(metric_label, fontsize=11, fontweight="bold")
+    ax.set_title(metric_title, fontsize=12, fontweight="bold")
     ax.grid(True, alpha=0.3)
     ax.legend(fontsize=10)
     
     # Exploration width decay
     ax = axes[1, 0]
-    ax.plot(history["round"], history["exploration_width"], "^-", linewidth=2, markersize=7, label="Exploration Width", color="#C73E1D")
+    exploration_column = (
+        "mean_exploration_std"
+        if "mean_exploration_std" in history
+        else "exploration_width"
+    )
+    ax.plot(history["round"], history[exploration_column], "^-", linewidth=2, markersize=7, label="Exploration Width", color="#C73E1D")
     ax.set_xlabel("Round", fontsize=11, fontweight="bold")
     ax.set_ylabel("Width", fontsize=11, fontweight="bold")
     ax.set_title("Exploration Width Decay", fontsize=12, fontweight="bold")
@@ -124,7 +164,7 @@ def plot_reward_progression(history: pd.DataFrame, summary: Dict, output_path: P
     
     plt.tight_layout()
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
-    print(f"✓ Saved: {output_path}")
+    print(f"Saved: {output_path}")
     plt.close()
 
 
@@ -132,11 +172,11 @@ def plot_profile_comparison(summary: Dict, output_path: Path):
     """Create radar/spider plot comparing best profile vs target."""
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     fig.suptitle(
-        f"{summary['gesture'].title()} + {summary['target_state'].title()} | Profile Comparison",
+        f"{summary['gesture'].title()} + {target_label(summary)} | Profile Comparison",
         fontsize=14, fontweight="bold"
     )
     
-    target = TARGET_PROFILES[summary["target_state"]]
+    target = reference_profile(summary)
     best = summary["best_sampled_profile"]
     final_mean = summary["final_distribution_mean"]
     
@@ -187,7 +227,7 @@ def plot_profile_comparison(summary: Dict, output_path: Path):
     
     plt.tight_layout()
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
-    print(f"✓ Saved: {output_path}")
+    print(f"Saved: {output_path}")
     plt.close()
 
 
@@ -195,9 +235,10 @@ def plot_distribution_convergence(history: pd.DataFrame, summary: Dict, output_p
     """Plot how distribution means and stds converge over time."""
     fig, axes = plt.subplots(2, 3, figsize=(16, 9))
     fig.suptitle(
-        f"{summary['gesture'].title()} + {summary['target_state'].title()} | Distribution Convergence",
+        f"{summary['gesture'].title()} + {target_label(summary)} | Distribution Convergence",
         fontsize=14, fontweight="bold"
     )
+    target = reference_profile(summary)
     
     for idx, dim in enumerate(DIMENSIONS):
         ax = axes[idx // 3, idx % 3]
@@ -209,7 +250,7 @@ def plot_distribution_convergence(history: pd.DataFrame, summary: Dict, output_p
         ax.plot(history["round"], history[mean_col], "o-", linewidth=2.5, markersize=7, color="#2E86AB", label="Mean")
         
         # Add target ideal as reference
-        target_val = TARGET_PROFILES[summary["target_state"]][dim]
+        target_val = target[dim]
         ax.axhline(target_val, color="#A23B72", linestyle="--", linewidth=2, label=f"Target: {target_val:.2f}")
         
         # Add best value
@@ -225,7 +266,7 @@ def plot_distribution_convergence(history: pd.DataFrame, summary: Dict, output_p
     
     plt.tight_layout()
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
-    print(f"✓ Saved: {output_path}")
+    print(f"Saved: {output_path}")
     plt.close()
 
 
@@ -239,7 +280,7 @@ def plot_summary_table(summary: Dict, output_path: Path):
     data = [
         ["Metric", "Value"],
         ["Gesture", summary["gesture"].upper()],
-        ["Target State", summary["target_state"].upper()],
+        ["Target", target_label(summary)],
         ["", ""],
         ["Training Stats", ""],
         ["Total Rounds", str(summary["num_rounds_completed"])],
@@ -249,8 +290,8 @@ def plot_summary_table(summary: Dict, output_path: Path):
         ["Mean Reward (Last 5)", f"{summary['mean_reward_last_5_rounds']:.6f}"],
         ["", ""],
         ["Perceptual Metrics", ""],
-        ["Mean Target Prob (All)", f"{summary['mean_target_probability_all_rounds']:.4f} ({summary['mean_target_probability_all_rounds']*100:.1f}%)"],
-        ["Mean Target Prob (Last 5)", f"{summary['mean_target_probability_last_5_rounds']:.4f} ({summary['mean_target_probability_last_5_rounds']*100:.1f}%)"],
+        ["Mean Target Prob (All)", format_optional_probability(summary["mean_target_probability_all_rounds"])],
+        ["Mean Target Prob (Last 5)", format_optional_probability(summary["mean_target_probability_last_5_rounds"])],
         ["", ""],
         ["CEM Config", ""],
         ["Elite Fraction", f"{summary['cem_elite_fraction']}"],
@@ -262,12 +303,13 @@ def plot_summary_table(summary: Dict, output_path: Path):
     ]
     
     # Add dimensions
+    target = reference_profile(summary)
     for dim in DIMENSIONS:
         val = summary["best_sampled_profile"][dim]
-        target_val = TARGET_PROFILES[summary["target_state"]][dim]
+        target_val = target[dim]
         delta = val - target_val
         sign = "+" if delta >= 0 else ""
-        data.append([f"  {dim.replace('_', ' ').title()}", f"{val:.4f} (Δ {sign}{delta:.4f})"])
+        data.append([f"  {dim.replace('_', ' ').title()}", f"{val:.4f} (delta {sign}{delta:.4f})"])
     
     # Create table
     table = ax.table(cellText=data, cellLoc="left", loc="center", colWidths=[0.4, 0.6])
@@ -297,11 +339,11 @@ def plot_summary_table(summary: Dict, output_path: Path):
             table[(i, 1)].set_facecolor(color)
     
     plt.title(
-        f"{summary['gesture'].title()} + {summary['target_state'].title()} | Results Summary",
+        f"{summary['gesture'].title()} + {target_label(summary)} | Results Summary",
         fontsize=14, fontweight="bold", pad=20
     )
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
-    print(f"✓ Saved: {output_path}")
+    print(f"Saved: {output_path}")
     plt.close()
 
 
@@ -309,24 +351,24 @@ def main():
     experiment_dir = Path("outputs/experiment_cem_wave_friendly")
     
     if not experiment_dir.exists():
-        print(f"❌ Experiment directory not found: {experiment_dir}")
+        print(f"Experiment directory not found: {experiment_dir}")
         return
     
     # Load data
-    print(f"📊 Loading results from {experiment_dir}...")
+    print(f"Loading results from {experiment_dir}...")
     history, summary = load_results(experiment_dir)
     
     # Create visualizations
     output_dir = experiment_dir / "visualizations"
     output_dir.mkdir(exist_ok=True)
     
-    print("\n🎨 Generating visualizations...")
+    print("\nGenerating visualizations...")
     plot_reward_progression(history, summary, output_dir / "01_reward_progression.png")
     plot_profile_comparison(summary, output_dir / "02_profile_comparison.png")
     plot_distribution_convergence(history, summary, output_dir / "03_distribution_convergence.png")
     plot_summary_table(summary, output_dir / "04_summary_table.png")
     
-    print(f"\n✅ All visualizations saved to {output_dir}/")
+    print(f"\nAll visualizations saved to {output_dir}/")
 
 
 if __name__ == "__main__":

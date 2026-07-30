@@ -36,6 +36,7 @@ from laban_rl.perceptual_bandit.environment import (
     MockNoisyPerceptualEvaluator,
     PerceptualBanditEnvironment,
 )
+from laban_rl.affect import VAD_KEYS, VAD_TARGETS
 from laban_rl.config import EMOTION_STATES, FEATURE_KEYS, GESTURE_TYPES
 from laban_rl.perceptual_bandit.cem import CEMOptimizer
 from laban_rl.perceptual_bandit.selection import select_feasible_incumbent
@@ -365,7 +366,7 @@ for _gesture, _source in {
         )
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
@@ -376,8 +377,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--target-state",
         choices=list(EMOTION_STATES),
-        required=True,
+        help="Named affect target resolved through its configured VAD anchor.",
     )
+    parser.add_argument("--target-valence", type=float)
+    parser.add_argument("--target-arousal", type=float)
+    parser.add_argument("--target-dominance", type=float)
     parser.add_argument("--rounds", type=int, default=15)
 
     parser.add_argument(
@@ -474,7 +478,162 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Overwrite existing output folder if it is non-empty. Default: error.",
     )
-    return parser.parse_args()
+    args = parser.parse_args(argv)
+    explicit_values = (
+        args.target_valence,
+        args.target_arousal,
+        args.target_dominance,
+    )
+    has_any_explicit = any(value is not None for value in explicit_values)
+    has_all_explicit = all(value is not None for value in explicit_values)
+    if args.target_state is not None and has_any_explicit:
+        parser.error(
+            "--target-state cannot be combined with explicit "
+            "--target-valence/--target-arousal/--target-dominance."
+        )
+    if args.target_state is None and not has_all_explicit:
+        parser.error(
+            "specify either --target-state or all three explicit VAD options: "
+            "--target-valence, --target-arousal, and --target-dominance."
+        )
+    if has_any_explicit and args.perceptual_reward_mode == "categorical":
+        parser.error(
+            "explicit VAD targets require --perceptual-reward-mode vad; "
+            "categorical mode requires --target-state."
+        )
+    try:
+        context_from_args(args)
+    except ValueError as error:
+        parser.error(str(error))
+    return args
+
+
+def context_from_args(args: argparse.Namespace) -> Context:
+    if args.target_state is not None:
+        return Context(gesture=args.gesture, target_state=args.target_state)
+    return Context(
+        gesture=args.gesture,
+        target_vad={
+            "valence": args.target_valence,
+            "arousal": args.target_arousal,
+            "dominance": args.target_dominance,
+        },
+    )
+
+
+def nearest_vad_anchor(context: Context) -> str:
+    """Choose an informed-profile prior without changing the reward target."""
+    if context.target_state is not None:
+        return context.target_state
+    assert context.target_vad is not None
+    return min(
+        VAD_TARGETS,
+        key=lambda state: sum(
+            (context.target_vad[axis] - VAD_TARGETS[state][axis]) ** 2
+            for axis in VAD_KEYS
+        ),
+    )
+
+
+def target_history_metadata(context: Context) -> dict:
+    assert context.target_vad is not None
+    return {
+        "target_mode": context.target_mode,
+        "target_state": context.target_state,
+        "target_valence": context.target_vad["valence"],
+        "target_arousal": context.target_vad["arousal"],
+        "target_dominance": context.target_vad["dominance"],
+    }
+
+
+def build_resume_config(args: argparse.Namespace) -> dict:
+    """Capture settings that must remain stable across a resumed experiment."""
+    return {
+        "cem": {
+            "samples_per_round": args.cem_samples_per_round,
+            "elite_fraction": args.cem_elite_fraction,
+            "initial_width": args.cem_initial_width,
+            "exploration_decay_rate": args.exploration_decay_rate,
+            "smoothing": args.cem_smoothing,
+            "min_std": args.cem_min_std,
+            "min_elites": args.cem_min_elites,
+        },
+        "evaluation": {
+            "evaluator": args.evaluator,
+            "model": args.model if args.evaluator == "gemini" else None,
+            "temperature": args.temperature if args.evaluator == "gemini" else None,
+            "mock_noise_std": (
+                args.mock_noise_std if args.evaluator == "mock" else None
+            ),
+            "mock_distance_scale": (
+                args.mock_distance_scale if args.evaluator == "mock" else None
+            ),
+            "training_repeats": args.repeats,
+            "validation_repeats": args.validation_repeats,
+            "validation_top_k": args.validation_top_k,
+        },
+        "inner_optimizer": {
+            "maxiter": args.maxiter,
+            "popsize": args.popsize,
+            "local_maxiter": args.local_maxiter,
+            "de_mutation": args.de_mutation,
+            "de_recombination": args.de_recombination,
+            "wave_flow_target_weight": args.wave_flow_target_weight,
+            "seed": args.seed,
+        },
+        "reward": {
+            "perceptual_reward_mode": args.perceptual_reward_mode,
+            "valence_weight": args.valence_weight,
+            "arousal_weight": args.arousal_weight,
+            "dominance_weight": args.dominance_weight,
+            "reward_margin_mode": args.reward_margin_mode,
+            "realisation_penalty_weight": args.realisation_penalty_weight,
+            "max_feature_error_threshold": args.max_feature_error_threshold,
+            "max_feature_error_penalty_weight": (
+                args.max_feature_error_penalty_weight
+            ),
+            "reject_excessive_feature_error": args.reject_excessive_feature_error,
+            "stability_penalty_weight": args.stability_penalty_weight,
+        },
+    }
+
+
+def validate_resume_config(saved_config: dict | None, current_config: dict) -> None:
+    if saved_config is None:
+        raise RuntimeError(
+            "Checkpoint predates complete experiment metadata and cannot be "
+            "resumed safely. Use --overwrite to start a new experiment."
+        )
+    if saved_config != current_config:
+        raise RuntimeError(
+            f"Checkpoint experiment config {saved_config!r} does not match "
+            f"the current config {current_config!r}. "
+            "Use matching arguments or --overwrite."
+        )
+
+
+def validate_checkpoint_context(
+    saved_context: dict | None,
+    current_context: Context,
+) -> None:
+    if saved_context is None:
+        raise RuntimeError(
+            "Checkpoint has no saved target context and cannot be resumed safely. "
+            "Use --overwrite to start a new experiment."
+        )
+    try:
+        restored_context = Context.from_dict(saved_context)
+    except (KeyError, TypeError, ValueError) as error:
+        raise RuntimeError(
+            f"Checkpoint target context is invalid: {saved_context!r}. "
+            "Use --overwrite to start a new experiment."
+        ) from error
+    if restored_context.to_dict() != current_context.to_dict():
+        raise RuntimeError(
+            f"Checkpoint context {restored_context.to_dict()!r} does not match "
+            f"the current context {current_context.to_dict()!r}. "
+            "Use --overwrite to start a new experiment."
+        )
 
 
 def safe_output_folder(out_dir: Path, overwrite: bool, allow_resume: bool = False) -> bool:
@@ -537,7 +696,8 @@ def load_history_csv(csv_path: Path) -> list[dict]:
         "invalid_or_infeasible_samples",
         "mean_vad_reward", "mean_vad_error", "mean_vad_reward_std",
         "mean_observed_valence", "mean_observed_arousal",
-        "mean_observed_dominance",
+        "mean_observed_dominance", "target_valence", "target_arousal",
+        "target_dominance",
     }
     for row in rows:
         for field in numeric_fields:
@@ -709,6 +869,7 @@ def save_plots(rows: list[dict], out_dir: Path) -> None:
 
 def main() -> None:
     args = parse_args()
+    environment_context = context_from_args(args)
 
     # Note: CEMOptimizer and MockNoisyPerceptualEvaluator use
     # np.random.default_rng(seed) internally, which is seeded through their
@@ -722,11 +883,6 @@ def main() -> None:
     # Check if we're resuming from checkpoint
     is_resuming = safe_output_folder(out_dir, args.overwrite, allow_resume=True)
 
-    environment_context = Context(
-        gesture=args.gesture,
-        target_state=args.target_state,
-    )
-
     # Load checkpoint if resuming
     checkpoint_data = None
     if is_resuming:
@@ -734,48 +890,34 @@ def main() -> None:
         checkpoint_data = load_checkpoint(checkpoint_path)
         # Verify the checkpoint belongs to the same experiment context so a
         # checkpoint from one run cannot silently continue as a different one.
-        saved_context = checkpoint_data.get("context")
-        if saved_context is not None:
-            if (
-                saved_context.get("gesture") != args.gesture
-                or saved_context.get("target_state") != args.target_state
-            ):
-                raise RuntimeError(
-                    f"Checkpoint context {saved_context!r} does not match the "
-                    f"current arguments (gesture={args.gesture!r}, "
-                    f"target_state={args.target_state!r}). "
-                    "Use --overwrite to start a new experiment."
-                )
-        else:
-            print("  Warning: checkpoint has no saved context; skipping context validation.")
-        saved_reward_config = checkpoint_data.get("perceptual_reward_config")
-        current_reward_config = {
-            "mode": args.perceptual_reward_mode,
-            "valence_weight": args.valence_weight,
-            "arousal_weight": args.arousal_weight,
-            "dominance_weight": args.dominance_weight,
-        }
-        if saved_reward_config is None:
-            raise RuntimeError(
-                "This checkpoint predates VAD reward metadata and cannot be resumed "
-                "safely. Use --overwrite to start a new experiment."
-            )
-        if saved_reward_config != current_reward_config:
-            raise RuntimeError(
-                f"Checkpoint reward config {saved_reward_config!r} does not match "
-                f"the current config {current_reward_config!r}. "
-                "Use matching arguments or --overwrite."
-            )
+        validate_checkpoint_context(
+            checkpoint_data.get("context"),
+            environment_context,
+        )
+        validate_resume_config(
+            checkpoint_data.get("resume_config"),
+            build_resume_config(args),
+        )
         print(f"  Resuming from round {checkpoint_data['round']} of {args.rounds}")
 
+    target_context_metadata = environment_context.to_dict()
+    (out_dir / "target_context.json").write_text(
+        json.dumps(target_context_metadata, indent=2, allow_nan=False),
+        encoding="utf-8",
+    )
+
     # Get informed profile or raise error if missing and not allowed.
-    context_key = f"{args.gesture}::{args.target_state}"
-    initial_profile = INFORMED_PROFILES.get(context_key)
+    context_key = environment_context.key
+    initialization_anchor_state = nearest_vad_anchor(environment_context)
+    initialization_context_key = (
+        f"{args.gesture}::{initialization_anchor_state}"
+    )
+    initial_profile = INFORMED_PROFILES.get(initialization_context_key)
 
     if initial_profile is None:
         if not args.allow_default_profile:
             raise ValueError(
-                f"No informed profile for context {context_key!r}. "
+                f"No informed profile for context {initialization_context_key!r}. "
                 "Either add the profile to INFORMED_PROFILES, or use --allow-default-profile."
             )
         initial_profile = None
@@ -807,7 +949,10 @@ def main() -> None:
             distance_scale=args.mock_distance_scale,
             seed=args.seed,
         )
-        if args.target_state not in evaluator.state_labels:
+        if (
+            args.target_state is not None
+            and args.target_state not in evaluator.state_labels
+        ):
             raise ValueError(
                 f"Mock evaluator does not support target state "
                 f"{args.target_state!r}. Available labels: "
@@ -861,6 +1006,10 @@ def main() -> None:
     # Load existing history if resuming
     if is_resuming:
         history = load_history_csv(out_dir / "training_history.csv")
+        target_columns = target_history_metadata(environment_context)
+        for row in history:
+            for key, value in target_columns.items():
+                row.setdefault(key, value)
         best_reward = checkpoint_data["best_reward"]
         best_profile = checkpoint_data["best_profile"]
         # best_round_index is stored directly in the checkpoint (see save below)
@@ -1088,6 +1237,7 @@ def main() -> None:
 
             row = {
                 "round": round_index,
+                **target_history_metadata(environment_context),
                 # best_round_reward is the best reward seen in THIS round only
                 # (not a cumulative maximum).  The cumulative best is stored
                 # separately in best_profile.json.
@@ -1145,10 +1295,8 @@ def main() -> None:
                 pickle.dump({
                     "round": round_index,
                     "cem_state": cem.state_dict(),
-                    "context": {
-                        "gesture": args.gesture,
-                        "target_state": args.target_state,
-                    },
+                    "context": environment_context.to_dict(),
+                    "resume_config": build_resume_config(args),
                     "perceptual_reward_config": {
                         "mode": args.perceptual_reward_mode,
                         "valence_weight": args.valence_weight,
@@ -1287,7 +1435,11 @@ def main() -> None:
 
     results_summary = {
         "gesture": args.gesture,
-        "target_state": args.target_state,
+        "target_mode": environment_context.target_mode,
+        "target_state": environment_context.target_state,
+        "target_vad": dict(environment_context.target_vad),
+        "target": environment_context.to_dict(),
+        "initialization_anchor_state": initialization_anchor_state,
         "num_rounds_completed": num_rounds_completed,
         "samples_per_round": args.cem_samples_per_round,
         "repeats_per_round": args.repeats,

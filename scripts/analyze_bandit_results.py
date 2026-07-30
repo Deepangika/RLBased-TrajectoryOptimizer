@@ -35,7 +35,10 @@ def print_analysis(summary: dict, history: pd.DataFrame, output_dir: Path) -> No
     print("=" * 100)
 
     print(f"\nGesture:           {summary['gesture']}")
-    print(f"Target state:      {summary['target_state']}")
+    if summary.get("target_state") is not None:
+        print(f"Target state:      {summary['target_state']}")
+    else:
+        print(f"Target VAD:        {summary['target_vad']}")
     print(f"Rounds completed:  {summary['num_rounds_completed']}")
     print(f"Repeats per round: {summary['repeats_per_round']}")
 

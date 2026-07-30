@@ -26,6 +26,7 @@ for candidate in [PROJECT_ROOT, SRC_DIR]:
 
 import robust_laban_normalisation_balanced_3gestures as laban
 from laban_rl.optimiser_api import optimise_laban_target
+from laban_rl.perceptual_bandit.environment import Context
 
 
 # Target profiles for reference
@@ -109,12 +110,24 @@ def generate_best_profile_gif(
         summary = json.load(f)
     
     best_profile = summary["best_sampled_profile"]
-    target_state = summary["target_state"]
+    context = Context.from_dict(
+        summary.get("target")
+        or {
+            "gesture": summary["gesture"],
+            "target_state": summary["target_state"],
+        }
+    )
+    target_label = context.target_label
     best_reward = summary["best_reward"]
     
-    target_profile = TARGET_PROFILES[target_state]
+    initial_validation = summary.get("initial_profile_validation") or {}
+    target_profile = (
+        initial_validation.get("requested_profile")
+        or TARGET_PROFILES.get(context.target_state)
+        or best_profile
+    )
     
-    print(f"🎨 Generating GIF for {gesture} + {target_state}")
+    print(f"Generating GIF for {gesture} + {target_label}")
     print(f"   Best reward: {best_reward:.4f}")
     print(f"   Profile: {best_profile}")
     
@@ -128,7 +141,7 @@ def generate_best_profile_gif(
     
     result = optimise_laban_target(
         gesture=gesture,
-        target_state=target_state,
+        target_state=target_label,
         target_profile=best_profile,
         out_dir=temp_dir,
     )
@@ -215,7 +228,7 @@ def generate_best_profile_gif(
         # Title
         title_y = 0.95
         ax_dims.text(
-            0.5, title_y, f"{gesture.upper()} + {target_state.upper()}",
+            0.5, title_y, f"{gesture.upper()} + {target_label.upper()}",
             ha="center", fontsize=14, fontweight="bold",
             transform=ax_dims.transAxes
         )
@@ -234,7 +247,7 @@ def generate_best_profile_gif(
         ax_dims.text(0.05, y_pos, "Dimension", fontsize=10, fontweight="bold", transform=ax_dims.transAxes)
         ax_dims.text(0.35, y_pos, "Learned", fontsize=10, fontweight="bold", transform=ax_dims.transAxes)
         ax_dims.text(0.55, y_pos, "Target", fontsize=10, fontweight="bold", transform=ax_dims.transAxes)
-        ax_dims.text(0.72, y_pos, "Δ", fontsize=10, fontweight="bold", transform=ax_dims.transAxes)
+        ax_dims.text(0.72, y_pos, "Delta", fontsize=10, fontweight="bold", transform=ax_dims.transAxes)
         
         y_pos -= 0.06
         
@@ -315,14 +328,14 @@ def generate_best_profile_gif(
     anim.save(output_path, writer=PillowWriter(fps=12))
     plt.close(fig)
     
-    print(f"✅ Saved: {output_path}")
+    print(f"Saved: {output_path}")
 
 
 def main():
     experiment_dir = Path("outputs/experiment_cem_wave_friendly")
     
     if not experiment_dir.exists():
-        print(f"❌ Experiment directory not found: {experiment_dir}")
+        print(f"Experiment directory not found: {experiment_dir}")
         return
     
     output_dir = experiment_dir / "visualizations"

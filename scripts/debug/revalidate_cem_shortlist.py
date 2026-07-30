@@ -56,6 +56,10 @@ def main() -> None:
         evaluator=evaluator,
         reward_config=EnvironmentRewardConfig(
             repeat_evaluations=args.repeats,
+            perceptual_reward_mode=summary.get("perceptual_reward_mode", "vad"),
+            valence_weight=float(summary.get("vad_weights", {}).get("valence", 0.20)),
+            arousal_weight=float(summary.get("vad_weights", {}).get("arousal", 0.40)),
+            dominance_weight=float(summary.get("vad_weights", {}).get("dominance", 0.40)),
             reward_margin_mode=summary.get("reward_margin_mode", "raw"),
             realisation_penalty_weight=float(summary.get("realisation_penalty_weight", 0.25)),
             stability_penalty_weight=float(summary.get("stability_penalty_weight", 0.25)),
@@ -65,7 +69,13 @@ def main() -> None:
         ),
         optimiser_overrides=_build_optimiser_overrides(optimiser_args, summary["gesture"]),
     )
-    context = Context(gesture=summary["gesture"], target_state=summary["target_state"])
+    context = Context.from_dict(
+        summary.get("target")
+        or {
+            "gesture": summary["gesture"],
+            "target_state": summary["target_state"],
+        }
+    )
     recovered = []
     try:
         for item in previous_selection["shortlist"]:

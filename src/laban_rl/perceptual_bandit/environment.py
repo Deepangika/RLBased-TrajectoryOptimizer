@@ -20,12 +20,18 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Mapping, Protocol, Sequence
+from typing import Any, Literal, Mapping, Protocol, Sequence
 
 import numpy as np
 
 from laban_rl.config import EMOTION_STATES, FEATURE_KEYS, GESTURE_TYPES
-from laban_rl.affect import VAD_KEYS, VAD_TARGETS, target_vad, validate_vad
+from laban_rl.affect import (
+    VAD_KEYS,
+    VAD_TARGETS,
+    VADVector,
+    target_vad,
+    validate_vad,
+)
 from laban_rl.optimiser_api import (
     LabanOptimisationResult,
     optimise_laban_target,
@@ -34,10 +40,36 @@ from laban_rl.optimiser_api import (
 
 @dataclass(frozen=True)
 class Context:
-    """Context observed by the future contextual-bandit policy."""
+    """Gesture plus exactly one named or explicit continuous affect target."""
 
     gesture: str
-    target_state: str
+    target_state: str | None = None
+    target_vad: Mapping[str, float] | None = None
+    target_mode: Literal["named", "vad"] = field(init=False)
+
+    def __post_init__(self) -> None:
+        supplied_state = self.target_state
+        supplied_vad = self.target_vad
+        if (supplied_state is None) == (supplied_vad is None):
+            raise ValueError(
+                "Specify exactly one of target_state or target_vad."
+            )
+
+        if supplied_state is not None:
+            if not isinstance(supplied_state, str) or not supplied_state.strip():
+                raise ValueError("target_state must be a non-empty string.")
+            resolved_vad = target_vad(supplied_state)
+            mode: Literal["named", "vad"] = "named"
+        else:
+            resolved_vad = validate_vad(
+                supplied_vad or {},
+                name="Target VAD",
+            )
+            mode = "vad"
+
+        object.__setattr__(self, "target_vad", resolved_vad)
+        object.__setattr__(self, "target_mode", mode)
+        self.validate()
 
     def validate(self) -> None:
         if self.gesture not in GESTURE_TYPES:
@@ -45,9 +77,73 @@ class Context:
                 f"Unknown gesture {self.gesture!r}. "
                 f"Expected one of {GESTURE_TYPES}."
             )
-        if not self.target_state.strip():
-            raise ValueError("target_state must be a non-empty string.")
-        target_vad(self.target_state)
+        resolved_vad = validate_vad(self.target_vad or {}, name="Target VAD")
+        if self.target_mode == "named":
+            if self.target_state is None:
+                raise ValueError("Named target context requires target_state.")
+            if resolved_vad != target_vad(self.target_state):
+                raise ValueError(
+                    "Named target VAD does not match its configured anchor."
+                )
+        elif self.target_state is not None:
+            raise ValueError("Direct VAD target context cannot have target_state.")
+
+    @property
+    def target_label(self) -> str:
+        """Human-readable metadata label for the inner optimizer."""
+        if self.target_state is not None:
+            return self.target_state
+        assert self.target_vad is not None
+        return (
+            f"vad_v{self.target_vad['valence']:.3f}"
+            f"_a{self.target_vad['arousal']:.3f}"
+            f"_d{self.target_vad['dominance']:.3f}"
+        )
+
+    @property
+    def key(self) -> str:
+        return f"{self.gesture}::{self.target_label}"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "gesture": self.gesture,
+            "target_mode": self.target_mode,
+            "target_state": self.target_state,
+            "target_vad": dict(self.target_vad or {}),
+        }
+
+    @classmethod
+    def from_dict(cls, payload: Mapping[str, Any]) -> Context:
+        """Load current metadata or a legacy named-state context."""
+        gesture = str(payload["gesture"])
+        mode = payload.get("target_mode")
+        saved_state = payload.get("target_state")
+        saved_vad = payload.get("target_vad")
+
+        if mode is None:
+            mode = "named" if saved_state is not None else "vad"
+
+        if mode == "named":
+            if saved_state is None:
+                raise ValueError("Named context metadata is missing target_state.")
+            context = cls(gesture=gesture, target_state=str(saved_state))
+            if saved_vad is not None and validate_vad(
+                saved_vad,
+                name="Saved target VAD",
+            ) != context.target_vad:
+                raise ValueError(
+                    "Saved named target VAD does not match its configured anchor."
+                )
+            return context
+        if mode == "vad":
+            if saved_state is not None:
+                raise ValueError(
+                    "Direct VAD context metadata must not include target_state."
+                )
+            if saved_vad is None:
+                raise ValueError("Direct VAD context metadata is missing target_vad.")
+            return cls(gesture=gesture, target_vad=saved_vad)
+        raise ValueError(f"Unknown target_mode {mode!r}.")
 
 
 @dataclass(frozen=True)
@@ -57,12 +153,12 @@ class PerceptualEvaluation:
     affect_ratings: dict[str, float]
     probabilities: dict[str, float] = field(default_factory=dict)
 
-    def validate(self, target_state: str) -> None:
+    def validate(self, target_state: str | None = None) -> None:
         validate_vad(self.affect_ratings, name="Evaluator VAD")
 
         if not self.probabilities:
             return
-        if target_state not in self.probabilities:
+        if target_state is not None and target_state not in self.probabilities:
             raise ValueError(
                 f"Evaluator output does not contain target state "
                 f"{target_state!r}. Available labels: "
@@ -259,8 +355,13 @@ class EnvironmentStepResult:
     vad_reward_std: float | None = None
     categorical_reward: float | None = None
 
+    def __post_init__(self) -> None:
+        if self.target_vad is None:
+            self.target_vad = dict(self.context.target_vad or {})
+
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
+        payload["context"] = self.context.to_dict()
         return payload
 
 
@@ -431,7 +532,7 @@ class PerceptualBanditEnvironment:
         context.validate()
         return optimise_laban_target(
             gesture=context.gesture,
-            target_state=context.target_state,
+            target_state=context.target_label,
             target_profile=action_profile,
             out_dir=out_dir,
             optimiser_overrides=self.optimiser_overrides,
@@ -460,7 +561,7 @@ class PerceptualBanditEnvironment:
 
         optimisation_result = optimise_laban_target(
             gesture=context.gesture,
-            target_state=context.target_state,
+            target_state=context.target_label,
             target_profile=action_profile,
             out_dir=out_dir,
             optimiser_overrides=self.optimiser_overrides,
@@ -484,6 +585,14 @@ class PerceptualBanditEnvironment:
         a transient API failure.
         """
         context.validate()
+        if (
+            self.reward_config.perceptual_reward_mode == "categorical"
+            and context.target_state is None
+        ):
+            raise ValueError(
+                "Categorical reward mode requires a named target_state; "
+                "direct target_vad contexts use VAD reward mode."
+            )
         invalid_features = [
             key
             for key in FEATURE_KEYS
@@ -687,7 +796,10 @@ class PerceptualBanditEnvironment:
         categorical_rewards: list[float] = []
         winning_labels: list[str] = []
         probability_entropies: list[float] = []
-        affect_target = target_vad(context.target_state)
+        affect_target: VADVector = validate_vad(
+            context.target_vad or {},
+            name="Target VAD",
+        )
         affect_target_vector = np.asarray(
             [affect_target[key] for key in VAD_KEYS],
             dtype=float,
@@ -740,31 +852,38 @@ class PerceptualBanditEnvironment:
                         probability_values * np.log(probability_values + 1e-12)
                     )))
 
-                    target_probability = float(probabilities[context.target_state])
-                    best_competitor = max(
-                        probability
-                        for label, probability in probabilities.items()
-                        if label != context.target_state
-                    )
-                    margin = target_probability - best_competitor
-                    margin_clipped = max(0.0, margin)
-                    use_clipped = (
-                        self.reward_config.reward_margin_mode == "clipped"
-                        or self.reward_config.clip_negative_margin
-                    )
-                    effective_margin = margin_clipped if use_clipped else margin
-                    categorical_reward = (
-                        self.reward_config.target_probability_weight * target_probability
-                        + self.reward_config.margin_weight * effective_margin
-                    )
-                    categorical_reward_clipped = (
-                        self.reward_config.target_probability_weight * target_probability
-                        + self.reward_config.margin_weight * margin_clipped
-                    )
-                    target_probabilities.append(target_probability)
-                    margins.append(margin)
-                    margins_clipped.append(margin_clipped)
-                    categorical_rewards.append(float(categorical_reward))
+                    if context.target_state is not None:
+                        target_probability = float(
+                            probabilities[context.target_state]
+                        )
+                        best_competitor = max(
+                            probability
+                            for label, probability in probabilities.items()
+                            if label != context.target_state
+                        )
+                        margin = target_probability - best_competitor
+                        margin_clipped = max(0.0, margin)
+                        use_clipped = (
+                            self.reward_config.reward_margin_mode == "clipped"
+                            or self.reward_config.clip_negative_margin
+                        )
+                        effective_margin = (
+                            margin_clipped if use_clipped else margin
+                        )
+                        categorical_reward = (
+                            self.reward_config.target_probability_weight
+                            * target_probability
+                            + self.reward_config.margin_weight * effective_margin
+                        )
+                        categorical_reward_clipped = (
+                            self.reward_config.target_probability_weight
+                            * target_probability
+                            + self.reward_config.margin_weight * margin_clipped
+                        )
+                        target_probabilities.append(target_probability)
+                        margins.append(margin)
+                        margins_clipped.append(margin_clipped)
+                        categorical_rewards.append(float(categorical_reward))
 
                 if self.reward_config.perceptual_reward_mode == "vad":
                     perceptual_rewards.append(vad_reward)
@@ -864,7 +983,7 @@ class PerceptualBanditEnvironment:
             float(np.mean([
                 label == context.target_state for label in winning_labels
             ]))
-            if winning_labels
+            if winning_labels and context.target_state is not None
             else None
         )
         winner_counts = {

@@ -9,12 +9,13 @@ Why Beta instead of the previous logistic-normal policy:
 - the policy mean is directly interpretable as the expected Laban profile;
 - concentration controls how tightly actions are sampled around that mean.
 
-Each (gesture, target_state) context has its own learnable:
+Each named (gesture, target_state) context has its own learnable:
 - 5-D mean profile;
 - 5-D concentration values.
 
 The first reward for each context initializes the baseline and does not update
-the policy.
+the policy. Arbitrary continuous VAD targets are supported by the CEM trainer,
+not by this categorical per-context policy.
 """
 from __future__ import annotations
 

@@ -78,6 +78,39 @@ The default perceptual objective is weighted VAD distance (`0.2` valence,
 `0.4` arousal, `0.4` dominance). Legacy categorical-margin experiments can
 be reproduced with `--perceptual-reward-mode categorical`.
 
+Target an arbitrary normalized VAD point directly with all three explicit
+coordinates:
+
+  python scripts/train_cem_contextual_bandit.py \
+    --gesture point \
+    --target-valence 0.72 \
+    --target-arousal 0.58 \
+    --target-dominance 0.81 \
+    --evaluator mock \
+    --rounds 2 \
+    --cem-samples-per-round 4 \
+    --cem-min-elites 2 \
+    --repeats 2 \
+    --validation-repeats 3 \
+    --validation-top-k 2 \
+    --out outputs/direct_vad_point_mock
+
+The same direct target works with Gemini by changing `--evaluator mock` to
+`--evaluator gemini` and supplying the API key described below. The three VAD
+values must each lie in `[0, 1]`; they are an all-or-nothing alternative to
+`--target-state`. Direct targets use VAD reward mode, while categorical reward
+mode remains available only for named targets.
+
+Every run writes the resolved target to `target_context.json`, each history row,
+the checkpoint, and `results_summary.json`. Resuming with a different gesture,
+named state, direct VAD point, evaluator, optimizer, or reward configuration is
+rejected.
+
+The CEM optimizer operates directly on the resolved VAD target and uses the
+nearest named anchor only to choose an informed initial Laban profile. The
+separate `ContinuousContextualBanditPolicy` remains a per-named-state policy and
+does not generalize across arbitrary VAD coordinates.
+
 If you use Gemini evaluation, set your API key first:
 
   set GOOGLE_API_KEY=your_key_here

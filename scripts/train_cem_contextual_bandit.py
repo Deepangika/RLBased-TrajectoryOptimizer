@@ -896,9 +896,11 @@ def main() -> None:
 
                 candidates.append((profile, result.outer_reward))
                 # A candidate is eligible for CEM updates only when the
-                # realisation is physically valid and the evaluator produced
-                # a real perceptual reward (not the -1 penalty).
-                if result.valid_realisation and result.physically_acceptable:
+                # realisation is physically valid and at least one perceptual
+                # evaluation succeeded (i.e., not a fallback penalty).
+                if (
+                    result.valid_realisation and result.physically_acceptable and result.perceptual_evaluations
+                ):
                     valid_candidates.append((profile, result.outer_reward))
 
                 round_rewards.append(result.outer_reward)

@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import os
 import time
+import hashlib
+import json
 from typing import Literal
 
 import numpy as np
@@ -19,6 +21,7 @@ from laban_rl.perceptual_bandit.environment import (
     Context,
     PerceptualEvaluation,
 )
+from laban_rl.perceptual_bandit.evaluation_cache import clip_content_sha256
 from laban_rl.perceptual_bandit.variant_video import (
     render_variant_only_mp4,
 )
@@ -41,6 +44,9 @@ STATE_LABELS = (
     "sadness",
     "surprise",
 )
+PROMPT_VERSION = "lma-vad-category-v1"
+SCHEMA_VERSION = "gemini-gesture-assessment-v1"
+RENDERER_VERSION = "variant-only-mp4-v1"
 
 
 class GeminiGestureAssessment(BaseModel):
@@ -181,9 +187,26 @@ class GeminiProVideoEvaluator:
 
         self.client = genai.Client(api_key=resolved_key)
         self._upload_cache: dict[str, object] = {}
+        self._prepared_video_hashes: dict[str, str] = {}
 
         self.last_assessment: GeminiGestureAssessment | None = None
         self.last_video_path: str | None = None
+
+    def cache_identity(self) -> dict[str, object]:
+        """Return only non-secret settings that affect evaluator observations."""
+        return {
+            "provider": "gemini",
+            "model": self.model,
+            "prompt_version": PROMPT_VERSION,
+            "schema_version": SCHEMA_VERSION,
+            "settings": {
+                "temperature": self.temperature,
+                "video_duration_seconds": self.video_duration_seconds,
+                "video_fps": self.video_fps,
+                "renderer_version": RENDERER_VERSION,
+                "response_mime_type": "application/json",
+            },
+        }
 
     def _build_prompt(self, gesture: str) -> str:
         return f"""
@@ -278,14 +301,46 @@ Return:
             optimisation_result.output_dir
             / "variant_only_vlm.mp4"
         )
-
-        video_path = render_variant_only_mp4(
-            optimisation_result.q_ref,
-            optimisation_result.q_var,
-            video_path,
-            duration_seconds=self.video_duration_seconds,
-            fps=self.video_fps,
+        content_hash = clip_content_sha256(optimisation_result)
+        render_identity = hashlib.sha256(
+            json.dumps(
+                {
+                    "content_hash": content_hash,
+                    "duration": self.video_duration_seconds,
+                    "fps": self.video_fps,
+                    "renderer_version": RENDERER_VERSION,
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
+        path_key = str(video_path.resolve())
+        marker_path = video_path.with_suffix(".content.sha256")
+        persisted_hash = (
+            marker_path.read_text(encoding="ascii").strip()
+            if marker_path.exists()
+            else None
         )
+
+        if (
+            not video_path.exists()
+            or (
+                self._prepared_video_hashes.get(path_key) != render_identity
+                and persisted_hash != render_identity
+            )
+        ):
+            video_path = render_variant_only_mp4(
+                optimisation_result.q_ref,
+                optimisation_result.q_var,
+                video_path,
+                duration_seconds=self.video_duration_seconds,
+                fps=self.video_fps,
+                overwrite=True,
+            )
+            temporary_marker = marker_path.with_suffix(".tmp")
+            temporary_marker.write_text(render_identity + "\n", encoding="ascii")
+            temporary_marker.replace(marker_path)
+        self._prepared_video_hashes[path_key] = render_identity
 
         self.last_video_path = str(video_path)
         return video_path
@@ -371,7 +426,10 @@ Return:
                 self.last_assessment = assessment
                 return PerceptualEvaluation(
                     affect_ratings=assessment.affect_dict(),
-                    probabilities=assessment.probability_dict()
+                    probabilities=assessment.probability_dict(),
+                    confidence=float(assessment.confidence),
+                    perceived_state=assessment.perceived_state,
+                    reasoning_summary=assessment.reasoning_summary,
                 )
                 
             except Exception as e:
@@ -416,4 +474,5 @@ Return:
                     pass
 
         self._upload_cache.clear()
+        self._prepared_video_hashes.clear()
         self.client.close()

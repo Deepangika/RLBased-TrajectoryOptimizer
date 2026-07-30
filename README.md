@@ -111,6 +111,79 @@ nearest named anchor only to choose an informed initial Laban profile. The
 separate `ContinuousContextualBanditPolicy` remains a per-named-state policy and
 does not generalize across arbitrary VAD coordinates.
 
+## Paired perceptual experiments
+
+Use the paired runner before human validation instead of running separate VAD
+and categorical evaluator passes. It renders each candidate once, stores every
+structured repeat observation in a content-addressed cache, and derives both
+reward views from exactly those observations. Cache keys include trajectory
+content, gesture prompt context, model, temperature, renderer settings, and
+prompt/schema versions; API keys and other credentials are never cached.
+
+Create a matrix JSON such as:
+
+```json
+{
+  "gestures": ["point", "wave"],
+  "targets": [
+    {"state": "happiness"},
+    {
+      "label": "custom_vad",
+      "vad": {"valence": 0.72, "arousal": 0.58, "dominance": 0.81}
+    }
+  ],
+  "seeds": [7, 19],
+  "candidate_profiles": {
+    "baseline": {
+      "weight": 0.50,
+      "time": 0.50,
+      "flow_boundness": 0.50,
+      "space_indirectness": 0.50,
+      "shape_arcness": 0.50
+    },
+    "candidate_b": {
+      "weight": 0.65,
+      "time": 0.70,
+      "flow_boundness": 0.40,
+      "space_indirectness": 0.30,
+      "shape_arcness": 0.70
+    }
+  }
+}
+```
+
+Run the complete matrix offline with the deterministic mock evaluator:
+
+```text
+python scripts/evaluation/run_paired_perceptual_experiment.py \
+  --matrix configs/paired_matrix.json \
+  --evaluator mock \
+  --repeats 5 \
+  --cache outputs/paired_cache \
+  --out outputs/paired_mock
+```
+
+For a focused two-profile A/B check, use the same matrix with exactly two
+candidate profiles and add `--paired-ab`. The report compares ranking agreement,
+repeat stability, feasibility, and selected candidate identity. **VAD and
+categorical reward magnitudes are not directly comparable.** Direct VAD targets
+do not require categorical output; categorical rankings are reported only when
+the cached evaluator observations provide the optional probabilities.
+
+Change `--evaluator mock` to `--evaluator gemini` for live collection after
+setting the API key. Interrupted runs can be restarted with the identical
+command: completed candidates are read from `paired_results.json`, and partially
+collected repeats resume from the valid cache without duplicate Gemini calls.
+Changing clip content or any evaluator/prompt/schema setting creates a new cache
+identity; tampered or incompatible entries are rejected.
+
+Each run writes `paired_results.json`, `paired_results.csv`,
+`paired_rankings.png`, and `paired_stability.png`. Reliability output includes
+per-axis VAD mean/standard deviation, winner agreement, probability entropy and
+variability, and confidence variability. ICC(2,1) is emitted only when at least
+two clips and two repeats make it identifiable; low-repeat and zero-variance
+cases are explicitly marked unavailable rather than represented as NaN.
+
 If you use Gemini evaluation, set your API key first:
 
   set GOOGLE_API_KEY=your_key_here

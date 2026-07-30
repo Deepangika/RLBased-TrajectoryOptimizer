@@ -19,6 +19,7 @@ Drop this file into:
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+import hashlib
 from pathlib import Path
 from typing import Any, Literal, Mapping, Protocol, Sequence
 
@@ -35,6 +36,10 @@ from laban_rl.affect import (
 from laban_rl.optimiser_api import (
     LabanOptimisationResult,
     optimise_laban_target,
+)
+from laban_rl.perceptual_bandit.scoring import (
+    apply_outer_penalties,
+    score_perceptual_observations,
 )
 
 
@@ -152,11 +157,19 @@ class PerceptualEvaluation:
 
     affect_ratings: dict[str, float]
     probabilities: dict[str, float] = field(default_factory=dict)
+    confidence: float | None = None
+    perceived_state: str | None = None
+    reasoning_summary: str | None = None
 
     def validate(self, target_state: str | None = None) -> None:
         validate_vad(self.affect_ratings, name="Evaluator VAD")
 
         if not self.probabilities:
+            if self.confidence is not None and (
+                not np.isfinite(self.confidence)
+                or not 0.0 <= self.confidence <= 1.0
+            ):
+                raise ValueError("Evaluator confidence must be finite and in [0, 1].")
             return
         if target_state is not None and target_state not in self.probabilities:
             raise ValueError(
@@ -183,6 +196,11 @@ class PerceptualEvaluation:
             raise ValueError(
                 f"Evaluator probabilities must sum to 1.0; got {total:.8f}."
             )
+        if self.confidence is not None and (
+            not np.isfinite(self.confidence)
+            or not 0.0 <= self.confidence <= 1.0
+        ):
+            raise ValueError("Evaluator confidence must be finite and in [0, 1].")
 
 
 class PerceptualEvaluator(Protocol):
@@ -354,6 +372,11 @@ class EnvironmentStepResult:
     mean_vad_reward: float | None = None
     vad_reward_std: float | None = None
     categorical_reward: float | None = None
+    per_axis_vad_std: dict[str, float] = field(default_factory=dict)
+    probability_std: dict[str, float] = field(default_factory=dict)
+    mean_confidence: float | None = None
+    confidence_std: float | None = None
+    repeat_reliability: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.target_vad is None:
@@ -412,6 +435,7 @@ class MockNoisyPerceptualEvaluator:
         self.noise_std = float(noise_std)
         self.distance_scale = float(distance_scale)
         self.rng = np.random.default_rng(seed)
+        self.seed = int(seed)
 
         source = dict(
             ideal_profiles
@@ -437,10 +461,29 @@ class MockNoisyPerceptualEvaluator:
                 )
             self.ideal_profiles[label] = vector
 
-    def evaluate(
+    def cache_identity(self) -> dict[str, Any]:
+        return {
+            "provider": "mock",
+            "model": "synthetic-laban-distance",
+            "prompt_version": "mock-vad-mixture-v1",
+            "schema_version": "perceptual-evaluation-v2",
+            "settings": {
+                "state_labels": list(self.state_labels),
+                "ideal_profiles": {
+                    label: self.ideal_profiles[label].astype(float).tolist()
+                    for label in self.state_labels
+                },
+                "noise_std": self.noise_std,
+                "distance_scale": self.distance_scale,
+                "seed": self.seed,
+            },
+        }
+
+    def _evaluate_with_rng(
         self,
         context: Context,
         optimisation_result: LabanOptimisationResult,
+        rng: np.random.Generator,
     ) -> PerceptualEvaluation:
         achieved = np.asarray(
             [
@@ -465,7 +508,7 @@ class MockNoisyPerceptualEvaluator:
             )
             logit = -self.distance_scale * distance_sq
             logit += float(
-                self.rng.normal(0.0, self.noise_std)
+                rng.normal(0.0, self.noise_std)
             )
             logits.append(logit)
 
@@ -491,7 +534,32 @@ class MockNoisyPerceptualEvaluator:
                     self.state_labels,
                     probabilities,
                 )
-            }
+            },
+            confidence=float(np.max(probabilities)),
+            perceived_state=self.state_labels[int(np.argmax(probabilities))],
+        )
+
+    def evaluate(
+        self,
+        context: Context,
+        optimisation_result: LabanOptimisationResult,
+    ) -> PerceptualEvaluation:
+        return self._evaluate_with_rng(context, optimisation_result, self.rng)
+
+    def evaluate_repeat(
+        self,
+        context: Context,
+        optimisation_result: LabanOptimisationResult,
+        *,
+        repeat_index: int,
+        clip_hash: str,
+    ) -> PerceptualEvaluation:
+        material = f"{self.seed}:{clip_hash}:{repeat_index}".encode("ascii")
+        repeat_seed = int.from_bytes(hashlib.sha256(material).digest()[:8], "big")
+        return self._evaluate_with_rng(
+            context,
+            optimisation_result,
+            np.random.default_rng(repeat_seed),
         )
 
 
@@ -785,32 +853,10 @@ class PerceptualBanditEnvironment:
                 action_coefficients=optimisation_result.action_coefficients.astype(float).tolist(),
             )
 
-        probability_records: list[dict[str, float]] = []
-        affective_records: list[dict[str, float]] = []
-        target_probabilities: list[float] = []
-        margins: list[float] = []
-        margins_clipped: list[float] = []
-        perceptual_rewards: list[float] = []
-        perceptual_rewards_clipped: list[float] = []
-        vad_rewards: list[float] = []
-        categorical_rewards: list[float] = []
-        winning_labels: list[str] = []
-        probability_entropies: list[float] = []
+        observations: list[PerceptualEvaluation] = []
         affect_target: VADVector = validate_vad(
             context.target_vad or {},
             name="Target VAD",
-        )
-        affect_target_vector = np.asarray(
-            [affect_target[key] for key in VAD_KEYS],
-            dtype=float,
-        )
-        affect_weights = np.asarray(
-            [
-                self.reward_config.valence_weight,
-                self.reward_config.arousal_weight,
-                self.reward_config.dominance_weight,
-            ],
-            dtype=float,
         )
 
         try:
@@ -822,83 +868,9 @@ class PerceptualBanditEnvironment:
                     optimisation_result,
                 )
                 evaluation.validate(context.target_state)
-
-                affect_ratings = validate_vad(
-                    evaluation.affect_ratings,
-                    name="Evaluator VAD",
-                )
-                affective_records.append(affect_ratings)
-                affect_vector = np.asarray(
-                    [affect_ratings[key] for key in VAD_KEYS],
-                    dtype=float,
-                )
-                vad_error = float(
-                    np.sum(affect_weights * np.abs(affect_vector - affect_target_vector))
-                )
-                vad_reward = 1.0 - vad_error
-                vad_rewards.append(vad_reward)
-
-                probabilities = dict(evaluation.probabilities)
-                categorical_reward = None
-                categorical_reward_clipped = None
-                if probabilities:
-                    probability_records.append(probabilities)
-                    winning_labels.append(max(probabilities, key=probabilities.get))
-                    probability_values = np.asarray(
-                        list(probabilities.values()),
-                        dtype=float,
-                    )
-                    probability_entropies.append(float(-np.sum(
-                        probability_values * np.log(probability_values + 1e-12)
-                    )))
-
-                    if context.target_state is not None:
-                        target_probability = float(
-                            probabilities[context.target_state]
-                        )
-                        best_competitor = max(
-                            probability
-                            for label, probability in probabilities.items()
-                            if label != context.target_state
-                        )
-                        margin = target_probability - best_competitor
-                        margin_clipped = max(0.0, margin)
-                        use_clipped = (
-                            self.reward_config.reward_margin_mode == "clipped"
-                            or self.reward_config.clip_negative_margin
-                        )
-                        effective_margin = (
-                            margin_clipped if use_clipped else margin
-                        )
-                        categorical_reward = (
-                            self.reward_config.target_probability_weight
-                            * target_probability
-                            + self.reward_config.margin_weight * effective_margin
-                        )
-                        categorical_reward_clipped = (
-                            self.reward_config.target_probability_weight
-                            * target_probability
-                            + self.reward_config.margin_weight * margin_clipped
-                        )
-                        target_probabilities.append(target_probability)
-                        margins.append(margin)
-                        margins_clipped.append(margin_clipped)
-                        categorical_rewards.append(float(categorical_reward))
-
-                if self.reward_config.perceptual_reward_mode == "vad":
-                    perceptual_rewards.append(vad_reward)
-                    perceptual_rewards_clipped.append(vad_reward)
-                else:
-                    if categorical_reward is None or categorical_reward_clipped is None:
-                        raise ValueError(
-                            "Categorical reward mode requires evaluator probabilities."
-                        )
-                    perceptual_rewards.append(float(categorical_reward))
-                    perceptual_rewards_clipped.append(
-                        float(categorical_reward_clipped)
-                    )
+                observations.append(evaluation)
         except Exception as evaluator_error:
-            if perceptual_rewards:
+            if observations:
                 # At least one repetition succeeded. Use the partial results
                 # rather than discarding paid evaluations. The reward will
                 # have higher variance but is still valid signal.
@@ -963,97 +935,32 @@ class PerceptualBanditEnvironment:
                     ),
                 )
 
-        mean_target_probability = (
-            float(np.mean(target_probabilities)) if target_probabilities else None
-        )
-        mean_margin = float(np.mean(margins)) if margins else None
-        mean_margin_clipped = (
-            float(np.mean(margins_clipped)) if margins_clipped else None
-        )
-        mean_perceptual_reward = float(
-            np.mean(perceptual_rewards)
-        )
-        mean_perceptual_reward_clipped = float(
-            np.mean(perceptual_rewards_clipped)
-        )
-        perceptual_reward_std = float(
-            np.std(perceptual_rewards)
-        )
-        target_classification_rate = (
-            float(np.mean([
-                label == context.target_state for label in winning_labels
-            ]))
-            if winning_labels and context.target_state is not None
-            else None
-        )
-        winner_counts = {
-            label: winning_labels.count(label) for label in set(winning_labels)
-        }
-        winner_agreement_rate = (
-            float(max(winner_counts.values()) / len(winning_labels))
-            if winning_labels
-            else None
-        )
-        mean_probability_entropy = (
-            float(np.mean(probability_entropies))
-            if probability_entropies
-            else None
-        )
-        affect_matrix = np.asarray(
-            [
-                [record[key] for key in VAD_KEYS]
-                for record in affective_records
-            ],
-            dtype=float,
-        )
-        mean_affect_vector = np.mean(affect_matrix, axis=0)
-        mean_observed_vad = {
-            key: float(mean_affect_vector[index])
-            for index, key in enumerate(VAD_KEYS)
-        }
-        per_axis_vad_error = {
-            key: float(abs(mean_affect_vector[index] - affect_target_vector[index]))
-            for index, key in enumerate(VAD_KEYS)
-        }
-        mean_vad_error = float(
-            np.sum(
-                affect_weights
-                * np.asarray([per_axis_vad_error[key] for key in VAD_KEYS])
+        try:
+            paired = score_perceptual_observations(
+                observations,
+                target_vad=affect_target,
+                target_state=context.target_state,
+                reward_config=self.reward_config,
             )
-        )
-        mean_vad_reward = float(np.mean(vad_rewards))
-        vad_reward_std = float(np.std(vad_rewards))
-        mean_categorical_reward = (
-            float(np.mean(categorical_rewards))
-            if categorical_rewards
-            else None
-        )
+        except Exception as evaluator_error:
+            raise RuntimeError(
+                "Perceptual evaluator failed on every repetition; "
+                "candidate reward is unavailable."
+            ) from evaluator_error
 
-        # Always compute both raw and clipped for logging.
-        outer_reward = (
-            mean_perceptual_reward
-            - self.reward_config.realisation_penalty_weight
-            * realisation_rmse
-            - self.reward_config.stability_penalty_weight
-            * perceptual_reward_std
-            - self.reward_config.max_feature_error_penalty_weight
-            * max(
-                0.0,
-                max_abs_feature_error - self.reward_config.max_feature_error_threshold,
-            )
+        outer_reward = apply_outer_penalties(
+            paired["mean_perceptual_reward"],
+            perceptual_reward_std=paired["perceptual_reward_std"],
+            realisation_rmse=realisation_rmse,
+            max_abs_feature_error=max_abs_feature_error,
+            reward_config=self.reward_config,
         )
-
-        outer_reward_clipped = (
-            mean_perceptual_reward_clipped
-            - self.reward_config.realisation_penalty_weight
-            * realisation_rmse
-            - self.reward_config.stability_penalty_weight
-            * perceptual_reward_std
-            - self.reward_config.max_feature_error_penalty_weight
-            * max(
-                0.0,
-                max_abs_feature_error - self.reward_config.max_feature_error_threshold,
-            )
+        outer_reward_clipped = apply_outer_penalties(
+            paired["mean_perceptual_reward_clipped"],
+            perceptual_reward_std=paired["perceptual_reward_std"],
+            realisation_rmse=realisation_rmse,
+            max_abs_feature_error=max_abs_feature_error,
+            reward_config=self.reward_config,
         )
 
         return EnvironmentStepResult(
@@ -1081,16 +988,18 @@ class PerceptualBanditEnvironment:
             inner_reward=float(
                 optimisation_result.inner_reward
             ),
-            perceptual_evaluations=probability_records,
-            mean_target_probability=mean_target_probability,
-            mean_margin=mean_margin,
-            mean_margin_clipped=mean_margin_clipped,
-            mean_perceptual_reward=mean_perceptual_reward,
-            mean_perceptual_reward_clipped=mean_perceptual_reward_clipped,
-            perceptual_reward_std=perceptual_reward_std,
-            target_classification_rate=target_classification_rate,
-            winner_agreement_rate=winner_agreement_rate,
-            mean_probability_entropy=mean_probability_entropy,
+            perceptual_evaluations=paired["perceptual_evaluations"],
+            mean_target_probability=paired["mean_target_probability"],
+            mean_margin=paired["mean_margin"],
+            mean_margin_clipped=paired["mean_margin_clipped"],
+            mean_perceptual_reward=paired["mean_perceptual_reward"],
+            mean_perceptual_reward_clipped=paired[
+                "mean_perceptual_reward_clipped"
+            ],
+            perceptual_reward_std=paired["perceptual_reward_std"],
+            target_classification_rate=paired["target_classification_rate"],
+            winner_agreement_rate=paired["winner_agreement_rate"],
+            mean_probability_entropy=paired["mean_probability_entropy"],
             outer_reward=float(outer_reward),
             outer_reward_clipped=float(outer_reward_clipped),
             optimiser_output_dir=str(
@@ -1103,11 +1012,16 @@ class PerceptualBanditEnvironment:
                 .tolist()
             ),
             target_vad=affect_target,
-            affective_evaluations=affective_records,
-            mean_observed_vad=mean_observed_vad,
-            per_axis_vad_error=per_axis_vad_error,
-            mean_vad_error=mean_vad_error,
-            mean_vad_reward=mean_vad_reward,
-            vad_reward_std=vad_reward_std,
-            categorical_reward=mean_categorical_reward,
+            affective_evaluations=paired["affective_evaluations"],
+            mean_observed_vad=paired["mean_observed_vad"],
+            per_axis_vad_error=paired["per_axis_vad_error"],
+            mean_vad_error=paired["mean_vad_error"],
+            mean_vad_reward=paired["mean_vad_reward"],
+            vad_reward_std=paired["vad_reward_std"],
+            categorical_reward=paired["categorical_reward"],
+            per_axis_vad_std=paired["per_axis_vad_std"],
+            probability_std=paired["probability_std"],
+            mean_confidence=paired["mean_confidence"],
+            confidence_std=paired["confidence_std"],
+            repeat_reliability=paired["repeat_reliability"],
         )

@@ -798,14 +798,15 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
         "reward_info": reward_info,
     }
 
-    save_outputs(result, out_path, arm)
-    np.savez(
-        out_path / "spatiotemporal_direct_laban_coefficients.npz",
-        x=x_best, spatial_coeffs=spatial_coeffs, timing_coeffs=timing_coeffs,
-        q_ref=q_ref, q_spatial=q_spatial, q_var=q_var, basis=spatial_basis,
-        warped_u=warped_u, speed=speed, target=np.asarray(target_arr)
-    )
-    if history:
+    if not args.skip_output_files:
+        save_outputs(result, out_path, arm)
+        np.savez(
+            out_path / "spatiotemporal_direct_laban_coefficients.npz",
+            x=x_best, spatial_coeffs=spatial_coeffs, timing_coeffs=timing_coeffs,
+            q_ref=q_ref, q_spatial=q_spatial, q_var=q_var, basis=spatial_basis,
+            warped_u=warped_u, speed=speed, target=np.asarray(target_arr)
+        )
+    if history and not args.skip_output_files:
         # Some rows may contain a slightly different set of feature-diagnostic keys
         # when a feature is NaN or unavailable during an intermediate evaluation.
         # Build the CSV header from the union of all row keys instead of only the
@@ -815,7 +816,7 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
             writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
             writer.writeheader()
             writer.writerows(history)
-    if generation_history:
+    if generation_history and not args.skip_output_files:
         with open(out_path / "generation_convergence.csv", "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=list(generation_history[0].keys()))
             writer.writeheader()
@@ -883,6 +884,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--de-recombination", type=float, default=0.65, help="DE binomial crossover probability CR. Tuned application default: 0.65.")
     parser.add_argument("--local-method", choices=["L-BFGS-B", "Powell", "none"], default="L-BFGS-B", help="Bounded local polishing method. Powell remains available for ablation but is substantially more expensive.")
     parser.add_argument("--seed", type=int, default=17)
+    parser.add_argument(
+        "--skip-output-files",
+        action="store_true",
+        help="Return metrics without writing plots, videos, coefficients, or histories.",
+    )
     parser.add_argument("--space-weight", type=float, default=1.0)
     parser.add_argument("--shape-weight", type=float, default=1.0)
     parser.add_argument(

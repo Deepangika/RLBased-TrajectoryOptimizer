@@ -170,6 +170,7 @@ def evaluate_case(module: Any, case: dict[str, Any], out_dir: Path) -> dict[str,
     parser_args.gesture = case["gesture"]
     parser_args.target = case["state"]
     parser_args.out = str(out_dir / "optimiser_outputs")
+    parser_args.skip_output_files = True
     for name, value in case["overrides"].items():
         setattr(parser_args, name, value)
 

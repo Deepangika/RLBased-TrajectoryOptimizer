@@ -1,0 +1,85 @@
+{
+  "format_version": 1,
+  "gesture": "wave",
+  "selection_method": "equal_weight_nearest_three_seed_feasible_profile",
+  "screening_candidate_count": 128,
+  "validation_seeds": [
+    7,
+    17,
+    27
+  ],
+  "states": {
+    "anger": {
+      "original_affect_target": {
+        "weight": 0.9,
+        "time": 0.85,
+        "flow_boundness": 0.85,
+        "space_indirectness": 0.1,
+        "shape_arcness": 0.15
+      },
+      "projected_feasible_target": {
+        "weight": 0.7780272194,
+        "time": 0.7891497611,
+        "flow_boundness": 0.7265753311,
+        "space_indirectness": 0.1546006793,
+        "shape_arcness": 0.1622706712
+      },
+      "equal_weight_distance_to_original": 0.08595994791328969,
+      "validation": {
+        "strictly_feasible_seeds": 3,
+        "worst_max_abs_feature_error": 0.07922427995930847,
+        "mean_nearest_path_mse": 0.0006336884034869256,
+        "minimum_path_length_ratio": 1.0094655844521672,
+        "maximum_path_length_ratio": 1.0220218862048378
+      }
+    },
+    "disgust": {
+      "original_affect_target": {
+        "weight": 0.45,
+        "time": 0.4,
+        "flow_boundness": 0.7,
+        "space_indirectness": 0.15,
+        "shape_arcness": 0.2
+      },
+      "projected_feasible_target": {
+        "weight": 0.3152650269,
+        "time": 0.2913735675,
+        "flow_boundness": 0.2569935038,
+        "space_indirectness": 0.3508188415,
+        "shape_arcness": 0.2075726686
+      },
+      "equal_weight_distance_to_original": 0.2309084333238883,
+      "validation": {
+        "strictly_feasible_seeds": 3,
+        "worst_max_abs_feature_error": 0.04514126753030148,
+        "mean_nearest_path_mse": 0.0001676912421927939,
+        "minimum_path_length_ratio": 0.9934779914550405,
+        "maximum_path_length_ratio": 1.002989963450718
+      }
+    },
+    "sadness": {
+      "original_affect_target": {
+        "weight": 0.12,
+        "time": 0.15,
+        "flow_boundness": 0.35,
+        "space_indirectness": 0.25,
+        "shape_arcness": 0.25
+      },
+      "projected_feasible_target": {
+        "weight": 0.1428744257,
+        "time": 0.1320374762,
+        "flow_boundness": 0.2054143719,
+        "space_indirectness": 0.3085070133,
+        "shape_arcness": 0.2326816966
+      },
+      "equal_weight_distance_to_original": 0.07137771319310073,
+      "validation": {
+        "strictly_feasible_seeds": 3,
+        "worst_max_abs_feature_error": 0.08419714363857514,
+        "mean_nearest_path_mse": 0.00017932248544410786,
+        "minimum_path_length_ratio": 1.0027493587035294,
+        "maximum_path_length_ratio": 1.003950218685076
+      }
+    }
+  }
+}

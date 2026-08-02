@@ -49,6 +49,11 @@ from laban_rl.perceptual_bandit.selection import (
     select_feasible_incumbent,
     strict_realisability,
 )
+from laban_rl.targets import TARGET_PROFILES
+
+WAVE_PROJECTION_CONFIG = (
+    PROJECT_ROOT / "configs" / "wave_feasible_target_projections.json"
+)
 
 
 def _build_optimiser_overrides(args, gesture: str) -> dict:
@@ -67,6 +72,8 @@ def _build_optimiser_overrides(args, gesture: str) -> dict:
         "seed": args.seed,
     }
     
+    target_state = getattr(args, "target_state", None)
+
     # Wave gesture needs VERY strong preservation to maintain flowing structure
     if gesture == "wave":
         overrides.update({
@@ -90,6 +97,26 @@ def _build_optimiser_overrides(args, gesture: str) -> dict:
             "shape_arcness_target_weight": 0.05,       # Very gentle: shape_arcness
             "time_target_weight": 0.1,                 # Gentle: prevent time overshooting
         })
+        if target_state in {"anger", "disgust", "fear", "sadness"}:
+            overrides.update({
+                "maxiter": max(int(args.maxiter), 75),
+                "popsize": max(int(args.popsize), 8),
+                "n_timing_basis": 6,
+                "flow_boundness_target_weight": max(
+                    float(args.wave_flow_target_weight), 1.5
+                ),
+            })
+
+    if gesture == "beckon" and target_state in {"fear", "surprise"}:
+        overrides.update({
+            "maxiter": max(int(args.maxiter), 75),
+            "popsize": max(int(args.popsize), 8),
+            "n_timing_basis": 5 if target_state == "fear" else 6,
+            "time_target_weight": 0.10,
+            "flow_boundness_target_weight": 0.10,
+        })
+        if target_state == "fear":
+            overrides["shape_arcness_target_weight"] = 0.06
 
     if gesture == "celebratory_pump":
         overrides.update({
@@ -102,6 +129,63 @@ def _build_optimiser_overrides(args, gesture: str) -> dict:
         })
     
     return overrides
+
+
+def load_projected_initial_profile(
+    gesture: str,
+    target_state: str | None,
+    *,
+    path: Path = WAVE_PROJECTION_CONFIG,
+) -> tuple[dict[str, float] | None, dict | None]:
+    if gesture != "wave" or target_state not in {"anger", "disgust", "sadness"}:
+        return None, None
+    if not path.exists():
+        return None, None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if payload.get("format_version") != 1 or payload.get("gesture") != "wave":
+        raise RuntimeError(f"Wave projection config is incompatible: {path}")
+    state_payload = payload.get("states", {}).get(target_state)
+    if not isinstance(state_payload, dict):
+        raise RuntimeError(
+            f"Wave projection config has no state {target_state!r}: {path}"
+        )
+    original = state_payload.get("original_affect_target")
+    if original != TARGET_PROFILES[target_state]:
+        raise RuntimeError(
+            f"Wave projection original target for {target_state!r} does not "
+            "match the current affect-derived target."
+        )
+    projected = state_payload.get("projected_feasible_target")
+    if not isinstance(projected, dict) or set(projected) != set(FEATURE_KEYS):
+        raise RuntimeError(
+            f"Wave projected target for {target_state!r} has invalid features."
+        )
+    profile = {key: float(projected[key]) for key in FEATURE_KEYS}
+    if any(not np.isfinite(value) or not 0.0 <= value <= 1.0 for value in profile.values()):
+        raise RuntimeError(
+            f"Wave projected target for {target_state!r} is outside [0, 1]."
+        )
+    validation = state_payload.get("validation", {})
+    if (
+        validation.get("strictly_feasible_seeds") != 3
+        or float(validation.get("worst_max_abs_feature_error", np.inf)) > 0.10
+        or float(validation.get("minimum_path_length_ratio", 0.0)) < 0.70
+        or float(validation.get("maximum_path_length_ratio", np.inf)) > 1.30
+    ):
+        raise RuntimeError(
+            f"Wave projected target for {target_state!r} lacks strict "
+            "three-seed feasibility evidence."
+        )
+    return profile, {
+        "source": "projected_feasible_wave_target",
+        "config_path": str(path),
+        "original_affect_target": dict(original),
+        "projected_feasible_target": dict(profile),
+        "equal_weight_distance_to_original": float(
+            state_payload["equal_weight_distance_to_original"]
+        ),
+        "validation": dict(validation),
+    }
 
 
 # All 12 gesture-state profiles for informed initialization.
@@ -563,6 +647,9 @@ def target_history_metadata(context: Context) -> dict:
 
 def build_resume_config(args: argparse.Namespace) -> dict:
     """Capture settings that must remain stable across a resumed experiment."""
+    projected_profile, projection_metadata = load_projected_initial_profile(
+        args.gesture, args.target_state
+    )
     return {
         "cem": {
             "samples_per_round": args.cem_samples_per_round,
@@ -595,6 +682,9 @@ def build_resume_config(args: argparse.Namespace) -> dict:
             "de_recombination": args.de_recombination,
             "wave_flow_target_weight": args.wave_flow_target_weight,
             "seed": args.seed,
+            "effective_overrides": _build_optimiser_overrides(
+                args, args.gesture
+            ),
         },
         "reward": {
             "perceptual_reward_mode": args.perceptual_reward_mode,
@@ -609,6 +699,10 @@ def build_resume_config(args: argparse.Namespace) -> dict:
             ),
             "reject_excessive_feature_error": args.reject_excessive_feature_error,
             "stability_penalty_weight": args.stability_penalty_weight,
+        },
+        "initialization": {
+            "projected_profile": projected_profile,
+            "projection_metadata": projection_metadata,
         },
     }
 
@@ -1001,6 +1095,17 @@ def main() -> None:
         f"{args.gesture}::{initialization_anchor_state}"
     )
     initial_profile = INFORMED_PROFILES.get(initialization_context_key)
+    initialization_profile_metadata = {
+        "source": "informed_named_anchor",
+        "anchor_state": initialization_anchor_state,
+        "profile": dict(initial_profile) if initial_profile is not None else None,
+    }
+    projected_profile, projection_metadata = load_projected_initial_profile(
+        args.gesture, environment_context.target_state
+    )
+    if projected_profile is not None:
+        initial_profile = projected_profile
+        initialization_profile_metadata = dict(projection_metadata or {})
 
     if initial_profile is None:
         if not args.allow_default_profile:
@@ -1009,6 +1114,15 @@ def main() -> None:
                 "Either add the profile to INFORMED_PROFILES, or use --allow-default-profile."
             )
         initial_profile = None
+
+    (out_dir / "initialization_profile.json").write_text(
+        json.dumps(
+            initialization_profile_metadata,
+            indent=2,
+            allow_nan=False,
+        ),
+        encoding="utf-8",
+    )
 
     cem = CEMOptimizer(
         initial_profile=initial_profile,
@@ -1549,6 +1663,7 @@ def main() -> None:
         "target_vad": dict(environment_context.target_vad),
         "target": environment_context.to_dict(),
         "initialization_anchor_state": initialization_anchor_state,
+        "initialization_profile": initialization_profile_metadata,
         "num_rounds_completed": num_rounds_completed,
         "samples_per_round": args.cem_samples_per_round,
         "repeats_per_round": args.repeats,
@@ -1614,6 +1729,9 @@ def main() -> None:
         "inner_local_maxiter": args.local_maxiter,
         "inner_de_mutation": args.de_mutation,
         "inner_de_recombination": args.de_recombination,
+        "inner_optimizer_overrides": _build_optimiser_overrides(
+            args, args.gesture
+        ),
         "evaluator_max_attempts": args.evaluator_max_attempts,
         "evaluator_retry_base_seconds": args.evaluator_retry_base_seconds,
         "seed": args.seed,

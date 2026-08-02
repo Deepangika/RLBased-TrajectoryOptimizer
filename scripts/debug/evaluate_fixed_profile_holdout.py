@@ -10,7 +10,6 @@ import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from types import SimpleNamespace
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_DIR = PROJECT_ROOT / "src"
@@ -24,7 +23,6 @@ from laban_rl.perceptual_bandit.environment import (  # noqa: E402
     PerceptualBanditEnvironment,
 )
 from laban_rl.perceptual_bandit.gemini_evaluator import GeminiProVideoEvaluator  # noqa: E402
-from scripts.train_cem_contextual_bandit import _build_optimiser_overrides  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
@@ -63,6 +61,17 @@ def selected_profile(summary: dict) -> tuple[dict[str, float], dict]:
     raise RuntimeError("No independently selected fixed profile was found.")
 
 
+def recorded_optimizer_overrides(summary: dict) -> dict:
+    overrides = summary.get("inner_optimizer_overrides")
+    if not isinstance(overrides, dict):
+        raise RuntimeError(
+            "This experiment predates recorded effective inner-optimizer "
+            "overrides, so an exact holdout trajectory cannot be reproduced. "
+            "Rerun training with the current workflow before collecting a holdout."
+        )
+    return dict(overrides)
+
+
 def main() -> None:
     args = parse_args()
     if args.repeats < 1:
@@ -79,6 +88,7 @@ def main() -> None:
 
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
     profile, selection_metadata = selected_profile(summary)
+    optimiser_overrides = recorded_optimizer_overrides(summary)
     model = args.model or summary.get("model") or "gemini-2.5-flash"
     temperature = (
         float(args.temperature)
@@ -86,15 +96,6 @@ def main() -> None:
         else float(summary.get("temperature", 0.2))
     )
 
-    optimiser_args = SimpleNamespace(
-        maxiter=int(summary["inner_maxiter"]),
-        popsize=int(summary["inner_popsize"]),
-        local_maxiter=int(summary["inner_local_maxiter"]),
-        seed=int(summary["seed"]),
-        de_mutation=float(summary.get("inner_de_mutation", 0.5)),
-        de_recombination=float(summary.get("inner_de_recombination", 0.65)),
-        wave_flow_target_weight=float(summary.get("wave_flow_target_weight", 0.35)),
-    )
     evaluator = GeminiProVideoEvaluator(model=model, temperature=temperature)
     environment = PerceptualBanditEnvironment(
         evaluator=evaluator,
@@ -111,9 +112,7 @@ def main() -> None:
             max_feature_error_penalty_weight=float(summary.get("max_feature_error_penalty_weight", 0.50)),
             reject_excessive_feature_error=False,
         ),
-        optimiser_overrides=_build_optimiser_overrides(
-            optimiser_args, summary["gesture"]
-        ),
+        optimiser_overrides=optimiser_overrides,
     )
     context = Context.from_dict(
         summary.get("target")

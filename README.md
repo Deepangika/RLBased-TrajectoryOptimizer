@@ -145,6 +145,46 @@ resolution with moderate Time/Flow tracking and additional Shape tracking for
 fear. Raw and seed-aggregated CSV/JSON outputs are written under
 `outputs/focused_inner_screen`.
 
+The robust inner-optimizer defaults selected by this screen are applied
+automatically during CEM training. Beckon-fear uses five timing bases and the
+75-iteration/eight-member budget; beckon-surprise uses six timing bases with the
+same budget. The four difficult wave states (anger, disgust, fear, and sadness)
+use six timing bases, the 75/eight budget, and Flow target weight 1.5.
+
+### Feasible wave-target projection
+
+For wave anger, disgust, and sadness, the affect-derived five-feature profiles
+contain combinations that were not reliably realizable under the strict `0.10`
+feature gate. Reproduce the deterministic feasible-region projection with:
+
+```text
+python scripts/evaluation/project_wave_feasible_targets.py \
+  --out outputs/wave_feasible_projection \
+  --config-out configs/wave_feasible_target_projections.json
+```
+
+For each state, the workflow screens 128 nearby candidates with seed 7, then
+validates the eight nearest feasible candidates with seeds 17 and 27. It
+publishes a projection only when the selected profile passes all three seeds,
+the path-ratio gate, and the per-feature threshold. CEM uses that projected
+profile only as its initialization centre: perceptual scoring still uses the
+original named affect and VAD target. Run metadata records both profiles,
+projection distance, validation evidence, and the effective inner-optimizer
+overrides so resumes and holdout checks remain reproducible.
+
+Render the selected projected wave motions together with the refined wave-fear
+and beckon motions for visual review:
+
+```text
+python scripts/evaluation/render_refined_motion_review.py \
+  --out outputs/refined_motion_review \
+  --seed 7
+```
+
+The command writes one GIF and feature plot per condition plus
+`render_summary.json`. Passing numerical gates establish realizability, not
+human interpretability; review the rendered motions before live evaluation.
+
 ## Paired perceptual experiments
 
 Use the paired runner before human validation instead of running separate VAD

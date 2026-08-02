@@ -374,6 +374,7 @@ def compute_out_of_range_penalty(features_unclipped: Dict[str, float]) -> float:
 def compose_loss_components(
     *,
     feature_loss: float,
+    target_tracking_errors: Dict[str, float],
     out_of_range_error: float,
     joint_preservation_error: float,
     smoothness_error: float,
@@ -386,6 +387,26 @@ def compose_loss_components(
     """Single source of truth for both optimisation and final loss reporting."""
     components = {
         "feature_loss": float(feature_loss),
+        "target_weight": (
+            float(args.weight_target_weight)
+            * float(target_tracking_errors["weight"])
+        ),
+        "target_time": (
+            float(args.time_target_weight)
+            * float(target_tracking_errors["time"])
+        ),
+        "target_flow_boundness": (
+            float(args.flow_boundness_target_weight)
+            * float(target_tracking_errors["flow_boundness"])
+        ),
+        "target_space_indirectness": (
+            float(args.space_indirectness_target_weight)
+            * float(target_tracking_errors["space_indirectness"])
+        ),
+        "target_shape_arcness": (
+            float(args.shape_arcness_target_weight)
+            * float(target_tracking_errors["shape_arcness"])
+        ),
         "out_of_range": float(args.out_of_range_weight) * float(out_of_range_error),
         "joint_preservation": float(args.preserve_weight) * float(joint_preservation_error),
         "nearest_path": float(args.nearest_path_weight) * float(terms["nearest_path_mse"]),
@@ -540,6 +561,12 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
             target_profile,
             feature_weights,
         )
+        target_tracking_errors = {
+            key: (
+                float(var_norm_unclipped[key]) - float(target_profile[key])
+            ) ** 2
+            for key in FEATURE_KEYS
+        }
         out_of_range_error = compute_out_of_range_penalty(var_norm_unclipped)
         
         joint_preservation_error = float(np.mean((q_spatial - q_ref) ** 2))
@@ -551,6 +578,7 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
         timing_coeff_error = float(np.mean(timing_coeffs ** 2)) if len(timing_coeffs) else 0.0
         loss_components = compose_loss_components(
             feature_loss=feature_loss,
+            target_tracking_errors=target_tracking_errors,
             out_of_range_error=out_of_range_error,
             joint_preservation_error=joint_preservation_error,
             smoothness_error=smoothness_error,
@@ -672,6 +700,10 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
             f"{var_norm_unclipped}"
         )
     feature_loss, feature_diag = weighted_feature_rmse(var_norm_unclipped, target_profile, feature_weights)
+    target_tracking_errors = {
+        key: (float(var_norm_unclipped[key]) - float(target_profile[key])) ** 2
+        for key in FEATURE_KEYS
+    }
     out_of_range_error = compute_out_of_range_penalty(var_norm_unclipped)
     joint_preservation_error = float(np.mean((q_spatial - q_ref) ** 2))
     terms = compute_preservation_terms(q_ref, q_var, q_spatial, warped_u, speed, arm, args.detour_tolerance, args.max_dev_tolerance)
@@ -681,6 +713,7 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
     timing_coeff_error = float(np.mean(timing_coeffs ** 2)) if len(timing_coeffs) else 0.0
     loss_components = compose_loss_components(
         feature_loss=feature_loss,
+        target_tracking_errors=target_tracking_errors,
         out_of_range_error=out_of_range_error,
         joint_preservation_error=joint_preservation_error,
         smoothness_error=smoothness_error,

@@ -126,6 +126,25 @@ nearest named anchor only to choose an informed initial Laban profile. The
 separate `ContinuousContextualBanditPolicy` remains a per-named-state policy and
 does not generalize across arbitrary VAD coordinates.
 
+### Focused inner-optimizer screening
+
+Before spending Gemini calls on difficult gesture/state pairs, run the
+mock-independent inner screens:
+
+```text
+python scripts/evaluation/run_focused_inner_screen.py --phase beckon-fear
+python scripts/evaluation/run_focused_inner_screen.py --phase beckon-surprise
+python scripts/evaluation/run_focused_inner_screen.py --phase wave
+```
+
+The runner enforces the `0.10` per-feature threshold and records physical,
+path-preservation, smoothness, and per-feature diagnostics for seeds 7, 17, and
+27. Each case is persisted atomically and can safely resume. Wave varies Flow
+target weight and timing resolution; beckon varies optimizer effort and timing
+resolution with moderate Time/Flow tracking and additional Shape tracking for
+fear. Raw and seed-aggregated CSV/JSON outputs are written under
+`outputs/focused_inner_screen`.
+
 ## Paired perceptual experiments
 
 Use the paired runner before human validation instead of running separate VAD

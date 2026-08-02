@@ -104,7 +104,22 @@ mode remains available only for named targets.
 Every run writes the resolved target to `target_context.json`, each history row,
 the checkpoint, and `results_summary.json`. Resuming with a different gesture,
 named state, direct VAD point, evaluator, optimizer, or reward configuration is
-rejected.
+rejected. Resume an interrupted compatible run explicitly with `--resume`; use
+`--overwrite` to discard an existing run and start fresh. An explicit resume can
+also recover deterministic work and cached repeats if interruption occurred
+before the first checkpoint. Checkpoints created before strict feasible-only CEM
+updates are rejected because their learned search state cannot be reinterpreted
+safely.
+
+CEM updates use only candidates that pass physical checks, feature RMSE and
+maximum-error thresholds, and the complete requested perceptual repeat count.
+If fewer than `--cem-min-elites` candidates qualify, that round does not update
+the distribution. Exploration contracts only after a strictly feasible
+incumbent improves. Successful repeats are persisted so retries collect only
+missing observations. Training and independent validation use separate cache
+namespaces to prevent validation from reusing observations that influenced the
+search. Results report the best observed profile separately from the best
+strictly feasible profile and split training from validation evaluator counts.
 
 The CEM optimizer operates directly on the resolved VAD target and uses the
 nearest named anchor only to choose an informed initial Laban profile. The
@@ -218,16 +233,10 @@ in a second confidence penalty. No empirical stability constant is assumed.
 ## Checkpoint and cache compatibility
 
 Current CEM checkpoints include format, feature-order, state-schema, and complete
-named/direct-VAD target fingerprint metadata. Legacy learned-policy weights
-without observation-shape metadata are rejected rather than reinterpreted.
-Pre-VAD CEM checkpoints missing complete context/config metadata are also
-rejected. Eligible CEM checkpoints can receive metadata only in a new file:
-
-```text
-python scripts/evaluation/migrate_checkpoint_metadata.py \
-  --checkpoint outputs/old/latest_checkpoint.pt \
-  --out outputs/migrated/latest_checkpoint.pt
-```
+named/direct-VAD target fingerprint metadata plus strict outer-loop semantics.
+Legacy learned-policy weights without observation-shape metadata are rejected
+rather than reinterpreted. Metadata-less and pre-strict CEM checkpoints are also
+rejected because their learned search state cannot be migrated safely.
 
 Evaluator cache format and Gemini prompt/schema versions are content-addressed.
 Old entries are never silently reused after category-schema changes.

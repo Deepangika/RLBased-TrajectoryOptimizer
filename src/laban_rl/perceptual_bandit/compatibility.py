@@ -13,6 +13,7 @@ from laban_rl.envs import OBSERVATION_SIZE
 CHECKPOINT_FORMAT_VERSION = 2
 POLICY_OBSERVATION_SCHEMA = "laban-observation-v2"
 CEM_STATE_SCHEMA = "beta-cem-v1"
+OUTER_LOOP_SCHEMA = "strict-feasible-cem-v1"
 
 
 class CheckpointCompatibilityError(RuntimeError):
@@ -48,6 +49,8 @@ def checkpoint_metadata(
     }
     if kind == "learned_policy":
         metadata["observation_size"] = OBSERVATION_SIZE
+    else:
+        metadata["outer_loop_schema"] = OUTER_LOOP_SCHEMA
     if context is not None:
         metadata["target_fingerprint"] = target_fingerprint(context)
     return metadata
@@ -65,6 +68,11 @@ def migrate_metadata_only_checkpoint(
             "Learned-policy checkpoint has no observation-schema metadata. "
             "Its weights may use an older observation shape and must not be "
             "silently reinterpreted; retrain or use the original code version."
+        )
+    if "cem_state" in migrated:
+        raise CheckpointCompatibilityError(
+            "Metadata-less CEM checkpoints predate strict feasible-only outer-loop "
+            "updates and cannot be migrated safely. Start a new run."
         )
     if not all(key in migrated for key in ("cem_state", "context", "resume_config")):
         raise CheckpointCompatibilityError(
@@ -112,8 +120,13 @@ def validate_checkpoint(
             raise CheckpointCompatibilityError(
                 "Learned-policy observation shape is incompatible; retraining is required."
             )
-    elif metadata.get("state_schema") != CEM_STATE_SCHEMA:
-        raise CheckpointCompatibilityError("CEM state schema is incompatible.")
+    else:
+        if metadata.get("state_schema") != CEM_STATE_SCHEMA:
+            raise CheckpointCompatibilityError("CEM state schema is incompatible.")
+        if metadata.get("outer_loop_schema") != OUTER_LOOP_SCHEMA:
+            raise CheckpointCompatibilityError(
+                "CEM outer-loop semantics are incompatible; start a new run."
+            )
     if context is not None and metadata.get("target_fingerprint") != target_fingerprint(
         context
     ):

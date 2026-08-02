@@ -606,6 +606,7 @@ class PerceptualBanditEnvironment:
         evaluator: PerceptualEvaluator,
         reward_config: EnvironmentRewardConfig | None = None,
         optimiser_overrides: Mapping[str, Any] | None = None,
+        observation_cache: Any | None = None,
     ) -> None:
         self.evaluator = evaluator
         self.reward_config = (
@@ -617,6 +618,7 @@ class PerceptualBanditEnvironment:
         self.optimiser_overrides = dict(
             optimiser_overrides or {}
         )
+        self.observation_cache = observation_cache
 
     def run_inner_step(
         self,
@@ -687,6 +689,19 @@ class PerceptualBanditEnvironment:
         a transient API failure.
         """
         context.validate()
+        if optimisation_result.gesture != context.gesture:
+            raise ValueError(
+                "Optimisation result gesture does not match evaluation context: "
+                f"{optimisation_result.gesture!r} != {context.gesture!r}."
+            )
+        if (
+            context.target_state is not None
+            and optimisation_result.target_state != context.target_state
+        ):
+            raise ValueError(
+                "Optimisation result target state does not match evaluation context: "
+                f"{optimisation_result.target_state!r} != {context.target_state!r}."
+            )
         if (
             self.reward_config.perceptual_reward_mode == "categorical"
             and context.target_state is None
@@ -894,28 +909,29 @@ class PerceptualBanditEnvironment:
         )
 
         try:
-            for _ in range(
-                self.reward_config.repeat_evaluations
-            ):
-                evaluation = self.evaluator.evaluate(
-                    context,
-                    optimisation_result,
+            if self.observation_cache is not None:
+                observations = self.observation_cache.collect(
+                    context=context,
+                    result=optimisation_result,
+                    evaluator=self.evaluator,
+                    repeats=self.reward_config.repeat_evaluations,
                 )
-                evaluation.validate(context.target_state)
-                observations.append(evaluation)
+            else:
+                for _ in range(self.reward_config.repeat_evaluations):
+                    evaluation = self.evaluator.evaluate(
+                        context,
+                        optimisation_result,
+                    )
+                    evaluation.validate(context.target_state)
+                    observations.append(evaluation)
         except Exception as evaluator_error:
-            if observations:
-                # At least one repetition succeeded. Use the partial results
-                # rather than discarding paid evaluations. The reward will
-                # have higher variance but is still valid signal.
-                pass
-            elif self.reward_config.evaluator_failure_mode == "raise":
+            if self.reward_config.evaluator_failure_mode == "raise":
                 raise RuntimeError(
-                    "Perceptual evaluator failed on every repetition; "
-                    "candidate reward is unavailable."
+                    "Perceptual evaluator did not complete every requested "
+                    "repetition; candidate reward is unavailable."
                 ) from evaluator_error
             else:
-                print(f"⚠ Evaluator failed on every repetition: {evaluator_error}")
+                print(f"⚠ Evaluator repeat set was incomplete: {evaluator_error}")
                 print(f"  Using fallback: penalizing with invalid_realisation_reward")
                 return EnvironmentStepResult(
                     context=context,

@@ -165,9 +165,8 @@ def test_checkpoint_metadata_migration_and_incompatible_policy():
         "context": context,
         "resume_config": {},
     }
-    migrated, changed = migrate_metadata_only_checkpoint(legacy_cem)
-    assert changed is True
-    validate_checkpoint(migrated, expected_kind="cem", context=context)
+    with pytest.raises(CheckpointCompatibilityError, match="strict feasible-only"):
+        migrate_metadata_only_checkpoint(legacy_cem)
 
     with pytest.raises(CheckpointCompatibilityError, match="observation-schema"):
         migrate_metadata_only_checkpoint({"policy_state_dict": {}})

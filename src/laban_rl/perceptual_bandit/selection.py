@@ -9,6 +9,7 @@ def strict_realisability(
     result: Mapping[str, Any],
     *,
     tolerance: float,
+    required_repeats: int | None = None,
 ) -> tuple[bool, list[str]]:
     """Return whether a validation result passes every deployment constraint."""
     reasons: list[str] = []
@@ -16,6 +17,8 @@ def strict_realisability(
         reasons.append("invalid_realisation")
     if not bool(result.get("physically_acceptable", False)):
         reasons.append("physical_acceptance_failed")
+    if result.get("feature_realisation_acceptable") is False:
+        reasons.append("feature_realisation_unacceptable")
     try:
         rmse = float(result["realisation_rmse"])
     except (KeyError, TypeError, ValueError):
@@ -28,6 +31,14 @@ def strict_realisability(
         reasons.append("rmse_above_tolerance")
     if max_error > tolerance:
         reasons.append("max_feature_error_above_tolerance")
+    if required_repeats is not None:
+        if required_repeats < 1:
+            raise ValueError("required_repeats must be at least 1.")
+        completed_repeats = len(result.get("affective_evaluations") or [])
+        if completed_repeats != required_repeats:
+            reasons.append(
+                f"incomplete_perceptual_repeats:{completed_repeats}/{required_repeats}"
+            )
     return not reasons, reasons
 
 
@@ -36,6 +47,7 @@ def select_feasible_incumbent(
     shortlist: Sequence[Mapping[str, Any]],
     *,
     tolerance: float,
+    required_repeats: int | None = None,
     allow_diagnostic_fallback: bool = False,
 ) -> dict[str, Any]:
     """Select the best feasible result from initial, final-mean, and top-K pool.
@@ -54,7 +66,11 @@ def select_feasible_incumbent(
         result = validation_results.get(result_key)
         if not isinstance(result, Mapping):
             return
-        eligible, reasons = strict_realisability(result, tolerance=tolerance)
+        eligible, reasons = strict_realisability(
+            result,
+            tolerance=tolerance,
+            required_repeats=required_repeats,
+        )
         candidate = {
             "source": source,
             "source_type": source_type,

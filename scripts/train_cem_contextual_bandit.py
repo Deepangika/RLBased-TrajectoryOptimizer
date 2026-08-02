@@ -1048,10 +1048,10 @@ def main() -> None:
             )
 
     training_observation_cache = PerceptualObservationCache(
-        out_dir / "perceptual_observation_cache" / "training"
+        out_dir / "cache" / "training"
     )
     validation_observation_cache = PerceptualObservationCache(
-        out_dir / "perceptual_observation_cache" / "validation"
+        out_dir / "cache" / "validation"
     )
     environment = PerceptualBanditEnvironment(
         evaluator=evaluator,

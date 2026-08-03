@@ -76,13 +76,32 @@ class PairedPreferenceCache:
         styled_result: LabanOptimisationResult,
         evaluator_identity: EvaluatorCacheIdentity,
     ) -> dict[str, Any]:
-        return {
+        payload = {
             "cache_format_version": PAIR_CACHE_FORMAT_VERSION,
             "reference_clip_sha256": clip_content_sha256(reference_result),
             "styled_clip_sha256": clip_content_sha256(styled_result),
             "target": context.to_dict(),
             "evaluator": evaluator_identity.to_dict(),
         }
+        reference_context = reference_result.raw_result.get(
+            "evaluator_render_context"
+        )
+        styled_context = styled_result.raw_result.get(
+            "evaluator_render_context"
+        )
+        if reference_context != styled_context:
+            raise ValueError(
+                "Paired clips must use identical evaluator render context."
+            )
+        if reference_context is not None:
+            payload["evaluator_render_context"] = json.loads(
+                json.dumps(
+                    reference_context,
+                    sort_keys=True,
+                    allow_nan=False,
+                )
+            )
+        return payload
 
     def cache_key(self, **kwargs: Any) -> str:
         return hashlib.sha256(
@@ -189,34 +208,19 @@ class PairedPreferenceCache:
 class GeminiPairedPreferenceEvaluator:
     """Ask Gemini which blinded clip better expresses the supplied target."""
 
-    def __init__(
-        self,
-        *,
-        fixed_camera_limits: tuple[
-            tuple[float, float],
-            tuple[float, float],
-        ] | None = None,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         self.video_evaluator = GeminiProVideoEvaluator(**kwargs)
         self.model = self.video_evaluator.model
         self.temperature = self.video_evaluator.temperature
-        self.fixed_camera_limits = fixed_camera_limits
 
     def cache_identity(self) -> dict[str, Any]:
         video_identity = self.video_evaluator.cache_identity()
-        settings = dict(video_identity["settings"])
-        if self.fixed_camera_limits is not None:
-            settings["fixed_camera_limits"] = [
-                [float(bound) for bound in axis_limits]
-                for axis_limits in self.fixed_camera_limits
-            ]
         return {
             "provider": "gemini-paired-preference",
             "model": self.model,
             "prompt_version": PAIR_PROMPT_VERSION,
             "schema_version": PAIR_SCHEMA_VERSION,
-            "settings": settings,
+            "settings": dict(video_identity["settings"]),
         }
 
     @staticmethod
@@ -260,9 +264,17 @@ perceptually meaningful or neither clip expresses the target.
             if reference_first
             else ("styled", "reference")
         )
+        render_context = reference_result.raw_result.get(
+            "evaluator_render_context",
+            {},
+        )
+        saved_limits = render_context.get("camera_limits")
         camera_limits = (
-            self.fixed_camera_limits
-            if self.fixed_camera_limits is not None
+            (
+                tuple(float(value) for value in saved_limits[0]),
+                tuple(float(value) for value in saved_limits[1]),
+            )
+            if saved_limits is not None
             else shared_camera_limits(
                 [reference_result.q_var, styled_result.q_var],
                 duration_seconds=(

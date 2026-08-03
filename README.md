@@ -261,26 +261,39 @@ This reports observed clip-mean ranges and each canonical target's nearest
 point on the sparse empirical VAD convex hull. It is a diagnostic projection,
 not a replacement for canonical targets or human calibration.
 
-Before expanding beyond the five diagnostic pairs, isolate possible path-overlay
-bias with the paired-only arm-rendering ablation:
+## Paired perceptual experiments
+
+The frozen full evaluation matrix contains 36 gesture-state conditions, 42
+unique videos, five target-blind VAD repeats per video, and five blinded
+A/B/neither judgments per condition. Build it reproducibly and rehearse it
+offline before using Gemini:
 
 ```text
-python scripts/evaluation/run_arm_only_paired_ablation.py \
-  --matrix configs/five_pair_gemini_diagnostic.json \
-  --motion-source-dir outputs/five_pair_diagnostic/candidates \
-  --evaluator gemini \
-  --repeats 3 \
-  --cache outputs/arm_only_ablation_cache \
-  --out outputs/arm_only_ablation
+python scripts/evaluation/build_full_gemini_matrix.py
+python scripts/evaluation/run_paired_perceptual_experiment.py \
+  --matrix configs/full_gemini_matrix.json \
+  --evaluator mock \
+  --repeats 5 \
+  --paired-ab \
+  --paired-preference-repeats 5 \
+  --gesture-wide-camera-limits \
+  --video-duration-seconds 2.0 \
+  --video-lead-in-seconds 0.5 \
+  --video-repetitions 2 \
+  --video-inter-repeat-transition-seconds 0.5 \
+  --video-final-hold-seconds 0.5 \
+  --cache outputs/full_gemini_cache \
+  --out outputs/full_gemini
 ```
 
-This reuses the exact frozen live trajectories and makes only 15 Gemini calls.
-Both clips use the same fixed camera and plain white background; only the dark
-arm is visible. The trail, axes, grid, labels, title, legend, and time annotation
-are removed. A/B order remains deterministically balanced and `neither` remains
-valid. No independent VAD calls are made.
-
-## Paired perceptual experiments
+The matrix rejects drift in model, temperature, prompts, schemas, rendering,
+camera policy, or repeat counts. A live run changes only `--evaluator mock` to
+`--evaluator gemini` and makes 390 evaluator calls: 210 independent ratings
+and 180 paired judgments. The runner rejects any infeasible motion before
+either evaluation phase. `full_experiment_report.json` and CSV preserve the
+original, projected, requested, and achieved Laban profiles; projection and
+realisation errors; VAD changes; preference rates; variability; and path
+preservation metrics.
 
 Use the paired runner before human validation instead of running separate VAD
 and categorical evaluator passes. It renders each candidate once, stores every

@@ -245,7 +245,14 @@ def _run_identity(
     }
 
 
-def _realisation_metrics(
+def _finite_metric(value: Any) -> float | None:
+    if value is None:
+        return None
+    numeric = float(value)
+    return numeric if np.isfinite(numeric) else None
+
+
+def realisation_metrics(
     result: LabanOptimisationResult,
     reward_config: EnvironmentRewardConfig,
     *,
@@ -285,6 +292,21 @@ def _realisation_metrics(
         ),
         "joint_limit_error": (
             joint_error if np.isfinite(joint_error) else None
+        ),
+        "nearest_path_mse": _finite_metric(
+            reward_info.get("nearest_path_mse")
+        ),
+        "nearest_path_max_dist": _finite_metric(
+            reward_info.get("nearest_path_max_dist")
+        ),
+        "endpoint_error": _finite_metric(
+            reward_info.get("endpoint_error")
+        ),
+        "direction_error": _finite_metric(
+            reward_info.get("direction_error")
+        ),
+        "smoothness_error": _finite_metric(
+            reward_info.get("smoothness_error")
         ),
         "path_preserved": path_preserved,
         "joint_limits_satisfied": joints_ok,
@@ -534,7 +556,7 @@ def run_paired_experiment(
         if case.candidate_id in completed:
             continue
         result = inner_runner(case, destination / "candidates" / case.candidate_id)
-        feasibility = _realisation_metrics(
+        feasibility = realisation_metrics(
             result,
             reward_config,
             require_feature_match=case.require_feature_match,

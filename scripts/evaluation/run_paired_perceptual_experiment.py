@@ -32,15 +32,28 @@ from laban_rl.perceptual_bandit.experiment import (
     REWARD_SCALE_NOTE,
     ExperimentCase,
     cases_from_matrix,
+    realisation_metrics,
     run_paired_experiment,
+)
+from laban_rl.perceptual_bandit.full_reporting import (
+    write_full_experiment_report,
+)
+from laban_rl.perceptual_bandit.gemini_evaluator import (
+    PROMPT_VERSION,
+    SCHEMA_VERSION,
+    SEQUENCE_RENDERER_VERSION,
 )
 from laban_rl.perceptual_bandit.paired_preference import (
     GeminiPairedPreferenceEvaluator,
     MockPairedPreferenceEvaluator,
+    PAIR_PROMPT_VERSION,
+    PAIR_SCHEMA_VERSION,
     PairedPreferenceCache,
     PreferencePair,
     run_paired_preference_experiment,
 )
+from laban_rl.perceptual_bandit.variant_video import shared_camera_limits
+from laban_rl.perceptual_bandit.variant_video import FROZEN_RENDER_STYLE
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -66,11 +79,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=0.0,
     )
     parser.add_argument("--video-final-hold-seconds", type=float, default=0.0)
-    parser.add_argument(
-        "--video-presentation-style",
-        choices=("plot", "arm_only"),
-        default="plot",
-    )
     parser.add_argument("--mock-noise-std", type=float, default=0.08)
     parser.add_argument("--maxiter", type=int, default=45)
     parser.add_argument("--popsize", type=int, default=5)
@@ -94,6 +102,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="Cache root for blinded paired judgments.",
     )
+    parser.add_argument(
+        "--gesture-wide-camera-limits",
+        action="store_true",
+        help="Use one camera envelope for every clip of the same gesture.",
+    )
     parser.add_argument("--no-plots", action="store_true")
     args = parser.parse_args(argv)
     if args.repeats < 1:
@@ -108,6 +121,55 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def _resolve(path: str) -> Path:
     value = Path(path)
     return value if value.is_absolute() else PROJECT_ROOT / value
+
+
+def _validate_frozen_protocol(
+    matrix: dict,
+    args: argparse.Namespace,
+) -> dict | None:
+    protocol = matrix.get("evaluation_protocol")
+    if protocol is None:
+        return None
+    actual = {
+        "model": args.model,
+        "temperature": args.temperature,
+        "independent_prompt_version": PROMPT_VERSION,
+        "independent_schema_version": SCHEMA_VERSION,
+        "paired_prompt_version": PAIR_PROMPT_VERSION,
+        "paired_schema_version": PAIR_SCHEMA_VERSION,
+        "renderer_version": SEQUENCE_RENDERER_VERSION,
+        "render_style": FROZEN_RENDER_STYLE,
+        "gesture_duration_seconds": args.video_duration_seconds,
+        "lead_in_seconds": args.video_lead_in_seconds,
+        "repetitions": args.video_repetitions,
+        "inter_repeat_transition_seconds": (
+            args.video_inter_repeat_transition_seconds
+        ),
+        "final_hold_seconds": args.video_final_hold_seconds,
+        "total_clip_duration_seconds": (
+            args.video_lead_in_seconds
+            + args.video_repetitions * args.video_duration_seconds
+            + (args.video_repetitions - 1)
+            * args.video_inter_repeat_transition_seconds
+            + args.video_final_hold_seconds
+        ),
+        "gesture_wide_camera_limits": args.gesture_wide_camera_limits,
+        "independent_target_blind": True,
+        "independent_repeats": args.repeats,
+        "paired_preference_repeats": args.paired_preference_repeats,
+        "paired_neither_enabled": True,
+    }
+    if protocol != actual:
+        differences = {
+            key: {"expected": protocol.get(key), "actual": actual.get(key)}
+            for key in sorted(set(protocol) | set(actual))
+            if protocol.get(key) != actual.get(key)
+        }
+        raise ValueError(
+            "Command does not match frozen evaluation protocol: "
+            + json.dumps(differences, sort_keys=True)
+        )
+    return dict(protocol)
 
 
 def _case_identity(case: ExperimentCase) -> str:
@@ -237,6 +299,7 @@ def _print_summary(payload: dict, *, paired_ab: bool) -> None:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     matrix = json.loads(_resolve(args.matrix).read_text(encoding="utf-8"))
+    frozen_protocol = _validate_frozen_protocol(matrix, args)
     parsed_cases = cases_from_matrix(matrix)
     cases = []
     for case in parsed_cases:
@@ -286,7 +349,6 @@ def main(argv: list[str] | None = None) -> int:
                 args.video_inter_repeat_transition_seconds
             ),
             video_final_hold_seconds=args.video_final_hold_seconds,
-            video_presentation_style=args.video_presentation_style,
             keep_uploaded_files=False,
         )
         preference_evaluator = GeminiPairedPreferenceEvaluator(
@@ -299,7 +361,6 @@ def main(argv: list[str] | None = None) -> int:
                 args.video_inter_repeat_transition_seconds
             ),
             video_final_hold_seconds=args.video_final_hold_seconds,
-            video_presentation_style=args.video_presentation_style,
             keep_uploaded_files=False,
         )
 
@@ -315,6 +376,8 @@ def main(argv: list[str] | None = None) -> int:
     materialized_results = {}
 
     def inner_runner(case: ExperimentCase, out_dir: Path):
+        if case.candidate_id in materialized_results:
+            return materialized_results[case.candidate_id]
         result = _load_motion_snapshot(case, out_dir)
         if result is not None:
             materialized_results[case.candidate_id] = result
@@ -326,16 +389,91 @@ def main(argv: list[str] | None = None) -> int:
                 out_dir=out_dir,
             )
         else:
+            optimizer_overrides = dict(case.optimizer_overrides)
+            optimizer_overrides.setdefault("seed", case.seed)
             result = optimise_laban_target(
                 gesture=case.context.gesture,
                 target_state=case.context.target_label,
                 target_profile=case.profile,
                 out_dir=out_dir,
-                optimiser_overrides=case.optimizer_overrides,
+                optimiser_overrides=optimizer_overrides,
             )
         _save_motion_snapshot(case, result, out_dir)
         materialized_results[case.candidate_id] = result
         return result
+
+    destination = _resolve(args.out)
+    if args.gesture_wide_camera_limits:
+        for case in cases:
+            inner_runner(
+                case,
+                destination / "candidates" / case.candidate_id,
+            )
+        cases_by_gesture = {}
+        for case in cases:
+            cases_by_gesture.setdefault(case.context.gesture, []).append(case)
+        for gesture, gesture_cases in cases_by_gesture.items():
+            limits = shared_camera_limits(
+                [
+                    materialized_results[case.candidate_id].q_var
+                    for case in gesture_cases
+                ],
+                duration_seconds=args.video_duration_seconds,
+                lead_in_seconds=args.video_lead_in_seconds,
+                repetitions=args.video_repetitions,
+                inter_repeat_transition_seconds=(
+                    args.video_inter_repeat_transition_seconds
+                ),
+                final_hold_seconds=args.video_final_hold_seconds,
+            )
+            render_context = {
+                "scope": "gesture_wide",
+                "gesture": gesture,
+                "camera_limits": [
+                    [float(value) for value in limits[0]],
+                    [float(value) for value in limits[1]],
+                ],
+            }
+            for case in gesture_cases:
+                materialized_results[
+                    case.candidate_id
+                ].raw_result["evaluator_render_context"] = render_context
+
+    if args.paired_preference_repeats:
+        for case in cases:
+            inner_runner(
+                case,
+                destination / "candidates" / case.candidate_id,
+            )
+        invalid = []
+        for case in cases:
+            feasibility = realisation_metrics(
+                materialized_results[case.candidate_id],
+                reward_config,
+                require_feature_match=case.require_feature_match,
+            )
+            if not feasibility["feasible"]:
+                invalid.append(
+                    {
+                        "candidate_id": case.candidate_id,
+                        "max_abs_feature_error": feasibility[
+                            "max_abs_feature_error"
+                        ],
+                        "path_preserved": feasibility["path_preserved"],
+                        "joint_limits_satisfied": feasibility[
+                            "joint_limits_satisfied"
+                        ],
+                    }
+                )
+        if invalid:
+            for active_evaluator in (evaluator, preference_evaluator):
+                close = getattr(active_evaluator, "close", None)
+                if close is not None:
+                    close()
+            raise ValueError(
+                "Paired evaluation preflight rejected infeasible motions: "
+                + json.dumps(invalid, sort_keys=True)
+            )
 
     try:
         payload = run_paired_experiment(
@@ -345,17 +483,20 @@ def main(argv: list[str] | None = None) -> int:
             cache=PerceptualObservationCache(_resolve(args.cache)),
             repeats=args.repeats,
             reward_config=reward_config,
-            out_dir=_resolve(args.out),
+            out_dir=destination,
             runner_identity={
                 "implementation": "paired-reference-styled-v2",
                 "maxiter": args.maxiter,
                 "popsize": args.popsize,
                 "local_maxiter": args.local_maxiter,
+                "gesture_wide_camera_limits": (
+                    args.gesture_wide_camera_limits
+                ),
+                "frozen_protocol": frozen_protocol,
             },
             save_plots=not args.no_plots,
         )
         if args.paired_preference_repeats:
-            destination = _resolve(args.out)
             for case in cases:
                 if case.candidate_id not in materialized_results:
                     inner_runner(
@@ -404,6 +545,11 @@ def main(argv: list[str] | None = None) -> int:
                 out_path=destination / "paired_preferences.json",
             )
             payload["blinded_paired_preferences"] = preference_payload
+            write_full_experiment_report(
+                payload,
+                preference_payload,
+                destination,
+            )
     finally:
         for active_evaluator in (evaluator, preference_evaluator):
             close = getattr(active_evaluator, "close", None)

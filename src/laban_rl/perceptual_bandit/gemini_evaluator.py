@@ -23,6 +23,7 @@ from laban_rl.perceptual_bandit.environment import (
 )
 from laban_rl.perceptual_bandit.evaluation_cache import clip_content_sha256
 from laban_rl.perceptual_bandit.variant_video import (
+    FROZEN_RENDER_STYLE,
     render_variant_only_mp4,
 )
 
@@ -47,7 +48,7 @@ STATE_LABELS = (
 PROMPT_VERSION = "lma-vad-category-ambiguity-v2"
 SCHEMA_VERSION = "gemini-gesture-assessment-v2"
 RENDERER_VERSION = "variant-only-mp4-v1"
-SEQUENCE_RENDERER_VERSION = "variant-only-mp4-sequence-v2"
+SEQUENCE_RENDERER_VERSION = "variant-only-mp4-sequence-v3-frozen-style"
 
 
 class GeminiGestureAssessment(BaseModel):
@@ -183,7 +184,6 @@ class GeminiProVideoEvaluator:
         video_repetitions: int = 1,
         video_inter_repeat_transition_seconds: float = 0.0,
         video_final_hold_seconds: float = 0.0,
-        video_presentation_style: str = "plot",
         video_fps: float | None = None,
         keep_uploaded_files: bool = True,
     ) -> None:
@@ -208,7 +208,6 @@ class GeminiProVideoEvaluator:
             video_inter_repeat_transition_seconds
         )
         self.video_final_hold_seconds = float(video_final_hold_seconds)
-        self.video_presentation_style = str(video_presentation_style)
         if (
             self.video_lead_in_seconds < 0.0
             or self.video_inter_repeat_transition_seconds < 0.0
@@ -216,8 +215,6 @@ class GeminiProVideoEvaluator:
             or self.video_repetitions < 1
         ):
             raise ValueError("Invalid standardized video sequence settings.")
-        if self.video_presentation_style not in {"plot", "arm_only"}:
-            raise ValueError("Invalid video presentation style.")
         self.video_fps = (
             None if video_fps is None else float(video_fps)
         )
@@ -265,11 +262,8 @@ class GeminiProVideoEvaluator:
                         self.video_final_hold_seconds
                     ),
                     "renderer_version": SEQUENCE_RENDERER_VERSION,
+                    "render_style": FROZEN_RENDER_STYLE,
                 }
-            )
-        if self.video_presentation_style != "plot":
-            settings["video_presentation_style"] = (
-                self.video_presentation_style
             )
         return settings
 
@@ -386,6 +380,17 @@ Return:
             tuple[float, float],
         ] | None = None,
     ):
+        if camera_limits is None:
+            render_context = optimisation_result.raw_result.get(
+                "evaluator_render_context",
+                {},
+            )
+            saved_limits = render_context.get("camera_limits")
+            if saved_limits is not None:
+                camera_limits = (
+                    tuple(float(value) for value in saved_limits[0]),
+                    tuple(float(value) for value in saved_limits[1]),
+                )
         video_path = (
             optimisation_result.output_dir
             / "variant_only_vlm.mp4"
@@ -430,7 +435,6 @@ Return:
                 final_hold_seconds=self.video_final_hold_seconds,
                 fps=self.video_fps,
                 camera_limits=camera_limits,
-                presentation_style=self.video_presentation_style,
                 overwrite=True,
             )
             temporary_marker = marker_path.with_suffix(".tmp")

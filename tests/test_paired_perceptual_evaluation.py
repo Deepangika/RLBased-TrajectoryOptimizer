@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -23,6 +24,10 @@ from laban_rl.perceptual_bandit.experiment import (
     paired_comparison_summary,
     run_paired_experiment,
 )
+from laban_rl.perceptual_bandit.full_reporting import (
+    build_full_experiment_report,
+    write_full_experiment_report,
+)
 from laban_rl.perceptual_bandit.gemini_evaluator import (
     GeminiProVideoEvaluator,
     RENDERER_VERSION,
@@ -39,7 +44,9 @@ from laban_rl.perceptual_bandit.variant_video import compose_standardized_sequen
 from scripts.evaluation.run_paired_perceptual_experiment import (
     _load_motion_snapshot,
     _save_motion_snapshot,
+    _validate_frozen_protocol,
 )
+from scripts.evaluation.build_full_gemini_matrix import build_matrix
 from scripts.evaluation.calibrate_empirical_vad_region import (
     project_to_empirical_hull,
 )
@@ -47,6 +54,10 @@ from laban_rl.perceptual_bandit.scoring import (
     score_perceptual_observations,
     test_retest_reliability as compute_test_retest_reliability,
 )
+
+
+def _profile(value):
+    return {key: value for key in FEATURE_KEYS}
 
 
 PROBABILITIES = {
@@ -166,6 +177,24 @@ def test_cache_reuses_repeats_and_invalidates_schema(tmp_path):
         evaluator_identity=EvaluatorCacheIdentity.from_evaluator(evaluator),
     )
 
+    result.raw_result["evaluator_render_context"] = {
+        "scope": "gesture_wide",
+        "camera_limits": [[-1.0, 1.0], [-1.0, 1.0]],
+    }
+    changed_profile.raw_result["evaluator_render_context"] = {
+        "scope": "gesture_wide",
+        "camera_limits": [[-2.0, 2.0], [-2.0, 2.0]],
+    }
+    assert cache.cache_key(
+        context=context,
+        result=result,
+        evaluator_identity=EvaluatorCacheIdentity.from_evaluator(evaluator),
+    ) != cache.cache_key(
+        context=context,
+        result=changed_profile,
+        evaluator_identity=EvaluatorCacheIdentity.from_evaluator(evaluator),
+    )
+
 
 def test_gemini_retry_message_is_windows_console_safe():
     message = _retry_message(2.0, 0, 5)
@@ -203,16 +232,12 @@ def test_default_renderer_settings_preserve_legacy_cache_identity():
     evaluator.video_repetitions = 1
     evaluator.video_inter_repeat_transition_seconds = 0.0
     evaluator.video_final_hold_seconds = 0.0
-    evaluator.video_presentation_style = "plot"
 
     assert evaluator._renderer_settings() == {
         "video_duration_seconds": 2.0,
         "video_fps": None,
         "renderer_version": RENDERER_VERSION,
     }
-
-    evaluator.video_presentation_style = "arm_only"
-    assert evaluator._renderer_settings()["video_presentation_style"] == "arm_only"
 
 
 def test_blinded_pair_cache_balances_order_and_resumes(tmp_path):
@@ -255,6 +280,28 @@ def test_blinded_pair_cache_balances_order_and_resumes(tmp_path):
     assert all(row["raw_choice"] in {"A", "B", "neither"} for row in observations)
 
 
+def test_blinded_pair_rejects_mismatched_render_context(tmp_path):
+    context = Context("point", "happiness")
+    reference = make_result(tmp_path / "reference")
+    styled = make_result(tmp_path / "styled")
+    reference.raw_result["evaluator_render_context"] = {
+        "camera_limits": [[-1.0, 1.0], [-1.0, 1.0]]
+    }
+    styled.raw_result["evaluator_render_context"] = {
+        "camera_limits": [[-2.0, 2.0], [-2.0, 2.0]]
+    }
+    cache = PairedPreferenceCache(tmp_path / "pair-cache")
+
+    with pytest.raises(ValueError, match="identical evaluator render context"):
+        cache.collect(
+            context=context,
+            reference_result=reference,
+            styled_result=styled,
+            evaluator=MockPairedPreferenceEvaluator(),
+            repeats=1,
+        )
+
+
 def test_blinded_pair_prompt_names_target_without_unblinding_sources():
     prompt = GeminiPairedPreferenceEvaluator._prompt(
         Context("wave", "anger")
@@ -264,27 +311,6 @@ def test_blinded_pair_prompt_names_target_without_unblinding_sources():
     assert "A, B, or neither" in prompt
     assert "reference" not in prompt.lower()
     assert "styled" not in prompt.lower()
-
-
-def test_paired_fixed_camera_identity_is_json_stable():
-    class VideoEvaluator:
-        @staticmethod
-        def cache_identity():
-            return {"settings": {"presentation_style": "arm_only"}}
-
-    evaluator = object.__new__(GeminiPairedPreferenceEvaluator)
-    evaluator.video_evaluator = VideoEvaluator()
-    evaluator.model = "test-model"
-    evaluator.temperature = 0.0
-    evaluator.fixed_camera_limits = ((-0.63, 0.63), (-0.63, 0.63))
-
-    identity = evaluator.cache_identity()
-
-    assert json.loads(json.dumps(identity)) == identity
-    assert identity["settings"]["fixed_camera_limits"] == [
-        [-0.63, 0.63],
-        [-0.63, 0.63],
-    ]
 
 
 def test_motion_snapshot_round_trip_and_identity_guard(tmp_path):
@@ -767,3 +793,205 @@ def test_paired_ranking_compares_order_and_selected_identity():
     assert group["categorical_selected"] == "b"
     assert group["same_selected_candidate"] is False
     assert "not directly comparable" in summary["reward_scale_note"]
+
+
+def _minimal_full_matrix_inputs():
+    gestures = (
+        "wave",
+        "reach",
+        "point",
+        "circle",
+        "beckon",
+        "celebratory_pump",
+    )
+    pilot = {
+        "cases": [
+            {
+                "gesture": gesture,
+                "candidate_profiles": {
+                    "reference": {"profile": _profile(0.5)}
+                },
+            }
+            for gesture in gestures
+        ]
+    }
+    projections = {
+        "states": {
+            state: {"projected_feasible_target": _profile(0.6)}
+            for state in ("anger", "disgust", "sadness")
+        }
+    }
+    return pilot, projections
+
+
+def test_full_matrix_builder_covers_protocol_and_projection():
+    pilot, projections = _minimal_full_matrix_inputs()
+    matrix = build_matrix(pilot, projections)
+
+    assert len(matrix["cases"]) == 36
+    assert matrix["planned_total_calls"] == 390
+    assert matrix["evaluation_protocol"]["independent_repeats"] == 5
+    assert matrix["evaluation_protocol"]["gesture_wide_camera_limits"] is True
+    wave_anger = next(
+        case
+        for case in matrix["cases"]
+        if case["gesture"] == "wave"
+        and case["target"]["state"] == "anger"
+    )
+    assert wave_anger["candidate_profiles"]["styled"]["profile"] == _profile(0.6)
+    reach_anger = next(
+        case
+        for case in matrix["cases"]
+        if case["gesture"] == "reach"
+        and case["target"]["state"] == "anger"
+    )
+    assert reach_anger["target_layers"][
+        "projected_feasible_laban_target"
+    ] is None
+    beckon_fear = next(
+        case
+        for case in matrix["cases"]
+        if case["gesture"] == "beckon"
+        and case["target"]["state"] == "fear"
+    )
+    beckon_fear_overrides = beckon_fear["candidate_profiles"]["styled"][
+        "optimizer_overrides"
+    ]
+    assert beckon_fear_overrides["maxiter"] == 75
+    assert beckon_fear_overrides["n_timing_basis"] == 5
+
+
+def test_frozen_protocol_rejects_cli_drift():
+    pilot, projections = _minimal_full_matrix_inputs()
+    matrix = build_matrix(pilot, projections)
+    arguments = SimpleNamespace(
+        model="gemini-2.5-flash",
+        temperature=0.2,
+        video_duration_seconds=2.0,
+        video_lead_in_seconds=0.5,
+        video_repetitions=2,
+        video_inter_repeat_transition_seconds=0.5,
+        video_final_hold_seconds=0.5,
+        gesture_wide_camera_limits=True,
+        repeats=5,
+        paired_preference_repeats=5,
+    )
+    assert _validate_frozen_protocol(matrix, arguments) is not None
+
+    arguments.temperature = 0.3
+    with pytest.raises(ValueError, match="temperature"):
+        _validate_frozen_protocol(matrix, arguments)
+
+
+def test_full_report_separates_projection_and_realisation_errors(tmp_path):
+    target_layers = {
+        "original_affect_derived_laban_target": _profile(0.5),
+        "projected_feasible_laban_target": _profile(0.6),
+    }
+    context = {
+        "gesture": "wave",
+        "target_state": "anger",
+        "target_vad": {
+            "valence": 0.1,
+            "arousal": 0.8,
+            "dominance": 0.7,
+        },
+    }
+
+    def record(name, reward, vad):
+        return {
+            "candidate_id": f"wave-anger-projected__seed-7__{name}",
+            "candidate_name": name,
+            "context": context,
+            "vad_score": reward,
+            "observations": [
+                {"perceived_vad": vad},
+                {"perceived_vad": vad},
+            ],
+            "target_layers": target_layers,
+            "requested_profile": _profile(0.6),
+            "achieved_profile": _profile(0.6),
+            "reliability": {
+                "mean_observed_vad": vad,
+                "mean_vad_reward": reward,
+                "vad_reward_std": 0.01,
+                "per_axis_vad_std": {
+                    "valence": 0.01,
+                    "arousal": 0.01,
+                    "dominance": 0.01,
+                },
+                "target_classification_rate": 1.0,
+            },
+            "feasibility": {
+                "valid_realisation": True,
+                "max_abs_feature_error": 0.01,
+                "joint_limit_error": 0.0,
+                "path_length_ratio": 1.0,
+                "nearest_path_mse": 0.01,
+                "nearest_path_max_dist": 0.02,
+                "endpoint_error": 0.03,
+                "direction_error": 0.04,
+                "smoothness_error": 0.05,
+            },
+        }
+
+    independent = {
+        "run_identity": {"configuration": {"repeats": 2}},
+        "records": [
+            record(
+                "reference",
+                0.2,
+                {"valence": 0.3, "arousal": 0.6, "dominance": 0.5},
+            ),
+            record(
+                "styled",
+                0.4,
+                {"valence": 0.1, "arousal": 0.8, "dominance": 0.7},
+            ),
+        ]
+    }
+    preferences = {
+        "records": [
+            {
+                "pair_id": "wave-anger-projected__seed-7",
+                "styled_preference_rate": 0.8,
+                "reference_preference_rate": 0.0,
+                "neither_rate": 0.2,
+                "repeat_count": 5,
+                "choice_counts": {
+                    "styled": 4,
+                    "reference": 0,
+                    "neither": 1,
+                },
+                "mean_confidence": 0.8,
+            }
+        ],
+        "repeat_count": 5,
+    }
+    report = build_full_experiment_report(independent, preferences)
+    condition = report["conditions"][0]
+
+    assert condition["vad"]["delta_vad_reward"] == pytest.approx(0.2)
+    assert condition["realisation"]["projection_error_e_proj"] == pytest.approx(
+        0.1
+    )
+    assert condition["realisation"]["realisation_error_e_real"] == pytest.approx(
+        0.0
+    )
+    assert condition["realisation"][
+        "original_to_achieved_error"
+    ] == pytest.approx(0.1)
+    assert condition["paired_preference"][
+        "styled_preference_rate"
+    ] == pytest.approx(0.8)
+    assert condition["paired_preference"]["neither_rate"] == pytest.approx(0.2)
+    assert condition["vad"][
+        "per_axis_change_styled_minus_reference"
+    ]["arousal"] == pytest.approx(0.2)
+    assert condition["realisation"]["endpoint_error"] == pytest.approx(
+        0.03
+    )
+
+    write_full_experiment_report(independent, preferences, tmp_path)
+    assert (tmp_path / "full_experiment_report.json").exists()
+    assert (tmp_path / "full_experiment_report.csv").exists()

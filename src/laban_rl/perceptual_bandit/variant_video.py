@@ -31,6 +31,21 @@ import robust_laban_normalisation_balanced_3gestures as laban
 from laban_rl.visualisation import compute_equal_axes
 
 
+FROZEN_RENDER_STYLE = {
+    "figure_size_inches": [6.0, 6.0],
+    "arm_color": "C1",
+    "arm_line_width": 1.5,
+    "marker": "o",
+    "marker_size": 6.0,
+    "trace_color": "C1",
+    "trace_line_width": 1.5,
+    "trace_alpha": 0.5,
+    "trace_mode": "cumulative_full_sequence",
+    "show_grid": True,
+    "show_time": True,
+}
+
+
 def _comparison_style_frame_indices(n_points: int) -> np.ndarray:
     """Match the frame subsampling used by save_arm_gif."""
     step = 4
@@ -142,7 +157,6 @@ def render_variant_only_mp4(
         tuple[float, float],
         tuple[float, float],
     ] | None = None,
-    presentation_style: str = "plot",
     overwrite: bool = False,
 ) -> Path:
     """Render only the Variant while preserving the old animation's look.
@@ -167,10 +181,6 @@ def render_variant_only_mp4(
         )
     if not np.all(np.isfinite(q_ref)) or not np.all(np.isfinite(q_var)):
         raise ValueError("q_ref/q_var contain NaN or infinite values.")
-    if presentation_style not in {"plot", "arm_only"}:
-        raise ValueError(
-            "presentation_style must be 'plot' or 'arm_only'."
-        )
 
     q_ref = compose_standardized_sequence(
         q_ref,
@@ -242,51 +252,47 @@ def render_variant_only_mp4(
 
     fps = float(fps)
 
-    fig, ax = plt.subplots(figsize=(6, 6))
-    fig.patch.set_facecolor("white")
-    ax.set_facecolor("white")
+    fig, ax = plt.subplots(
+        figsize=tuple(FROZEN_RENDER_STYLE["figure_size_inches"])
+    )
     canvas = FigureCanvasAgg(fig)
 
     ax.set_aspect("equal")
     ax.set_xlim(*xlim)
     ax.set_ylim(*ylim)
-    if presentation_style == "plot":
-        ax.set_xlabel("x position (m)")
-        ax.set_ylabel("y position (m)")
-        ax.set_title("Styled 2D arm")
-        ax.grid(True)
-        variant_colour = "C1"
-    else:
-        ax.set_axis_off()
-        fig.subplots_adjust(left=0.0, right=1.0, bottom=0.0, top=1.0)
-        variant_colour = "#202020"
+    ax.set_xlabel("x position (m)")
+    ax.set_ylabel("y position (m)")
+    ax.set_title("Styled 2D arm")
+    ax.grid(bool(FROZEN_RENDER_STYLE["show_grid"]))
+
+    # Match the Variant colour from the original comparison GIF.
+    variant_colour = str(FROZEN_RENDER_STYLE["arm_color"])
 
     var_line, = ax.plot(
         [],
         [],
-        marker="o",
+        marker=str(FROZEN_RENDER_STYLE["marker"]),
+        markersize=float(FROZEN_RENDER_STYLE["marker_size"]),
+        linewidth=float(FROZEN_RENDER_STYLE["arm_line_width"]),
         color=variant_colour,
         label="Variant",
-        linewidth=3.0 if presentation_style == "arm_only" else 1.5,
-        markersize=8.0 if presentation_style == "arm_only" else 6.0,
     )
-    var_trace = None
-    time_text = None
-    if presentation_style == "plot":
-        var_trace, = ax.plot(
-            [],
-            [],
-            alpha=0.5,
-            color=variant_colour,
-        )
-        time_text = ax.text(
-            0.02,
-            0.95,
-            "",
-            transform=ax.transAxes,
-            va="top",
-        )
-        ax.legend()
+    var_trace, = ax.plot(
+        [],
+        [],
+        alpha=float(FROZEN_RENDER_STYLE["trace_alpha"]),
+        color=str(FROZEN_RENDER_STYLE["trace_color"]),
+        linewidth=float(FROZEN_RENDER_STYLE["trace_line_width"]),
+    )
+    time_text = ax.text(
+        0.02,
+        0.95,
+        "",
+        transform=ax.transAxes,
+        va="top",
+    )
+
+    ax.legend()
 
     frames: list[np.ndarray] = []
 
@@ -303,13 +309,11 @@ def render_variant_only_mp4(
         ]
 
         var_line.set_data(var_xs, var_ys)
-        if var_trace is not None:
-            var_trace.set_data(
-                wrist_var[: frame + 1, 0],
-                wrist_var[: frame + 1, 1],
-            )
-        if time_text is not None:
-            time_text.set_text(f"t = {t[frame]:.2f} s")
+        var_trace.set_data(
+            wrist_var[: frame + 1, 0],
+            wrist_var[: frame + 1, 1],
+        )
+        time_text.set_text(f"t = {t[frame]:.2f} s")
 
         canvas.draw()
         rgba = np.asarray(canvas.buffer_rgba())
@@ -327,7 +331,7 @@ def render_variant_only_mp4(
     )
 
     print(
-        f"Variant-only MP4 rendered with {presentation_style} presentation: "
+        "Variant-only MP4 rendered in original animation style: "
         f"duration={total_duration_seconds:.3f}s | "
         f"fps={fps:.3f} | frames={len(frames)}"
     )

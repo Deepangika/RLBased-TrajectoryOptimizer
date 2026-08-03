@@ -136,12 +136,22 @@ class PerceptualObservationCache:
         result: LabanOptimisationResult,
         evaluator_identity: EvaluatorCacheIdentity,
     ) -> dict[str, Any]:
-        return {
+        payload = {
             "cache_format_version": CACHE_FORMAT_VERSION,
             "clip_content_sha256": clip_content_sha256(result),
             "prompt_context": {"gesture": str(context.gesture)},
             "evaluator": evaluator_identity.to_dict(),
         }
+        render_context = result.raw_result.get("evaluator_render_context")
+        if render_context is not None:
+            payload["evaluator_render_context"] = json.loads(
+                json.dumps(
+                    render_context,
+                    sort_keys=True,
+                    allow_nan=False,
+                )
+            )
+        return payload
 
     def cache_key(self, **kwargs: Any) -> str:
         payload = self.identity_payload(**kwargs)

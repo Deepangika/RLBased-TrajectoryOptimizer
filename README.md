@@ -212,6 +212,55 @@ Laban target, projected feasible target, requested optimization profile, and
 actually achieved profile. Restart the identical command to resume missing
 repeats without duplicating completed calls.
 
+### Five-pair long-clip diagnostic
+
+After the initial pilot, use the focused five-pair diagnostic instead of a
+complete 36-condition run:
+
+```text
+python scripts/evaluation/run_paired_perceptual_experiment.py \
+  --matrix configs/five_pair_gemini_diagnostic.json \
+  --evaluator gemini \
+  --repeats 5 \
+  --paired-ab \
+  --paired-preference-repeats 5 \
+  --video-duration-seconds 2 \
+  --video-lead-in-seconds 0.5 \
+  --video-repetitions 2 \
+  --video-inter-repeat-transition-seconds 0.5 \
+  --video-final-hold-seconds 0.5 \
+  --cache outputs/five_pair_diagnostic_cache \
+  --paired-preference-cache outputs/five_pair_preference_cache \
+  --out outputs/five_pair_diagnostic
+```
+
+The five conditions are celebratory-pump anger, beckon disgust, projected
+wave anger, projected wave disgust, and wave surprise. Each 5.5-second MP4
+holds the initial pose for 0.5 seconds, plays two natural-speed gesture cycles
+separated by a smooth 0.5-second return, and ends with a 0.5-second hold.
+Independent VAD/category ratings remain
+target-blind. A separate prompt receives the intended affect and asks which
+blinded clip expresses it more strongly: A, B, or neither. Display order is
+deterministic and balanced across five repeats.
+
+The experiment contains eight unique clips, requiring 40 independent ratings,
+plus 25 paired judgments. Both caches persist each successful repeat
+immediately. Motion snapshots prevent re-optimization during resume, and
+uploaded Gemini files are deleted when collection closes.
+
+Estimate a conservative empirical VAD envelope from a completed independent
+result:
+
+```text
+python scripts/evaluation/calibrate_empirical_vad_region.py \
+  --results outputs/limited_gemini_pilot/paired_results.json \
+  --out outputs/achievable_vad_calibration/live_pilot_empirical_vad.json
+```
+
+This reports observed clip-mean ranges and each canonical target's nearest
+point on the sparse empirical VAD convex hull. It is a diagnostic projection,
+not a replacement for canonical targets or human calibration.
+
 ## Paired perceptual experiments
 
 Use the paired runner before human validation instead of running separate VAD

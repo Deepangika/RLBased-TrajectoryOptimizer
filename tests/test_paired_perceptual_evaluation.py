@@ -23,7 +23,26 @@ from laban_rl.perceptual_bandit.experiment import (
     paired_comparison_summary,
     run_paired_experiment,
 )
-from laban_rl.perceptual_bandit.gemini_evaluator import _retry_message
+from laban_rl.perceptual_bandit.gemini_evaluator import (
+    GeminiProVideoEvaluator,
+    RENDERER_VERSION,
+    _retry_message,
+)
+from laban_rl.perceptual_bandit.paired_preference import (
+    GeminiPairedPreferenceEvaluator,
+    MockPairedPreferenceEvaluator,
+    PairedPreferenceCache,
+    PreferencePair,
+    run_paired_preference_experiment,
+)
+from laban_rl.perceptual_bandit.variant_video import compose_standardized_sequence
+from scripts.evaluation.run_paired_perceptual_experiment import (
+    _load_motion_snapshot,
+    _save_motion_snapshot,
+)
+from scripts.evaluation.calibrate_empirical_vad_region import (
+    project_to_empirical_hull,
+)
 from laban_rl.perceptual_bandit.scoring import (
     score_perceptual_observations,
     test_retest_reliability as compute_test_retest_reliability,
@@ -153,6 +172,138 @@ def test_gemini_retry_message_is_windows_console_safe():
 
     assert "Retrying in 2.0s" in message
     message.encode("cp1252")
+
+
+def test_standardized_sequence_preserves_speed_and_adds_holds():
+    trajectory = np.arange(16, dtype=float).reshape(8, 2)
+
+    sequence = compose_standardized_sequence(
+        trajectory,
+        gesture_duration_seconds=2.0,
+        lead_in_seconds=0.5,
+        repetitions=2,
+        inter_repeat_transition_seconds=0.5,
+        final_hold_seconds=0.5,
+    )
+
+    assert sequence.shape == (22, 2)
+    assert np.array_equal(sequence[:2], np.repeat(trajectory[:1], 2, axis=0))
+    assert np.array_equal(sequence[2:10], trajectory)
+    assert np.all(sequence[10:12] < trajectory[-1])
+    assert np.all(sequence[10:12] > trajectory[0])
+    assert np.array_equal(sequence[12:20], trajectory)
+    assert np.array_equal(sequence[-2:], np.repeat(trajectory[-1:], 2, axis=0))
+
+
+def test_default_renderer_settings_preserve_legacy_cache_identity():
+    evaluator = object.__new__(GeminiProVideoEvaluator)
+    evaluator.video_duration_seconds = 2.0
+    evaluator.video_fps = None
+    evaluator.video_lead_in_seconds = 0.0
+    evaluator.video_repetitions = 1
+    evaluator.video_inter_repeat_transition_seconds = 0.0
+    evaluator.video_final_hold_seconds = 0.0
+
+    assert evaluator._renderer_settings() == {
+        "video_duration_seconds": 2.0,
+        "video_fps": None,
+        "renderer_version": RENDERER_VERSION,
+    }
+
+
+def test_blinded_pair_cache_balances_order_and_resumes(tmp_path):
+    context = Context("point", "happiness")
+    reference = make_result(tmp_path / "reference")
+    styled = make_result(tmp_path / "styled")
+    styled.achieved_profile["weight"] = 0.6
+    pair = PreferencePair(
+        pair_id="point-happiness",
+        context=context,
+        reference_result=reference,
+        styled_result=styled,
+        target_layers={"original_affect_derived_laban_target": {}},
+    )
+    cache = PairedPreferenceCache(tmp_path / "pair-cache")
+    evaluator = MockPairedPreferenceEvaluator()
+
+    first = run_paired_preference_experiment(
+        [pair],
+        evaluator=evaluator,
+        cache=cache,
+        repeats=3,
+        out_path=tmp_path / "preferences.json",
+    )
+    resumed = run_paired_preference_experiment(
+        [pair],
+        evaluator=evaluator,
+        cache=cache,
+        repeats=5,
+        out_path=tmp_path / "preferences.json",
+    )
+
+    assert first["records"][0]["repeat_count"] == 3
+    observations = resumed["records"][0]["observations"]
+    assert len(observations) == 5
+    reference_as_a = sum(
+        row["displayed_a"] == "reference" for row in observations
+    )
+    assert reference_as_a in {2, 3}
+    assert all(row["raw_choice"] in {"A", "B", "neither"} for row in observations)
+
+
+def test_blinded_pair_prompt_names_target_without_unblinding_sources():
+    prompt = GeminiPairedPreferenceEvaluator._prompt(
+        Context("wave", "anger")
+    )
+
+    assert "Target affect: anger" in prompt
+    assert "A, B, or neither" in prompt
+    assert "reference" not in prompt.lower()
+    assert "styled" not in prompt.lower()
+
+
+def test_motion_snapshot_round_trip_and_identity_guard(tmp_path):
+    profile = {key: 0.5 for key in FEATURE_KEYS}
+    case = ExperimentCase(
+        candidate_id="point-happiness",
+        candidate_name="styled",
+        context=Context("point", "happiness"),
+        profile=profile,
+        seed=7,
+    )
+    result = make_result(tmp_path / "motion")
+
+    _save_motion_snapshot(case, result, result.output_dir)
+    restored = _load_motion_snapshot(case, result.output_dir)
+
+    assert restored is not None
+    assert np.array_equal(restored.q_ref, result.q_ref)
+    assert np.array_equal(restored.q_var, result.q_var)
+    changed = ExperimentCase(
+        candidate_id=case.candidate_id,
+        candidate_name=case.candidate_name,
+        context=case.context,
+        profile={**profile, "weight": 0.6},
+        seed=7,
+    )
+    with pytest.raises(ValueError, match="Incompatible motion snapshot"):
+        _load_motion_snapshot(changed, result.output_dir)
+
+
+def test_empirical_vad_projection_stays_inside_observed_hull():
+    observed = [
+        {"valence": 0.4, "arousal": 0.4, "dominance": 0.4},
+        {"valence": 0.6, "arousal": 0.4, "dominance": 0.4},
+    ]
+
+    projected, distance = project_to_empirical_hull(
+        {"valence": 0.9, "arousal": 0.4, "dominance": 0.4},
+        observed,
+    )
+
+    assert projected["valence"] == pytest.approx(0.6)
+    assert projected["arousal"] == pytest.approx(0.4)
+    assert distance > 0.0
 
 
 def test_explicit_matrix_preserves_pilot_layers_and_pair_settings():
@@ -545,6 +696,19 @@ def test_limited_gemini_pilot_matrix_cardinality_and_metadata():
         and case.candidate_name == "styled"
     )
     assert beckon_styled.optimizer_overrides["flow_boundness_target_weight"] == 0.2
+
+
+def test_five_pair_diagnostic_matrix_cardinality():
+    path = Path("configs/five_pair_gemini_diagnostic.json")
+    matrix = json.loads(path.read_text(encoding="utf-8"))
+    cases = cases_from_matrix(matrix)
+
+    assert len(matrix["cases"]) == 5
+    assert len(cases) == 10
+    assert matrix["unique_video_count"] == 8
+    assert matrix["planned_independent_calls"] == 40
+    assert matrix["planned_paired_calls"] == 25
+    assert matrix["planned_total_calls"] == 65
 
 
 def test_paired_ranking_compares_order_and_selected_identity():

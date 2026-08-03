@@ -47,6 +47,7 @@ STATE_LABELS = (
 PROMPT_VERSION = "lma-vad-category-ambiguity-v2"
 SCHEMA_VERSION = "gemini-gesture-assessment-v2"
 RENDERER_VERSION = "variant-only-mp4-v1"
+SEQUENCE_RENDERER_VERSION = "variant-only-mp4-sequence-v2"
 
 
 class GeminiGestureAssessment(BaseModel):
@@ -178,6 +179,10 @@ class GeminiProVideoEvaluator:
         upload_poll_seconds: float = 2.0,
         upload_timeout_seconds: float = 180.0,
         video_duration_seconds: float | None = None,
+        video_lead_in_seconds: float = 0.0,
+        video_repetitions: int = 1,
+        video_inter_repeat_transition_seconds: float = 0.0,
+        video_final_hold_seconds: float = 0.0,
         video_fps: float | None = None,
         keep_uploaded_files: bool = True,
     ) -> None:
@@ -196,6 +201,19 @@ class GeminiProVideoEvaluator:
             if video_duration_seconds is None
             else float(video_duration_seconds)
         )
+        self.video_lead_in_seconds = float(video_lead_in_seconds)
+        self.video_repetitions = int(video_repetitions)
+        self.video_inter_repeat_transition_seconds = float(
+            video_inter_repeat_transition_seconds
+        )
+        self.video_final_hold_seconds = float(video_final_hold_seconds)
+        if (
+            self.video_lead_in_seconds < 0.0
+            or self.video_inter_repeat_transition_seconds < 0.0
+            or self.video_final_hold_seconds < 0.0
+            or self.video_repetitions < 1
+        ):
+            raise ValueError("Invalid standardized video sequence settings.")
         self.video_fps = (
             None if video_fps is None else float(video_fps)
         )
@@ -220,6 +238,33 @@ class GeminiProVideoEvaluator:
         self.last_assessment: GeminiGestureAssessment | None = None
         self.last_video_path: str | None = None
 
+    def _renderer_settings(self) -> dict[str, object]:
+        settings: dict[str, object] = {
+            "video_duration_seconds": self.video_duration_seconds,
+            "video_fps": self.video_fps,
+            "renderer_version": RENDERER_VERSION,
+        }
+        if (
+            self.video_lead_in_seconds != 0.0
+            or self.video_repetitions != 1
+            or self.video_inter_repeat_transition_seconds != 0.0
+            or self.video_final_hold_seconds != 0.0
+        ):
+            settings.update(
+                {
+                    "video_lead_in_seconds": self.video_lead_in_seconds,
+                    "video_repetitions": self.video_repetitions,
+                    "video_inter_repeat_transition_seconds": (
+                        self.video_inter_repeat_transition_seconds
+                    ),
+                    "video_final_hold_seconds": (
+                        self.video_final_hold_seconds
+                    ),
+                    "renderer_version": SEQUENCE_RENDERER_VERSION,
+                }
+            )
+        return settings
+
     def cache_identity(self) -> dict[str, object]:
         """Return only non-secret settings that affect evaluator observations."""
         return {
@@ -229,9 +274,7 @@ class GeminiProVideoEvaluator:
             "schema_version": SCHEMA_VERSION,
             "settings": {
                 "temperature": self.temperature,
-                "video_duration_seconds": self.video_duration_seconds,
-                "video_fps": self.video_fps,
-                "renderer_version": RENDERER_VERSION,
+                **self._renderer_settings(),
                 "response_mime_type": "application/json",
             },
         }
@@ -329,6 +372,11 @@ Return:
     def _prepare_video(
         self,
         optimisation_result: LabanOptimisationResult,
+        *,
+        camera_limits: tuple[
+            tuple[float, float],
+            tuple[float, float],
+        ] | None = None,
     ):
         video_path = (
             optimisation_result.output_dir
@@ -339,9 +387,8 @@ Return:
             json.dumps(
                 {
                     "content_hash": content_hash,
-                    "duration": self.video_duration_seconds,
-                    "fps": self.video_fps,
-                    "renderer_version": RENDERER_VERSION,
+                    "renderer_settings": self._renderer_settings(),
+                    "camera_limits": camera_limits,
                 },
                 sort_keys=True,
                 separators=(",", ":"),
@@ -367,7 +414,14 @@ Return:
                 optimisation_result.q_var,
                 video_path,
                 duration_seconds=self.video_duration_seconds,
+                lead_in_seconds=self.video_lead_in_seconds,
+                repetitions=self.video_repetitions,
+                inter_repeat_transition_seconds=(
+                    self.video_inter_repeat_transition_seconds
+                ),
+                final_hold_seconds=self.video_final_hold_seconds,
                 fps=self.video_fps,
+                camera_limits=camera_limits,
                 overwrite=True,
             )
             temporary_marker = marker_path.with_suffix(".tmp")

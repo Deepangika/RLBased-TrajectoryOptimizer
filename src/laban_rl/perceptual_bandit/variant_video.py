@@ -42,15 +42,106 @@ def _comparison_style_frame_indices(n_points: int) -> np.ndarray:
     return np.asarray(frame_indices, dtype=int)
 
 
+def compose_standardized_sequence(
+    trajectory: np.ndarray,
+    *,
+    gesture_duration_seconds: float,
+    lead_in_seconds: float,
+    repetitions: int,
+    inter_repeat_transition_seconds: float,
+    final_hold_seconds: float,
+) -> np.ndarray:
+    """Add initial/final holds and repeat a trajectory at its natural speed."""
+    values = np.asarray(trajectory, dtype=float)
+    if gesture_duration_seconds <= 0.0:
+        raise ValueError("gesture_duration_seconds must be positive.")
+    if (
+        lead_in_seconds < 0.0
+        or inter_repeat_transition_seconds < 0.0
+        or final_hold_seconds < 0.0
+    ):
+        raise ValueError("Sequence segment durations cannot be negative.")
+    if repetitions < 1:
+        raise ValueError("repetitions must be at least 1.")
+    samples_per_second = len(values) / gesture_duration_seconds
+    lead_count = int(round(lead_in_seconds * samples_per_second))
+    hold_count = int(round(final_hold_seconds * samples_per_second))
+    segments = []
+    if lead_count:
+        segments.append(np.repeat(values[:1], lead_count, axis=0))
+    transition_count = int(
+        round(inter_repeat_transition_seconds * samples_per_second)
+    )
+    for repetition in range(repetitions):
+        if repetition and transition_count:
+            progress = np.linspace(
+                0.0,
+                1.0,
+                transition_count + 2,
+                dtype=float,
+            )[1:-1]
+            smooth = progress * progress * (3.0 - 2.0 * progress)
+            transition = (
+                values[-1][None, :] * (1.0 - smooth[:, None])
+                + values[0][None, :] * smooth[:, None]
+            )
+            segments.append(transition)
+        segments.append(values.copy())
+    if hold_count:
+        segments.append(np.repeat(values[-1:], hold_count, axis=0))
+    return np.concatenate(segments, axis=0)
+
+
+def shared_camera_limits(
+    trajectories: list[np.ndarray],
+    *,
+    duration_seconds: float,
+    lead_in_seconds: float,
+    repetitions: int,
+    inter_repeat_transition_seconds: float,
+    final_hold_seconds: float,
+    l1: float = 0.30,
+    l2: float = 0.25,
+) -> tuple[tuple[float, float], tuple[float, float]]:
+    """Compute identical camera limits for every clip in a blinded pair."""
+    positions = []
+    for trajectory in trajectories:
+        sequence = compose_standardized_sequence(
+            trajectory,
+            gesture_duration_seconds=duration_seconds,
+            lead_in_seconds=lead_in_seconds,
+            repetitions=repetitions,
+            inter_repeat_transition_seconds=(
+                inter_repeat_transition_seconds
+            ),
+            final_hold_seconds=final_hold_seconds,
+        )
+        shoulder, elbow, wrist = laban.forward_kinematics_2link(
+            sequence,
+            l1=l1,
+            l2=l2,
+        )
+        positions.extend((shoulder, elbow, wrist))
+    return compute_equal_axes(positions, padding=0.08)
+
+
 def render_variant_only_mp4(
     q_ref: np.ndarray,
     q_var: np.ndarray,
     output_path: str | Path,
     *,
     duration_seconds: float = 2.0,
+    lead_in_seconds: float = 0.0,
+    repetitions: int = 1,
+    inter_repeat_transition_seconds: float = 0.0,
+    final_hold_seconds: float = 0.0,
     fps: float | None = None,
     l1: float = 0.30,
     l2: float = 0.25,
+    camera_limits: tuple[
+        tuple[float, float],
+        tuple[float, float],
+    ] | None = None,
     overwrite: bool = False,
 ) -> Path:
     """Render only the Variant while preserving the old animation's look.
@@ -76,6 +167,29 @@ def render_variant_only_mp4(
     if not np.all(np.isfinite(q_ref)) or not np.all(np.isfinite(q_var)):
         raise ValueError("q_ref/q_var contain NaN or infinite values.")
 
+    q_ref = compose_standardized_sequence(
+        q_ref,
+        gesture_duration_seconds=duration_seconds,
+        lead_in_seconds=lead_in_seconds,
+        repetitions=repetitions,
+        inter_repeat_transition_seconds=inter_repeat_transition_seconds,
+        final_hold_seconds=final_hold_seconds,
+    )
+    q_var = compose_standardized_sequence(
+        q_var,
+        gesture_duration_seconds=duration_seconds,
+        lead_in_seconds=lead_in_seconds,
+        repetitions=repetitions,
+        inter_repeat_transition_seconds=inter_repeat_transition_seconds,
+        final_hold_seconds=final_hold_seconds,
+    )
+    total_duration_seconds = (
+        lead_in_seconds
+        + repetitions * duration_seconds
+        + (repetitions - 1) * inter_repeat_transition_seconds
+        + final_hold_seconds
+    )
+
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -99,24 +213,27 @@ def render_variant_only_mp4(
     )
 
     # EXACTLY match the comparison GIF's camera framing.
-    xlim, ylim = compute_equal_axes(
-        [
-            shoulder_ref,
-            elbow_ref,
-            wrist_ref,
-            shoulder_var,
-            elbow_var,
-            wrist_var,
-        ],
-        padding=0.08,
-    )
+    if camera_limits is None:
+        xlim, ylim = compute_equal_axes(
+            [
+                shoulder_ref,
+                elbow_ref,
+                wrist_ref,
+                shoulder_var,
+                elbow_var,
+                wrist_var,
+            ],
+            padding=0.08,
+        )
+    else:
+        xlim, ylim = camera_limits
 
-    t_full = np.linspace(0.0, duration_seconds, len(q_var))
+    t_full = np.linspace(0.0, total_duration_seconds, len(q_var))
     t = t_full[frame_indices]
 
     if fps is None:
         # Keep the motion duration faithful to the trajectory duration.
-        fps = len(frame_indices) / duration_seconds
+        fps = len(frame_indices) / total_duration_seconds
 
     fps = float(fps)
 
@@ -195,7 +312,7 @@ def render_variant_only_mp4(
 
     print(
         "Variant-only MP4 rendered in original animation style: "
-        f"duration={duration_seconds:.3f}s | "
+        f"duration={total_duration_seconds:.3f}s | "
         f"fps={fps:.3f} | frames={len(frames)}"
     )
 

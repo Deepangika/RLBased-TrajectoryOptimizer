@@ -1,0 +1,116 @@
+{
+  "format_version": 1,
+  "description": "Five-pair long-clip diagnostic with independent VAD and blinded paired preference.",
+  "independent_repeats": 5,
+  "paired_preference_repeats": 5,
+  "logical_video_count": 10,
+  "unique_video_count": 8,
+  "planned_independent_calls": 40,
+  "planned_paired_calls": 25,
+  "planned_total_calls": 65,
+  "cases": [
+    {
+      "id": "wave-surprise-original",
+      "gesture": "wave",
+      "target": {"state": "surprise"},
+      "seed": 7,
+      "target_layers": {
+        "original_affect_derived_laban_target": {"weight": 0.62, "time": 0.9, "flow_boundness": 0.25, "space_indirectness": 0.45, "shape_arcness": 0.65},
+        "projected_feasible_laban_target": null
+      },
+      "candidate_profiles": {
+        "reference": {
+          "motion_source": "reference",
+          "profile": {"weight": 0.15075242009678008, "time": 0.1399206958859102, "flow_boundness": 0.060769926001542476, "space_indirectness": 0.537744411680609, "shape_arcness": 0.3019278354332854}
+        },
+        "styled": {
+          "profile": {"weight": 0.62, "time": 0.9, "flow_boundness": 0.25, "space_indirectness": 0.45, "shape_arcness": 0.65}
+        }
+      }
+    },
+    {
+      "id": "beckon-disgust-original",
+      "gesture": "beckon",
+      "target": {"state": "disgust"},
+      "seed": 7,
+      "target_layers": {
+        "original_affect_derived_laban_target": {"weight": 0.45, "time": 0.4, "flow_boundness": 0.7, "space_indirectness": 0.15, "shape_arcness": 0.2},
+        "projected_feasible_laban_target": null
+      },
+      "optimizer_overrides": {
+        "maxiter": 75,
+        "popsize": 8,
+        "n_timing_basis": 5,
+        "time_target_weight": 0.1,
+        "flow_boundness_target_weight": 0.2,
+        "shape_arcness_target_weight": 0.05
+      },
+      "candidate_profiles": {
+        "reference": {
+          "motion_source": "reference",
+          "profile": {"weight": 0.33681292920114875, "time": 0.48247234332915323, "flow_boundness": 0.5465005411204834, "space_indirectness": 0.7784908586451159, "shape_arcness": 0.0370873262036066}
+        },
+        "styled": {
+          "profile": {"weight": 0.45, "time": 0.4, "flow_boundness": 0.7, "space_indirectness": 0.15, "shape_arcness": 0.2}
+        }
+      }
+    },
+    {
+      "id": "celebratory-pump-anger-original",
+      "gesture": "celebratory_pump",
+      "target": {"state": "anger"},
+      "seed": 7,
+      "target_layers": {
+        "original_affect_derived_laban_target": {"weight": 0.9, "time": 0.85, "flow_boundness": 0.85, "space_indirectness": 0.1, "shape_arcness": 0.15},
+        "projected_feasible_laban_target": null
+      },
+      "candidate_profiles": {
+        "reference": {
+          "motion_source": "reference",
+          "profile": {"weight": 0.5892538827500035, "time": 0.34031588951828134, "flow_boundness": 0.5444938242458949, "space_indirectness": 0.16332072841087233, "shape_arcness": 0.0}
+        },
+        "styled": {
+          "profile": {"weight": 0.9, "time": 0.85, "flow_boundness": 0.85, "space_indirectness": 0.1, "shape_arcness": 0.15}
+        }
+      }
+    },
+    {
+      "id": "wave-anger-projected",
+      "gesture": "wave",
+      "target": {"state": "anger"},
+      "seed": 7,
+      "target_layers": {
+        "original_affect_derived_laban_target": {"weight": 0.9, "time": 0.85, "flow_boundness": 0.85, "space_indirectness": 0.1, "shape_arcness": 0.15},
+        "projected_feasible_laban_target": {"weight": 0.7780272194, "time": 0.7891497611, "flow_boundness": 0.7265753311, "space_indirectness": 0.1546006793, "shape_arcness": 0.1622706712}
+      },
+      "candidate_profiles": {
+        "reference": {
+          "motion_source": "reference",
+          "profile": {"weight": 0.15075242009678008, "time": 0.1399206958859102, "flow_boundness": 0.060769926001542476, "space_indirectness": 0.537744411680609, "shape_arcness": 0.3019278354332854}
+        },
+        "styled": {
+          "profile": {"weight": 0.7780272194, "time": 0.7891497611, "flow_boundness": 0.7265753311, "space_indirectness": 0.1546006793, "shape_arcness": 0.1622706712}
+        }
+      }
+    },
+    {
+      "id": "wave-disgust-projected-stress",
+      "gesture": "wave",
+      "target": {"state": "disgust"},
+      "seed": 7,
+      "target_layers": {
+        "original_affect_derived_laban_target": {"weight": 0.45, "time": 0.4, "flow_boundness": 0.7, "space_indirectness": 0.15, "shape_arcness": 0.2},
+        "projected_feasible_laban_target": {"weight": 0.3152650269, "time": 0.2913735675, "flow_boundness": 0.2569935038, "space_indirectness": 0.3508188415, "shape_arcness": 0.2075726686}
+      },
+      "candidate_profiles": {
+        "reference": {
+          "motion_source": "reference",
+          "profile": {"weight": 0.15075242009678008, "time": 0.1399206958859102, "flow_boundness": 0.060769926001542476, "space_indirectness": 0.537744411680609, "shape_arcness": 0.3019278354332854}
+        },
+        "styled": {
+          "profile": {"weight": 0.3152650269, "time": 0.2913735675, "flow_boundness": 0.2569935038, "space_indirectness": 0.3508188415, "shape_arcness": 0.2075726686}
+        }
+      }
+    }
+  ]
+}

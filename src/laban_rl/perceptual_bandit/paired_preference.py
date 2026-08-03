@@ -189,19 +189,34 @@ class PairedPreferenceCache:
 class GeminiPairedPreferenceEvaluator:
     """Ask Gemini which blinded clip better expresses the supplied target."""
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *,
+        fixed_camera_limits: tuple[
+            tuple[float, float],
+            tuple[float, float],
+        ] | None = None,
+        **kwargs: Any,
+    ) -> None:
         self.video_evaluator = GeminiProVideoEvaluator(**kwargs)
         self.model = self.video_evaluator.model
         self.temperature = self.video_evaluator.temperature
+        self.fixed_camera_limits = fixed_camera_limits
 
     def cache_identity(self) -> dict[str, Any]:
         video_identity = self.video_evaluator.cache_identity()
+        settings = dict(video_identity["settings"])
+        if self.fixed_camera_limits is not None:
+            settings["fixed_camera_limits"] = [
+                [float(bound) for bound in axis_limits]
+                for axis_limits in self.fixed_camera_limits
+            ]
         return {
             "provider": "gemini-paired-preference",
             "model": self.model,
             "prompt_version": PAIR_PROMPT_VERSION,
             "schema_version": PAIR_SCHEMA_VERSION,
-            "settings": dict(video_identity["settings"]),
+            "settings": settings,
         }
 
     @staticmethod
@@ -245,21 +260,25 @@ perceptually meaningful or neither clip expresses the target.
             if reference_first
             else ("styled", "reference")
         )
-        camera_limits = shared_camera_limits(
-            [reference_result.q_var, styled_result.q_var],
-            duration_seconds=(
-                self.video_evaluator.video_duration_seconds
-            ),
-            lead_in_seconds=(
-                self.video_evaluator.video_lead_in_seconds
-            ),
-            repetitions=self.video_evaluator.video_repetitions,
-            inter_repeat_transition_seconds=(
-                self.video_evaluator.video_inter_repeat_transition_seconds
-            ),
-            final_hold_seconds=(
-                self.video_evaluator.video_final_hold_seconds
-            ),
+        camera_limits = (
+            self.fixed_camera_limits
+            if self.fixed_camera_limits is not None
+            else shared_camera_limits(
+                [reference_result.q_var, styled_result.q_var],
+                duration_seconds=(
+                    self.video_evaluator.video_duration_seconds
+                ),
+                lead_in_seconds=(
+                    self.video_evaluator.video_lead_in_seconds
+                ),
+                repetitions=self.video_evaluator.video_repetitions,
+                inter_repeat_transition_seconds=(
+                    self.video_evaluator.video_inter_repeat_transition_seconds
+                ),
+                final_hold_seconds=(
+                    self.video_evaluator.video_final_hold_seconds
+                ),
+            )
         )
         uploads = [
             self.video_evaluator._upload_video(

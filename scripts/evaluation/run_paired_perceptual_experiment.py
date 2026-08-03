@@ -66,6 +66,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=0.0,
     )
     parser.add_argument("--video-final-hold-seconds", type=float, default=0.0)
+    parser.add_argument(
+        "--video-presentation-style",
+        choices=("plot", "arm_only"),
+        default="plot",
+    )
     parser.add_argument("--mock-noise-std", type=float, default=0.08)
     parser.add_argument("--maxiter", type=int, default=45)
     parser.add_argument("--popsize", type=int, default=5)
@@ -281,6 +286,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.video_inter_repeat_transition_seconds
             ),
             video_final_hold_seconds=args.video_final_hold_seconds,
+            video_presentation_style=args.video_presentation_style,
             keep_uploaded_files=False,
         )
         preference_evaluator = GeminiPairedPreferenceEvaluator(
@@ -293,6 +299,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.video_inter_repeat_transition_seconds
             ),
             video_final_hold_seconds=args.video_final_hold_seconds,
+            video_presentation_style=args.video_presentation_style,
             keep_uploaded_files=False,
         )
 

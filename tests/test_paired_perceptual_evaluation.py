@@ -203,12 +203,16 @@ def test_default_renderer_settings_preserve_legacy_cache_identity():
     evaluator.video_repetitions = 1
     evaluator.video_inter_repeat_transition_seconds = 0.0
     evaluator.video_final_hold_seconds = 0.0
+    evaluator.video_presentation_style = "plot"
 
     assert evaluator._renderer_settings() == {
         "video_duration_seconds": 2.0,
         "video_fps": None,
         "renderer_version": RENDERER_VERSION,
     }
+
+    evaluator.video_presentation_style = "arm_only"
+    assert evaluator._renderer_settings()["video_presentation_style"] == "arm_only"
 
 
 def test_blinded_pair_cache_balances_order_and_resumes(tmp_path):
@@ -260,6 +264,27 @@ def test_blinded_pair_prompt_names_target_without_unblinding_sources():
     assert "A, B, or neither" in prompt
     assert "reference" not in prompt.lower()
     assert "styled" not in prompt.lower()
+
+
+def test_paired_fixed_camera_identity_is_json_stable():
+    class VideoEvaluator:
+        @staticmethod
+        def cache_identity():
+            return {"settings": {"presentation_style": "arm_only"}}
+
+    evaluator = object.__new__(GeminiPairedPreferenceEvaluator)
+    evaluator.video_evaluator = VideoEvaluator()
+    evaluator.model = "test-model"
+    evaluator.temperature = 0.0
+    evaluator.fixed_camera_limits = ((-0.63, 0.63), (-0.63, 0.63))
+
+    identity = evaluator.cache_identity()
+
+    assert json.loads(json.dumps(identity)) == identity
+    assert identity["settings"]["fixed_camera_limits"] == [
+        [-0.63, 0.63],
+        [-0.63, 0.63],
+    ]
 
 
 def test_motion_snapshot_round_trip_and_identity_guard(tmp_path):

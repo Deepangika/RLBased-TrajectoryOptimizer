@@ -142,6 +142,7 @@ def render_variant_only_mp4(
         tuple[float, float],
         tuple[float, float],
     ] | None = None,
+    presentation_style: str = "plot",
     overwrite: bool = False,
 ) -> Path:
     """Render only the Variant while preserving the old animation's look.
@@ -166,6 +167,10 @@ def render_variant_only_mp4(
         )
     if not np.all(np.isfinite(q_ref)) or not np.all(np.isfinite(q_var)):
         raise ValueError("q_ref/q_var contain NaN or infinite values.")
+    if presentation_style not in {"plot", "arm_only"}:
+        raise ValueError(
+            "presentation_style must be 'plot' or 'arm_only'."
+        )
 
     q_ref = compose_standardized_sequence(
         q_ref,
@@ -238,18 +243,23 @@ def render_variant_only_mp4(
     fps = float(fps)
 
     fig, ax = plt.subplots(figsize=(6, 6))
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("white")
     canvas = FigureCanvasAgg(fig)
 
     ax.set_aspect("equal")
     ax.set_xlim(*xlim)
     ax.set_ylim(*ylim)
-    ax.set_xlabel("x position (m)")
-    ax.set_ylabel("y position (m)")
-    ax.set_title("Styled 2D arm")
-    ax.grid(True)
-
-    # Match the Variant colour from the original comparison GIF.
-    variant_colour = "C1"
+    if presentation_style == "plot":
+        ax.set_xlabel("x position (m)")
+        ax.set_ylabel("y position (m)")
+        ax.set_title("Styled 2D arm")
+        ax.grid(True)
+        variant_colour = "C1"
+    else:
+        ax.set_axis_off()
+        fig.subplots_adjust(left=0.0, right=1.0, bottom=0.0, top=1.0)
+        variant_colour = "#202020"
 
     var_line, = ax.plot(
         [],
@@ -257,22 +267,26 @@ def render_variant_only_mp4(
         marker="o",
         color=variant_colour,
         label="Variant",
+        linewidth=3.0 if presentation_style == "arm_only" else 1.5,
+        markersize=8.0 if presentation_style == "arm_only" else 6.0,
     )
-    var_trace, = ax.plot(
-        [],
-        [],
-        alpha=0.5,
-        color=variant_colour,
-    )
-    time_text = ax.text(
-        0.02,
-        0.95,
-        "",
-        transform=ax.transAxes,
-        va="top",
-    )
-
-    ax.legend()
+    var_trace = None
+    time_text = None
+    if presentation_style == "plot":
+        var_trace, = ax.plot(
+            [],
+            [],
+            alpha=0.5,
+            color=variant_colour,
+        )
+        time_text = ax.text(
+            0.02,
+            0.95,
+            "",
+            transform=ax.transAxes,
+            va="top",
+        )
+        ax.legend()
 
     frames: list[np.ndarray] = []
 
@@ -289,11 +303,13 @@ def render_variant_only_mp4(
         ]
 
         var_line.set_data(var_xs, var_ys)
-        var_trace.set_data(
-            wrist_var[: frame + 1, 0],
-            wrist_var[: frame + 1, 1],
-        )
-        time_text.set_text(f"t = {t[frame]:.2f} s")
+        if var_trace is not None:
+            var_trace.set_data(
+                wrist_var[: frame + 1, 0],
+                wrist_var[: frame + 1, 1],
+            )
+        if time_text is not None:
+            time_text.set_text(f"t = {t[frame]:.2f} s")
 
         canvas.draw()
         rgba = np.asarray(canvas.buffer_rgba())
@@ -311,7 +327,7 @@ def render_variant_only_mp4(
     )
 
     print(
-        "Variant-only MP4 rendered in original animation style: "
+        f"Variant-only MP4 rendered with {presentation_style} presentation: "
         f"duration={total_duration_seconds:.3f}s | "
         f"fps={fps:.3f} | frames={len(frames)}"
     )

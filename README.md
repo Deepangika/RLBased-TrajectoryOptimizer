@@ -261,6 +261,25 @@ This reports observed clip-mean ranges and each canonical target's nearest
 point on the sparse empirical VAD convex hull. It is a diagnostic projection,
 not a replacement for canonical targets or human calibration.
 
+Before expanding beyond the five diagnostic pairs, isolate possible path-overlay
+bias with the paired-only arm-rendering ablation:
+
+```text
+python scripts/evaluation/run_arm_only_paired_ablation.py \
+  --matrix configs/five_pair_gemini_diagnostic.json \
+  --motion-source-dir outputs/five_pair_diagnostic/candidates \
+  --evaluator gemini \
+  --repeats 3 \
+  --cache outputs/arm_only_ablation_cache \
+  --out outputs/arm_only_ablation
+```
+
+This reuses the exact frozen live trajectories and makes only 15 Gemini calls.
+Both clips use the same fixed camera and plain white background; only the dark
+arm is visible. The trail, axes, grid, labels, title, legend, and time annotation
+are removed. A/B order remains deterministically balanced and `neither` remains
+valid. No independent VAD calls are made.
+
 ## Paired perceptual experiments
 
 Use the paired runner before human validation instead of running separate VAD

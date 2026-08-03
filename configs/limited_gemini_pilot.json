@@ -1,0 +1,188 @@
+{
+  "format_version": 1,
+  "description": "Nine-condition reference-versus-styled Gemini pilot with three repeats per video.",
+  "logical_video_count": 18,
+  "unique_video_count": 15,
+  "planned_evaluator_calls": 45,
+  "cases": [
+    {
+      "id": "wave-surprise-original",
+      "gesture": "wave",
+      "target": {"state": "surprise"},
+      "seed": 7,
+      "target_layers": {
+        "original_affect_derived_laban_target": {"weight": 0.62, "time": 0.9, "flow_boundness": 0.25, "space_indirectness": 0.45, "shape_arcness": 0.65},
+        "projected_feasible_laban_target": null
+      },
+      "candidate_profiles": {
+        "reference": {
+          "motion_source": "reference",
+          "profile": {"weight": 0.15075242009678008, "time": 0.1399206958859102, "flow_boundness": 0.060769926001542476, "space_indirectness": 0.537744411680609, "shape_arcness": 0.3019278354332854}
+        },
+        "styled": {
+          "profile": {"weight": 0.62, "time": 0.9, "flow_boundness": 0.25, "space_indirectness": 0.45, "shape_arcness": 0.65}
+        }
+      }
+    },
+    {
+      "id": "reach-sadness-original",
+      "gesture": "reach",
+      "target": {"state": "sadness"},
+      "seed": 7,
+      "target_layers": {
+        "original_affect_derived_laban_target": {"weight": 0.12, "time": 0.15, "flow_boundness": 0.35, "space_indirectness": 0.25, "shape_arcness": 0.25},
+        "projected_feasible_laban_target": null
+      },
+      "candidate_profiles": {
+        "reference": {
+          "motion_source": "reference",
+          "profile": {"weight": 0.04512744670475053, "time": 0.0060050414713089, "flow_boundness": 0.0, "space_indirectness": 0.0, "shape_arcness": 0.0}
+        },
+        "styled": {
+          "profile": {"weight": 0.12, "time": 0.15, "flow_boundness": 0.35, "space_indirectness": 0.25, "shape_arcness": 0.25}
+        }
+      }
+    },
+    {
+      "id": "point-fear-original",
+      "gesture": "point",
+      "target": {"state": "fear"},
+      "seed": 7,
+      "target_layers": {
+        "original_affect_derived_laban_target": {"weight": 0.35, "time": 0.8, "flow_boundness": 0.75, "space_indirectness": 0.65, "shape_arcness": 0.25},
+        "projected_feasible_laban_target": null
+      },
+      "candidate_profiles": {
+        "reference": {
+          "motion_source": "reference",
+          "profile": {"weight": 0.3679918978693256, "time": 0.17472027098609197, "flow_boundness": 0.0, "space_indirectness": 0.0, "shape_arcness": 0.0}
+        },
+        "styled": {
+          "profile": {"weight": 0.35, "time": 0.8, "flow_boundness": 0.75, "space_indirectness": 0.65, "shape_arcness": 0.25}
+        }
+      }
+    },
+    {
+      "id": "circle-happiness-original",
+      "gesture": "circle",
+      "target": {"state": "happiness"},
+      "seed": 7,
+      "target_layers": {
+        "original_affect_derived_laban_target": {"weight": 0.5, "time": 0.55, "flow_boundness": 0.2, "space_indirectness": 0.3, "shape_arcness": 0.7},
+        "projected_feasible_laban_target": null
+      },
+      "candidate_profiles": {
+        "reference": {
+          "motion_source": "reference",
+          "profile": {"weight": 0.21507232828897835, "time": 0.21915362930289717, "flow_boundness": 0.16989558757526335, "space_indirectness": 0.18134117862857102, "shape_arcness": 0.14305918096175352}
+        },
+        "styled": {
+          "profile": {"weight": 0.5, "time": 0.55, "flow_boundness": 0.2, "space_indirectness": 0.3, "shape_arcness": 0.7}
+        }
+      }
+    },
+    {
+      "id": "beckon-disgust-original",
+      "gesture": "beckon",
+      "target": {"state": "disgust"},
+      "seed": 7,
+      "target_layers": {
+        "original_affect_derived_laban_target": {"weight": 0.45, "time": 0.4, "flow_boundness": 0.7, "space_indirectness": 0.15, "shape_arcness": 0.2},
+        "projected_feasible_laban_target": null
+      },
+      "optimizer_overrides": {
+        "maxiter": 75,
+        "popsize": 8,
+        "n_timing_basis": 5,
+        "time_target_weight": 0.1,
+        "flow_boundness_target_weight": 0.2,
+        "shape_arcness_target_weight": 0.05
+      },
+      "candidate_profiles": {
+        "reference": {
+          "motion_source": "reference",
+          "profile": {"weight": 0.33681292920114875, "time": 0.48247234332915323, "flow_boundness": 0.5465005411204834, "space_indirectness": 0.7784908586451159, "shape_arcness": 0.0370873262036066}
+        },
+        "styled": {
+          "profile": {"weight": 0.45, "time": 0.4, "flow_boundness": 0.7, "space_indirectness": 0.15, "shape_arcness": 0.2}
+        }
+      }
+    },
+    {
+      "id": "celebratory-pump-anger-original",
+      "gesture": "celebratory_pump",
+      "target": {"state": "anger"},
+      "seed": 7,
+      "target_layers": {
+        "original_affect_derived_laban_target": {"weight": 0.9, "time": 0.85, "flow_boundness": 0.85, "space_indirectness": 0.1, "shape_arcness": 0.15},
+        "projected_feasible_laban_target": null
+      },
+      "candidate_profiles": {
+        "reference": {
+          "motion_source": "reference",
+          "profile": {"weight": 0.5892538827500035, "time": 0.34031588951828134, "flow_boundness": 0.5444938242458949, "space_indirectness": 0.16332072841087233, "shape_arcness": 0.0}
+        },
+        "styled": {
+          "profile": {"weight": 0.9, "time": 0.85, "flow_boundness": 0.85, "space_indirectness": 0.1, "shape_arcness": 0.15}
+        }
+      }
+    },
+    {
+      "id": "wave-anger-projected",
+      "gesture": "wave",
+      "target": {"state": "anger"},
+      "seed": 7,
+      "target_layers": {
+        "original_affect_derived_laban_target": {"weight": 0.9, "time": 0.85, "flow_boundness": 0.85, "space_indirectness": 0.1, "shape_arcness": 0.15},
+        "projected_feasible_laban_target": {"weight": 0.7780272194, "time": 0.7891497611, "flow_boundness": 0.7265753311, "space_indirectness": 0.1546006793, "shape_arcness": 0.1622706712}
+      },
+      "candidate_profiles": {
+        "reference": {
+          "motion_source": "reference",
+          "profile": {"weight": 0.15075242009678008, "time": 0.1399206958859102, "flow_boundness": 0.060769926001542476, "space_indirectness": 0.537744411680609, "shape_arcness": 0.3019278354332854}
+        },
+        "styled": {
+          "profile": {"weight": 0.7780272194, "time": 0.7891497611, "flow_boundness": 0.7265753311, "space_indirectness": 0.1546006793, "shape_arcness": 0.1622706712}
+        }
+      }
+    },
+    {
+      "id": "wave-sadness-projected",
+      "gesture": "wave",
+      "target": {"state": "sadness"},
+      "seed": 7,
+      "target_layers": {
+        "original_affect_derived_laban_target": {"weight": 0.12, "time": 0.15, "flow_boundness": 0.35, "space_indirectness": 0.25, "shape_arcness": 0.25},
+        "projected_feasible_laban_target": {"weight": 0.1428744257, "time": 0.1320374762, "flow_boundness": 0.2054143719, "space_indirectness": 0.3085070133, "shape_arcness": 0.2326816966}
+      },
+      "candidate_profiles": {
+        "reference": {
+          "motion_source": "reference",
+          "profile": {"weight": 0.15075242009678008, "time": 0.1399206958859102, "flow_boundness": 0.060769926001542476, "space_indirectness": 0.537744411680609, "shape_arcness": 0.3019278354332854}
+        },
+        "styled": {
+          "profile": {"weight": 0.1428744257, "time": 0.1320374762, "flow_boundness": 0.2054143719, "space_indirectness": 0.3085070133, "shape_arcness": 0.2326816966}
+        }
+      }
+    },
+    {
+      "id": "wave-disgust-projected-stress",
+      "gesture": "wave",
+      "target": {"state": "disgust"},
+      "seed": 7,
+      "target_layers": {
+        "original_affect_derived_laban_target": {"weight": 0.45, "time": 0.4, "flow_boundness": 0.7, "space_indirectness": 0.15, "shape_arcness": 0.2},
+        "projected_feasible_laban_target": {"weight": 0.3152650269, "time": 0.2913735675, "flow_boundness": 0.2569935038, "space_indirectness": 0.3508188415, "shape_arcness": 0.2075726686}
+      },
+      "candidate_profiles": {
+        "reference": {
+          "motion_source": "reference",
+          "profile": {"weight": 0.15075242009678008, "time": 0.1399206958859102, "flow_boundness": 0.060769926001542476, "space_indirectness": 0.537744411680609, "shape_arcness": 0.3019278354332854}
+        },
+        "styled": {
+          "profile": {"weight": 0.3152650269, "time": 0.2913735675, "flow_boundness": 0.2569935038, "space_indirectness": 0.3508188415, "shape_arcness": 0.2075726686}
+        }
+      }
+    }
+  ]
+}

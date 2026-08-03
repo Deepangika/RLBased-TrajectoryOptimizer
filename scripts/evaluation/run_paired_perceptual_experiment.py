@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 import json
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_DIR = PROJECT_ROOT / "src"
@@ -12,11 +14,12 @@ for candidate in (PROJECT_ROOT, SRC_DIR):
     if str(candidate) not in sys.path:
         sys.path.insert(0, str(candidate))
 
-from laban_rl.optimiser_api import optimise_laban_target
+from laban_rl.optimiser_api import build_reference_motion, optimise_laban_target
 from laban_rl.perceptual_bandit.environment import (
     EnvironmentRewardConfig,
     MockNoisyPerceptualEvaluator,
 )
+from scripts.train_cem_contextual_bandit import _build_optimiser_overrides
 from laban_rl.perceptual_bandit.evaluation_cache import PerceptualObservationCache
 from laban_rl.perceptual_bandit.experiment import (
     REWARD_SCALE_NOTE,
@@ -105,7 +108,27 @@ def _print_summary(payload: dict, *, paired_ab: bool) -> None:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     matrix = json.loads(_resolve(args.matrix).read_text(encoding="utf-8"))
-    cases = cases_from_matrix(matrix)
+    parsed_cases = cases_from_matrix(matrix)
+    cases = []
+    for case in parsed_cases:
+        optimiser_args = SimpleNamespace(
+            maxiter=args.maxiter,
+            popsize=args.popsize,
+            local_maxiter=args.local_maxiter,
+            de_mutation=0.5,
+            de_recombination=0.65,
+            seed=case.seed,
+            target_state=case.context.target_state,
+            wave_flow_target_weight=0.35,
+        )
+        effective_overrides = _build_optimiser_overrides(
+            optimiser_args,
+            case.context.gesture,
+        )
+        effective_overrides.update(case.optimizer_overrides)
+        cases.append(
+            replace(case, optimizer_overrides=effective_overrides)
+        )
     if args.paired_ab:
         profile_names = {case.candidate_name for case in cases}
         if len(profile_names) != 2:
@@ -132,22 +155,24 @@ def main(argv: list[str] | None = None) -> int:
         repeat_evaluations=args.repeats,
         perceptual_reward_mode="vad",
         max_feature_error_threshold=args.max_feature_error_threshold,
+        reject_excessive_feature_error=True,
         realisation_penalty_weight=args.realisation_penalty_weight,
         stability_penalty_weight=args.stability_penalty_weight,
     )
 
     def inner_runner(case: ExperimentCase, out_dir: Path):
+        if case.motion_source == "reference":
+            return build_reference_motion(
+                gesture=case.context.gesture,
+                target_state=case.context.target_label,
+                out_dir=out_dir,
+            )
         return optimise_laban_target(
             gesture=case.context.gesture,
             target_state=case.context.target_label,
             target_profile=case.profile,
             out_dir=out_dir,
-            optimiser_overrides={
-                "seed": case.seed,
-                "maxiter": args.maxiter,
-                "popsize": args.popsize,
-                "local_maxiter": args.local_maxiter,
-            },
+            optimiser_overrides=case.optimizer_overrides,
         )
 
     try:
@@ -160,7 +185,7 @@ def main(argv: list[str] | None = None) -> int:
             reward_config=reward_config,
             out_dir=_resolve(args.out),
             runner_identity={
-                "implementation": "optimise_laban_target-v1",
+                "implementation": "paired-reference-styled-v2",
                 "maxiter": args.maxiter,
                 "popsize": args.popsize,
                 "local_maxiter": args.local_maxiter,

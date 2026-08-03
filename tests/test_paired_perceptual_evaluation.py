@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from laban_rl.config import FEATURE_KEYS
-from laban_rl.optimiser_api import LabanOptimisationResult
+from laban_rl.optimiser_api import LabanOptimisationResult, build_reference_motion
 from laban_rl.perceptual_bandit.environment import (
     Context,
     EnvironmentRewardConfig,
@@ -19,6 +19,7 @@ from laban_rl.perceptual_bandit.evaluation_cache import (
 )
 from laban_rl.perceptual_bandit.experiment import (
     ExperimentCase,
+    cases_from_matrix,
     paired_comparison_summary,
     run_paired_experiment,
 )
@@ -45,9 +46,9 @@ def make_result(path: Path, *, offset: float = 0.0) -> LabanOptimisationResult:
     return LabanOptimisationResult(
         gesture="point",
         target_state="happiness",
-        requested_profile=profile,
-        achieved_profile=profile,
-        achieved_profile_clipped=profile,
+        requested_profile=dict(profile),
+        achieved_profile=dict(profile),
+        achieved_profile_clipped=dict(profile),
         inner_reward=0.0,
         inner_loss=0.0,
         action_coefficients=np.zeros(4),
@@ -144,6 +145,53 @@ def test_cache_reuses_repeats_and_invalidates_schema(tmp_path):
         result=changed_profile,
         evaluator_identity=EvaluatorCacheIdentity.from_evaluator(evaluator),
     )
+
+
+def test_explicit_matrix_preserves_pilot_layers_and_pair_settings():
+    profile = {key: 0.5 for key in FEATURE_KEYS}
+    config = {
+        "cases": [
+            {
+                "id": "wave-anger-projected",
+                "gesture": "wave",
+                "target": {"state": "anger"},
+                "seed": 7,
+                "target_layers": {
+                    "original_affect_derived_laban_target": profile,
+                    "projected_feasible_laban_target": profile,
+                },
+                "optimizer_overrides": {"maxiter": 75},
+                "candidate_profiles": {
+                    "reference": {
+                        "motion_source": "reference",
+                        "profile": profile,
+                    },
+                    "styled": {"profile": profile},
+                },
+            }
+        ]
+    }
+
+    cases = cases_from_matrix(config)
+
+    assert [case.candidate_name for case in cases] == ["reference", "styled"]
+    assert cases[0].motion_source == "reference"
+    assert cases[0].require_feature_match is False
+    assert cases[1].require_feature_match is True
+    assert cases[1].optimizer_overrides == {"maxiter": 75}
+    assert cases[1].target_layers["projected_feasible_laban_target"] == profile
+
+
+def test_reference_motion_is_an_exact_matched_baseline(tmp_path):
+    result = build_reference_motion(
+        gesture="wave",
+        target_state="surprise",
+        out_dir=tmp_path / "reference",
+    )
+
+    assert np.array_equal(result.q_ref, result.q_var)
+    assert result.raw_result["motion_source"] == "reference"
+    assert result.raw_result["reward_info"]["path_length_ratio"] == 1.0
 
 
 def test_cache_rejects_tampered_entry_and_secret_identity(tmp_path):
@@ -377,6 +425,118 @@ def test_matrix_skips_physically_invalid_candidate_evaluation(tmp_path):
     assert evaluator.calls == 0
     assert payload["records"][0]["observations"] == []
     assert payload["records"][0]["reliability"] is None
+
+
+def test_strict_matrix_skips_feature_miss_but_keeps_reference(tmp_path):
+    context = Context("point", "happiness")
+    profile = {key: 0.5 for key in FEATURE_KEYS}
+    cases = [
+        ExperimentCase(
+            candidate_id="styled",
+            candidate_name="styled",
+            context=context,
+            profile=profile,
+            seed=7,
+        ),
+        ExperimentCase(
+            candidate_id="reference",
+            candidate_name="reference",
+            context=context,
+            profile=profile,
+            seed=7,
+            motion_source="reference",
+            require_feature_match=False,
+        ),
+    ]
+    evaluator = CountingEvaluator()
+
+    def inner_runner(case, out_dir):
+        result = make_result(out_dir)
+        result.achieved_profile["weight"] = 0.75
+        return result
+
+    payload = run_paired_experiment(
+        cases,
+        inner_runner=inner_runner,
+        evaluator=evaluator,
+        cache=PerceptualObservationCache(tmp_path / "cache"),
+        repeats=2,
+        reward_config=EnvironmentRewardConfig(
+            repeat_evaluations=2,
+            reject_excessive_feature_error=True,
+        ),
+        out_dir=tmp_path / "strict-run",
+        runner_identity={"optimizer": "test-v1"},
+        save_plots=False,
+    )
+
+    assert evaluator.calls == 2
+    assert payload["records"][0]["observations"] == []
+    assert len(payload["records"][1]["observations"]) == 2
+    assert payload["records"][1]["feasibility"]["feasible"] is True
+    assert payload["records"][1]["vad_score"] == pytest.approx(
+        payload["records"][1]["reliability"]["mean_vad_reward"]
+    )
+
+
+def test_reliability_deduplicates_identical_cached_clips(tmp_path):
+    context = Context("point", "happiness")
+    profile = {key: 0.5 for key in FEATURE_KEYS}
+    cases = [
+        ExperimentCase(
+            candidate_id=f"reference-{index}",
+            candidate_name="reference",
+            context=context,
+            profile=profile,
+            seed=7,
+            motion_source="reference",
+            require_feature_match=False,
+        )
+        for index in range(2)
+    ]
+    evaluator = CountingEvaluator()
+
+    payload = run_paired_experiment(
+        cases,
+        inner_runner=lambda case, out_dir: make_result(out_dir),
+        evaluator=evaluator,
+        cache=PerceptualObservationCache(tmp_path / "cache"),
+        repeats=2,
+        reward_config=EnvironmentRewardConfig(repeat_evaluations=2),
+        out_dir=tmp_path / "deduplicated-run",
+        runner_identity={"optimizer": "test-v1"},
+        save_plots=False,
+    )
+
+    assert evaluator.calls == 2
+    assert (
+        payload["records"][0]["observation_cache_key"]
+        == payload["records"][1]["observation_cache_key"]
+    )
+    assert payload["test_retest_reliability"]["clip_count"] == 1
+
+
+def test_limited_gemini_pilot_matrix_cardinality_and_metadata():
+    path = Path("configs/limited_gemini_pilot.json")
+    matrix = json.loads(path.read_text(encoding="utf-8"))
+    cases = cases_from_matrix(matrix)
+
+    assert len(matrix["cases"]) == 9
+    assert len(cases) == 18
+    assert {case.candidate_name for case in cases} == {"reference", "styled"}
+    assert matrix["unique_video_count"] == 15
+    assert matrix["planned_evaluator_calls"] == 45
+    assert all(
+        "original_affect_derived_laban_target" in case.target_layers
+        for case in cases
+    )
+    beckon_styled = next(
+        case
+        for case in cases
+        if case.candidate_id.startswith("beckon-disgust")
+        and case.candidate_name == "styled"
+    )
+    assert beckon_styled.optimizer_overrides["flow_boundness_target_weight"] == 0.2
 
 
 def test_paired_ranking_compares_order_and_selected_identity():

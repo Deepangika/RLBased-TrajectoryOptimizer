@@ -142,3 +142,73 @@ def optimise_laban_target(
         output_dir=Path(out_dir),
         raw_result=raw,
     )
+
+
+def build_reference_motion(
+    *,
+    gesture: str,
+    target_state: str,
+    out_dir: str | Path,
+) -> LabanOptimisationResult:
+    """Build an unstyled reference result for matched perceptual evaluation."""
+    module = _load_optimiser_module()
+    args = module.build_parser().parse_args([])
+    args.gesture = gesture
+    args.target = target_state
+    args.out = str(Path(out_dir))
+
+    arm = module.laban.ArmConfig(
+        n_points=160,
+        duration=2.0,
+        l1=0.30,
+        l2=0.25,
+    )
+    filter_config = module.laban.FilterConfig(
+        enabled=True,
+        cutoff_hz=5.0,
+        order=4,
+    )
+    ranges_path = Path(args.ranges)
+    if not ranges_path.exists():
+        ranges_path = module.PROJECT_ROOT / ranges_path
+    ranges = module.load_ranges_or_default(ranges_path, gesture=gesture)
+    q_ref = module.make_reference_trajectory(gesture_type=gesture, arm=arm)
+    raw_features, clipped_profile = module.compute_raw_and_norm_features(
+        q_ref,
+        arm,
+        filter_config,
+        ranges,
+    )
+    achieved_profile = module.laban.normalise_laban_features(
+        features=raw_features,
+        normalisation_ranges=ranges,
+        clip=False,
+    )
+    requested_profile = {
+        key: float(clipped_profile[key]) for key in FEATURE_KEYS
+    }
+    output_dir = Path(out_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return LabanOptimisationResult(
+        gesture=gesture,
+        target_state=target_state,
+        requested_profile=requested_profile,
+        achieved_profile={
+            key: float(achieved_profile[key]) for key in FEATURE_KEYS
+        },
+        achieved_profile_clipped=requested_profile,
+        inner_reward=0.0,
+        inner_loss=0.0,
+        action_coefficients=np.zeros(0, dtype=float),
+        q_ref=np.asarray(q_ref, dtype=float),
+        q_var=np.asarray(q_ref, dtype=float),
+        output_dir=output_dir,
+        raw_result={
+            "reward_info": {
+                "total_loss": 0.0,
+                "path_length_ratio": 1.0,
+                "joint_limit_error": 0.0,
+            },
+            "motion_source": "reference",
+        },
+    )

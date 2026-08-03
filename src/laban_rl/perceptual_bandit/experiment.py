@@ -1,7 +1,7 @@
 """Resumable paired perceptual experiment orchestration."""
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 import csv
 import hashlib
 import json
@@ -28,7 +28,7 @@ from laban_rl.perceptual_bandit.scoring import (
 )
 
 
-EXPERIMENT_FORMAT_VERSION = 2
+EXPERIMENT_FORMAT_VERSION = 4
 REWARD_SCALE_NOTE = (
     "VAD and categorical reward scales are not directly comparable; compare "
     "candidate rankings, repeat stability, feasibility, and selected identity."
@@ -42,6 +42,10 @@ class ExperimentCase:
     context: Context
     profile: Mapping[str, float]
     seed: int
+    motion_source: str = "optimized"
+    require_feature_match: bool = True
+    optimizer_overrides: Mapping[str, Any] = field(default_factory=dict)
+    target_layers: Mapping[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -50,6 +54,10 @@ class ExperimentCase:
             "context": self.context.to_dict(),
             "profile": {key: float(self.profile[key]) for key in FEATURE_KEYS},
             "seed": int(self.seed),
+            "motion_source": self.motion_source,
+            "require_feature_match": bool(self.require_feature_match),
+            "optimizer_overrides": dict(self.optimizer_overrides),
+            "target_layers": dict(self.target_layers),
         }
 
 
@@ -60,6 +68,9 @@ def _slug(value: str) -> str:
 
 def cases_from_matrix(config: Mapping[str, Any]) -> list[ExperimentCase]:
     """Expand gestures x targets x seeds x named profiles deterministically."""
+    if "cases" in config:
+        return _cases_from_explicit_config(config)
+
     gestures = [str(value) for value in config.get("gestures", [])]
     targets = list(config.get("targets", []))
     seeds = [int(value) for value in config.get("seeds", [])]
@@ -108,6 +119,97 @@ def cases_from_matrix(config: Mapping[str, Any]) -> list[ExperimentCase]:
     return cases
 
 
+def _profile(payload: Mapping[str, Any], *, label: str) -> dict[str, float]:
+    if set(payload) != set(FEATURE_KEYS):
+        raise ValueError(f"{label} must contain exactly the five Laban features.")
+    profile = {key: float(payload[key]) for key in FEATURE_KEYS}
+    if any(not np.isfinite(value) or not 0.0 <= value <= 1.0 for value in profile.values()):
+        raise ValueError(f"{label} values must be finite and lie in [0, 1].")
+    return profile
+
+
+def _cases_from_explicit_config(
+    config: Mapping[str, Any],
+) -> list[ExperimentCase]:
+    conditions = list(config.get("cases", []))
+    if not conditions:
+        raise ValueError("Explicit matrix requires a non-empty cases array.")
+    cases: list[ExperimentCase] = []
+    for condition in conditions:
+        if not isinstance(condition, Mapping):
+            raise ValueError("Each explicit case must be an object.")
+        condition_id = str(condition.get("id", "")).strip()
+        gesture = str(condition.get("gesture", "")).strip()
+        target = condition.get("target")
+        candidates = condition.get("candidate_profiles")
+        if not condition_id or not gesture or not isinstance(target, Mapping):
+            raise ValueError("Each explicit case requires id, gesture, and target.")
+        if not isinstance(candidates, Mapping) or not candidates:
+            raise ValueError(
+                f"Explicit case {condition_id!r} requires candidate_profiles."
+            )
+        if "state" in target:
+            context = Context(gesture, target_state=str(target["state"]))
+        elif "vad" in target:
+            context = Context(gesture, target_vad=dict(target["vad"]))
+        else:
+            raise ValueError("Each target requires either 'state' or 'vad'.")
+        seed = int(condition.get("seed", 7))
+        target_layers = dict(condition.get("target_layers", {}))
+        common_overrides = dict(condition.get("optimizer_overrides", {}))
+        for candidate_name, raw_candidate in candidates.items():
+            if not isinstance(raw_candidate, Mapping):
+                raise ValueError(
+                    f"Candidate {candidate_name!r} in {condition_id!r} "
+                    "must be an object."
+                )
+            candidate = dict(raw_candidate)
+            profile_payload = candidate.get("profile")
+            if not isinstance(profile_payload, Mapping):
+                raise ValueError(
+                    f"Candidate {candidate_name!r} requires a profile."
+                )
+            motion_source = str(candidate.get("motion_source", "optimized"))
+            if motion_source not in {"optimized", "reference"}:
+                raise ValueError(
+                    f"Unsupported motion_source {motion_source!r}."
+                )
+            overrides = {
+                **common_overrides,
+                **dict(candidate.get("optimizer_overrides", {})),
+            }
+            cases.append(
+                ExperimentCase(
+                    candidate_id="__".join(
+                        (
+                            _slug(condition_id),
+                            f"seed-{seed}",
+                            _slug(str(candidate_name)),
+                        )
+                    ),
+                    candidate_name=str(candidate_name),
+                    context=context,
+                    profile=_profile(
+                        profile_payload,
+                        label=f"{condition_id}.{candidate_name}.profile",
+                    ),
+                    seed=seed,
+                    motion_source=motion_source,
+                    require_feature_match=bool(
+                        candidate.get(
+                            "require_feature_match",
+                            motion_source != "reference",
+                        )
+                    ),
+                    optimizer_overrides=overrides,
+                    target_layers=target_layers,
+                )
+            )
+    if len({case.candidate_id for case in cases}) != len(cases):
+        raise ValueError("Explicit matrix contains duplicate candidate identifiers.")
+    return cases
+
+
 def _atomic_json(path: Path, payload: Mapping[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -146,6 +248,8 @@ def _run_identity(
 def _realisation_metrics(
     result: LabanOptimisationResult,
     reward_config: EnvironmentRewardConfig,
+    *,
+    require_feature_match: bool = True,
 ) -> dict[str, Any]:
     requested = np.asarray(
         [result.requested_profile[key] for key in FEATURE_KEYS], dtype=float
@@ -186,7 +290,13 @@ def _realisation_metrics(
         "joint_limits_satisfied": joints_ok,
         "physically_acceptable": path_preserved and joints_ok,
         "feature_realisation_acceptable": feature_ok,
-        "feasible": finite and path_preserved and joints_ok and feature_ok,
+        "feature_match_required": require_feature_match,
+        "feasible": (
+            finite
+            and path_preserved
+            and joints_ok
+            and (feature_ok or not require_feature_match)
+        ),
         "realisation_rmse": rmse,
         "max_abs_feature_error": max_error,
         "per_feature_abs_error": {
@@ -424,7 +534,11 @@ def run_paired_experiment(
         if case.candidate_id in completed:
             continue
         result = inner_runner(case, destination / "candidates" / case.candidate_id)
-        feasibility = _realisation_metrics(result, reward_config)
+        feasibility = _realisation_metrics(
+            result,
+            reward_config,
+            require_feature_match=case.require_feature_match,
+        )
         rmse = feasibility["realisation_rmse"]
         max_error = feasibility["max_abs_feature_error"]
         evaluator_eligible = bool(
@@ -432,12 +546,19 @@ def run_paired_experiment(
             and feasibility["physically_acceptable"]
             and (
                 feasibility["feature_realisation_acceptable"]
+                or not case.require_feature_match
                 or not reward_config.reject_excessive_feature_error
             )
         )
         observations: list[dict[str, Any]] = []
         paired: dict[str, Any] | None = None
+        observation_cache_key: str | None = None
         if evaluator_eligible:
+            observation_cache_key = cache.cache_key(
+                context=case.context,
+                result=result,
+                evaluator_identity=identity,
+            )
             observations = cache.collect(
                 context=case.context,
                 result=result,
@@ -455,19 +576,23 @@ def run_paired_experiment(
             vad_score = reward_config.invalid_realisation_reward
             categorical_score = None
         else:
+            penalty_rmse = rmse if case.require_feature_match else 0.0
+            penalty_max_error = (
+                max_error if case.require_feature_match else 0.0
+            )
             vad_score = apply_outer_penalties(
                 paired["mean_vad_reward"],
                 perceptual_reward_std=paired["vad_reward_std"],
-                realisation_rmse=rmse,
-                max_abs_feature_error=max_error,
+                realisation_rmse=penalty_rmse,
+                max_abs_feature_error=penalty_max_error,
                 reward_config=reward_config,
             )
             categorical_score = (
                 apply_outer_penalties(
                     paired["categorical_reward"],
                     perceptual_reward_std=paired["categorical_reward_std"],
-                    realisation_rmse=rmse,
-                    max_abs_feature_error=max_error,
+                    realisation_rmse=penalty_rmse,
+                    max_abs_feature_error=penalty_max_error,
                     reward_config=reward_config,
                 )
                 if paired["categorical_reward"] is not None
@@ -476,7 +601,16 @@ def run_paired_experiment(
         records.append(
             {
                 **case.to_dict(),
+                "requested_profile": {
+                    key: float(result.requested_profile[key])
+                    for key in FEATURE_KEYS
+                },
+                "achieved_profile": {
+                    key: float(result.achieved_profile[key])
+                    for key in FEATURE_KEYS
+                },
                 "observations": observations,
+                "observation_cache_key": observation_cache_key,
                 "feasibility": feasibility,
                 "vad_score": float(vad_score),
                 "categorical_score": (
@@ -495,12 +629,13 @@ def run_paired_experiment(
         }
         _atomic_json(results_path, partial_payload)
 
+    unique_observation_sets = {
+        record["observation_cache_key"]: record["observations"]
+        for record in records
+        if record["observations"] and record.get("observation_cache_key")
+    }
     reliability = test_retest_reliability(
-        [
-            record["observations"]
-            for record in records
-            if record["observations"]
-        ]
+        list(unique_observation_sets.values())
     )
     comparison = paired_comparison_summary(records)
     payload = {

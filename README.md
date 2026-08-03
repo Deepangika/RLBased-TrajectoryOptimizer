@@ -185,6 +185,33 @@ The command writes one GIF and feature plot per condition plus
 `render_summary.json`. Passing numerical gates establish realizability, not
 human interpretability; review the rendered motions before live evaluation.
 
+### Limited Gemini pilot
+
+The preconfigured live pilot contains six affect-diverse original-target
+conditions and projected wave anger, sadness, and disgust:
+
+```text
+python scripts/evaluation/run_paired_perceptual_experiment.py \
+  --matrix configs/limited_gemini_pilot.json \
+  --evaluator gemini \
+  --repeats 3 \
+  --paired-ab \
+  --cache outputs/limited_gemini_pilot_cache \
+  --out outputs/limited_gemini_pilot
+```
+
+Each condition compares the unmodified gesture reference with one styled
+motion. The 18 logical entries contain 15 unique clips because the same wave
+reference is reused across four target conditions; the content-addressed cache
+therefore requires 45 Gemini evaluations rather than 54. Feature-infeasible or
+physically invalid styled motions are rejected before evaluator calls.
+
+Projected conditions retain the original named state and VAD as the
+perceptual target. Each result separately records the original affect-derived
+Laban target, projected feasible target, requested optimization profile, and
+actually achieved profile. Restart the identical command to resume missing
+repeats without duplicating completed calls.
+
 ## Paired perceptual experiments
 
 Use the paired runner before human validation instead of running separate VAD

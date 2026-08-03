@@ -23,6 +23,7 @@ from laban_rl.perceptual_bandit.experiment import (
     paired_comparison_summary,
     run_paired_experiment,
 )
+from laban_rl.perceptual_bandit.gemini_evaluator import _retry_message
 from laban_rl.perceptual_bandit.scoring import (
     score_perceptual_observations,
     test_retest_reliability as compute_test_retest_reliability,
@@ -145,6 +146,13 @@ def test_cache_reuses_repeats_and_invalidates_schema(tmp_path):
         result=changed_profile,
         evaluator_identity=EvaluatorCacheIdentity.from_evaluator(evaluator),
     )
+
+
+def test_gemini_retry_message_is_windows_console_safe():
+    message = _retry_message(2.0, 0, 5)
+
+    assert "Retrying in 2.0s" in message
+    message.encode("cp1252")
 
 
 def test_explicit_matrix_preserves_pilot_layers_and_pair_settings():

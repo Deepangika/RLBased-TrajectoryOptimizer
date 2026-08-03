@@ -160,6 +160,14 @@ class GeminiGestureAssessment(BaseModel):
         }
 
 
+def _retry_message(backoff: float, attempt: int, max_retries: int) -> str:
+    return (
+        "WARNING: Gemini evaluation failed transiently. "
+        f"Retrying in {backoff:.1f}s "
+        f"(attempt {attempt + 1}/{max_retries})..."
+    )
+
+
 class GeminiProVideoEvaluator:
     def __init__(
         self,
@@ -475,10 +483,7 @@ Return:
                 )
                 
                 if (is_503 or is_structured_output_error) and attempt < max_retries:
-                    print(
-                        f"⚠ Gemini evaluation failed transiently. Retrying in {backoff:.1f}s "
-                        f"(attempt {attempt + 1}/{max_retries})..."
-                    )
+                    print(_retry_message(backoff, attempt, max_retries))
                     time.sleep(backoff)
                     backoff *= 2  # Exponential backoff
                     continue

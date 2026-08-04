@@ -45,26 +45,42 @@ from laban_rl.perceptual_bandit.scoring import (
 
 @dataclass(frozen=True)
 class Context:
-    """Gesture plus exactly one named or explicit continuous affect target."""
+    """Gesture plus a named, explicit-VAD, or recalibrated-named affect target.
+
+    Modes:
+    - ``named``: ``target_state`` only; VAD resolved from the canonical anchor.
+    - ``vad``: ``target_vad`` only; anonymous continuous target.
+    - ``recalibrated``: both supplied and the VAD deliberately differs from the
+      canonical anchor. The named state is retained for prompts and metadata
+      while the reward targets the recalibrated VAD coordinates.
+    """
 
     gesture: str
     target_state: str | None = None
     target_vad: Mapping[str, float] | None = None
-    target_mode: Literal["named", "vad"] = field(init=False)
+    target_mode: Literal["named", "vad", "recalibrated"] = field(init=False)
 
     def __post_init__(self) -> None:
         supplied_state = self.target_state
         supplied_vad = self.target_vad
-        if (supplied_state is None) == (supplied_vad is None):
+        if supplied_state is None and supplied_vad is None:
             raise ValueError(
                 "Specify exactly one of target_state or target_vad."
             )
 
-        if supplied_state is not None:
-            if not isinstance(supplied_state, str) or not supplied_state.strip():
-                raise ValueError("target_state must be a non-empty string.")
+        if supplied_state is not None and not (
+            isinstance(supplied_state, str) and supplied_state.strip()
+        ):
+            raise ValueError("target_state must be a non-empty string.")
+
+        mode: Literal["named", "vad", "recalibrated"]
+        if supplied_state is not None and supplied_vad is not None:
+            resolved_vad = validate_vad(supplied_vad, name="Target VAD")
+            anchor = target_vad(supplied_state)
+            mode = "named" if resolved_vad == anchor else "recalibrated"
+        elif supplied_state is not None:
             resolved_vad = target_vad(supplied_state)
-            mode: Literal["named", "vad"] = "named"
+            mode = "named"
         else:
             resolved_vad = validate_vad(
                 supplied_vad or {},
@@ -90,6 +106,16 @@ class Context:
                 raise ValueError(
                     "Named target VAD does not match its configured anchor."
                 )
+        elif self.target_mode == "recalibrated":
+            if self.target_state is None:
+                raise ValueError(
+                    "Recalibrated target context requires target_state."
+                )
+            if resolved_vad == target_vad(self.target_state):
+                raise ValueError(
+                    "Recalibrated target VAD must differ from the canonical "
+                    "anchor; use named mode instead."
+                )
         elif self.target_state is not None:
             raise ValueError("Direct VAD target context cannot have target_state.")
 
@@ -107,6 +133,14 @@ class Context:
 
     @property
     def key(self) -> str:
+        if self.target_mode == "recalibrated":
+            assert self.target_vad is not None
+            return (
+                f"{self.gesture}::{self.target_label}"
+                f"@v{self.target_vad['valence']:.3f}"
+                f"_a{self.target_vad['arousal']:.3f}"
+                f"_d{self.target_vad['dominance']:.3f}"
+            )
         return f"{self.gesture}::{self.target_label}"
 
     def to_dict(self) -> dict[str, Any]:
@@ -148,6 +182,20 @@ class Context:
             if saved_vad is None:
                 raise ValueError("Direct VAD context metadata is missing target_vad.")
             return cls(gesture=gesture, target_vad=saved_vad)
+        if mode == "recalibrated":
+            if saved_state is None:
+                raise ValueError(
+                    "Recalibrated context metadata is missing target_state."
+                )
+            if saved_vad is None:
+                raise ValueError(
+                    "Recalibrated context metadata is missing target_vad."
+                )
+            return cls(
+                gesture=gesture,
+                target_state=str(saved_state),
+                target_vad=saved_vad,
+            )
         raise ValueError(f"Unknown target_mode {mode!r}.")
 
 

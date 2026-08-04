@@ -1,0 +1,59 @@
+{
+  "ablation": {
+    "condition": "C",
+    "condition_a_reference": "outputs/experiments/outer_learning_wave_sadness_live_flash_v1",
+    "design": "2x2 target-recalibration x tightened-smoothness",
+    "factors": {
+      "target_recalibration": false,
+      "tightened_smoothness": true
+    }
+  },
+  "baseline_experiment_name": "fixed_profile_baseline_v1",
+  "defaults": {
+    "candidate_vlm_repeats": 2,
+    "elite_count": 3,
+    "paired_validation_repeats": 5,
+    "robust_elite_max_feature_error": 0.08,
+    "rounds_max": 5,
+    "rounds_min": 5,
+    "samples_per_round": 8,
+    "validation_top_k": 4,
+    "validation_vlm_repeats": 5
+  },
+  "description": "Ablation condition C for wave-sadness: original canonical VAD target; tightened inner smoothness (smooth_weight=0.03, frozen in configs/ablations/tightened_smoothness_v1.json). Frozen live protocol identical to Condition A: gemini-2.5-flash, temperature 0.2, 5 rounds x 8 samples x 2 repeats, elites 3, validation top-k 4 x 5 repeats, 2 paired comparisons x 5 repeats, seed 7, hard 110-call ceiling, feasibility tolerance 0.10, robust ranking margin 0.08.",
+  "experiment_name": "ablation_wave_sadness_C_v1",
+  "format_version": 1,
+  "primary_gestures": [
+    "wave"
+  ],
+  "stages": {
+    "full": {
+      "contexts": []
+    },
+    "mock": {
+      "contexts": [
+        {
+          "extra_optimiser_overrides": {
+            "smooth_weight": 0.03
+          },
+          "gesture": "wave",
+          "target_state": "sadness"
+        }
+      ]
+    },
+    "stage_a": {
+      "contexts": [
+        {
+          "extra_optimiser_overrides": {
+            "smooth_weight": 0.03
+          },
+          "gesture": "wave",
+          "target_state": "sadness"
+        }
+      ]
+    },
+    "stage_b": {
+      "contexts": []
+    }
+  }
+}

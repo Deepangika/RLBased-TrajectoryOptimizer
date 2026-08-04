@@ -4,14 +4,13 @@ from __future__ import annotations
 import argparse
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import csv
-from dataclasses import asdict
 from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
 import shutil
 import sys
-from typing import Any
+from typing import Any, Mapping
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -433,7 +432,7 @@ def _checkpoint_settings_payload(
     seed: int,
 ) -> dict[str, Any]:
     return {
-        "context": asdict(context),
+        "context": _context_payload(context),
         "evaluator": evaluator_name,
         "model": model if evaluator_name == "gemini" else None,
         "temperature": float(temperature),
@@ -463,11 +462,8 @@ def _checkpoint_settings_payload(
 
 
 def _evaluate_candidate_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    context = OuterLearningContext(
-        gesture=str(payload["context"]["gesture"]),
-        target_state=str(payload["context"]["target_state"]),
-    )
-    target_context = Context(gesture=context.gesture, target_state=context.target_state)
+    context = _outer_context_from_payload(payload["context"])
+    target_context = _target_context_for(context)
     synthetic = bool(payload["synthetic"])
     synthetic_invalid = bool(payload["synthetic_invalid"])
     evaluator_name = str(payload["evaluator_name"])
@@ -545,13 +541,71 @@ def _require_stage_a_success(base_out: Path) -> None:
 
 
 def _contexts_from_stage(stage_payload: dict[str, Any]) -> list[OuterLearningContext]:
-    return [
-        OuterLearningContext(
-            gesture=str(item["gesture"]),
-            target_state=str(item["target_state"]),
+    contexts = []
+    for item in stage_payload["contexts"]:
+        target_vad_override = item.get("target_vad_override")
+        extra_optimiser_overrides = item.get("extra_optimiser_overrides")
+        contexts.append(
+            OuterLearningContext(
+                gesture=str(item["gesture"]),
+                target_state=str(item["target_state"]),
+                target_vad_override=OuterLearningContext.freeze_mapping(
+                    {k: float(v) for k, v in target_vad_override.items()}
+                    if target_vad_override is not None
+                    else None
+                ),
+                extra_optimiser_overrides=OuterLearningContext.freeze_mapping(
+                    dict(extra_optimiser_overrides)
+                    if extra_optimiser_overrides is not None
+                    else None
+                ),
+            )
         )
-        for item in stage_payload["contexts"]
-    ]
+    return contexts
+
+
+def _context_payload(context: OuterLearningContext) -> dict[str, Any]:
+    """JSON-stable serialisation of an OuterLearningContext.
+
+    Overrides are stored as plain dicts so checkpoint settings written to
+    JSON compare equal after a load round-trip.
+    """
+    return {
+        "gesture": context.gesture,
+        "target_state": context.target_state,
+        "target_vad_override": context.target_vad_override_dict,
+        "extra_optimiser_overrides": context.extra_optimiser_overrides_dict,
+    }
+
+
+def _outer_context_from_payload(payload: Mapping[str, Any]) -> OuterLearningContext:
+    """Rebuild an OuterLearningContext from an asdict()/JSON payload."""
+
+    def _freeze(value: Any) -> tuple[tuple[str, float], ...] | None:
+        if value is None:
+            return None
+        if isinstance(value, Mapping):
+            return OuterLearningContext.freeze_mapping(dict(value))
+        return tuple(sorted((str(k), v) for k, v in value))
+
+    return OuterLearningContext(
+        gesture=str(payload["gesture"]),
+        target_state=str(payload["target_state"]),
+        target_vad_override=_freeze(payload.get("target_vad_override")),
+        extra_optimiser_overrides=_freeze(payload.get("extra_optimiser_overrides")),
+    )
+
+
+def _target_context_for(context: OuterLearningContext) -> Context:
+    """Build the evaluation Context, honouring any recalibrated VAD target."""
+    override = context.target_vad_override_dict
+    if override is not None:
+        return Context(
+            gesture=context.gesture,
+            target_state=context.target_state,
+            target_vad=override,
+        )
+    return Context(gesture=context.gesture, target_state=context.target_state)
 
 
 def _canonical_feasibility(
@@ -950,10 +1004,7 @@ def run_context(
     workers: int = 1,
 ) -> dict[str, Any]:
     baseline = baseline_condition(context.gesture, context.target_state)
-    target_context = Context(
-        gesture=context.gesture,
-        target_state=context.target_state,
-    )
+    target_context = _target_context_for(context)
     initial_profile = (
         baseline.projected_feasible_initialisation
         or baseline.requested_optimization
@@ -981,6 +1032,11 @@ def run_context(
         context.gesture,
         context.target_state,
     )
+    extra_overrides = context.extra_optimiser_overrides_dict
+    if extra_overrides:
+        # Ablation knob: deliberate inner-optimiser overrides layered on the
+        # frozen baseline settings (for example a tightened smooth_weight).
+        optimiser_overrides.update(extra_overrides)
     optimiser_overrides.setdefault("seed", seed)
     if workers < 1:
         raise ValueError("workers must be at least 1.")
@@ -1024,7 +1080,7 @@ def run_context(
     checkpoint_state = {
         "schema_version": 1,
         "created_at_utc": _utc_timestamp(),
-        "context": asdict(context),
+        "context": _context_payload(context),
         "run_settings": checkpoint_settings,
         "resume_events": 0,
         "recovered_candidates": 0,
@@ -1110,7 +1166,7 @@ def run_context(
                 sample_index=sample_index,
             )
             payload_by_index[sample_index] = {
-                "context": asdict(context),
+                "context": _context_payload(context),
                 "evaluator_name": evaluator_name,
                 "model": model,
                 "temperature": temperature,
@@ -1451,7 +1507,7 @@ def run_context(
             {
                 "schema_version": 1,
                 "created_at_utc": _utc_timestamp(),
-                "context": asdict(context),
+                "context": _context_payload(context),
                 "round_index": round_index,
                 "distribution_state": distribution.state_dict(),
                 "mean_action": distribution.mean_action(),
@@ -1683,7 +1739,9 @@ def run_context(
         final_selected_result["mean_observed_vad"] if final_selected_result is not None
         else baseline.baseline_observed_vad
     )
-    target_vad = dict(baseline.target_vad)
+    target_vad = dict(target_context.target_vad or {})
+    canonical_target_vad = dict(baseline.target_vad)
+    target_vad_recalibrated = target_context.target_mode == "recalibrated"
     selected_validation_reward = (
         float(final_selected_result["validation_reward"])
         if final_selected_result is not None
@@ -1814,7 +1872,9 @@ def run_context(
         ),
         "initial_observed_vad": dict(baseline.baseline_observed_vad),
         "learned_observed_vad": dict(final_vad),
-        "canonical_target_vad": dict(target_vad),
+        "canonical_target_vad": dict(canonical_target_vad),
+        "effective_target_vad": dict(target_vad),
+        "target_vad_recalibrated": bool(target_vad_recalibrated),
         "projection_error": baseline.projection_error,
         "realisation_error": (
             final_selected_result["result"].get("realisation_rmse")
@@ -1850,7 +1910,7 @@ def run_context(
         {
             "experiment_name": "gesture_conditioned_outer_learning_v1",
             "baseline_experiment_name": BASELINE_EXPERIMENT_NAME,
-            "context": asdict(context),
+            "context": _context_payload(context),
             "evaluator": evaluator_name,
             "model": model if evaluator_name == "gemini" else None,
             "temperature": temperature,
@@ -1874,6 +1934,10 @@ def run_context(
             "max_feature_error_threshold": max_feature_error_threshold,
             "robust_elite_max_feature_error": robust_elite_max_feature_error,
             "baseline_directory": str(BASELINE_ROOT),
+            "canonical_target_vad": dict(canonical_target_vad),
+            "effective_target_vad": dict(target_vad),
+            "target_vad_recalibrated": bool(target_vad_recalibrated),
+            "extra_optimiser_overrides": context.extra_optimiser_overrides_dict,
             "selection_status": selection_status,
             "comparison_status": comparison_status,
             "initial_synthetic_objective_distance": synthetic_initial_distance,
@@ -1949,7 +2013,7 @@ def run_context(
     checkpoint_state["final_selection_status"] = selection_status
     _write_json(checkpoint_state_path, checkpoint_state)
     return {
-        "context": asdict(context),
+        "context": _context_payload(context),
         "stopping_reason": stop,
         "outcome": outcome,
         "corrected_assessment": corrected_assessment,

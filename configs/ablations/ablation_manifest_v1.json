@@ -1,0 +1,76 @@
+{
+  "format_version": 1,
+  "ablation_name": "vad_target_x_smoothness_ablation_v1",
+  "design": "2x2 factorial: target recalibration (original vs evaluator-derived feasible) x inner smoothness (original vs tightened)",
+  "frozen_protocol": {
+    "model": "gemini-2.5-flash",
+    "temperature": 0.2,
+    "rounds": 5,
+    "samples_per_round": 8,
+    "elite_count": 3,
+    "candidate_vlm_repeats": 2,
+    "validation_top_k": 4,
+    "validation_vlm_repeats": 5,
+    "paired_validation_repeats": 5,
+    "seed": 7,
+    "max_feature_error_threshold": 0.1,
+    "robust_elite_max_feature_error": 0.08,
+    "workers": 1,
+    "per_run_call_ceiling": 110,
+    "aggregate_call_ceiling": 660
+  },
+  "recalibrated_targets_artifact": "configs/ablations/recalibrated_targets_v1.json",
+  "smoothness_grid_artifact": "outputs/experiments/ablation_smoothness_grid_v1/smoothness_grid_results.json",
+  "condition_a_reference_runs": [
+    {
+      "condition_id": "beckon_fear_A",
+      "factors": { "target_recalibration": false, "tightened_smoothness": false },
+      "out_dir": "outputs/experiments/outer_learning_beckon_fear_live_flash_v1",
+      "reused": true
+    },
+    {
+      "condition_id": "wave_sadness_A",
+      "factors": { "target_recalibration": false, "tightened_smoothness": false },
+      "out_dir": "outputs/experiments/outer_learning_wave_sadness_live_flash_v1",
+      "reused": true
+    }
+  ],
+  "live_conditions": [
+    {
+      "condition_id": "beckon_fear_B",
+      "factors": { "target_recalibration": true, "tightened_smoothness": false },
+      "config": "configs/ablations/ablation_beckon_fear_B_v1.json",
+      "out_dir": "outputs/experiments/ablation_beckon_fear_B_v1"
+    },
+    {
+      "condition_id": "beckon_fear_C",
+      "factors": { "target_recalibration": false, "tightened_smoothness": true },
+      "config": "configs/ablations/ablation_beckon_fear_C_v1.json",
+      "out_dir": "outputs/experiments/ablation_beckon_fear_C_v1"
+    },
+    {
+      "condition_id": "beckon_fear_D",
+      "factors": { "target_recalibration": true, "tightened_smoothness": true },
+      "config": "configs/ablations/ablation_beckon_fear_D_v1.json",
+      "out_dir": "outputs/experiments/ablation_beckon_fear_D_v1"
+    },
+    {
+      "condition_id": "wave_sadness_B",
+      "factors": { "target_recalibration": true, "tightened_smoothness": false },
+      "config": "configs/ablations/ablation_wave_sadness_B_v1.json",
+      "out_dir": "outputs/experiments/ablation_wave_sadness_B_v1"
+    },
+    {
+      "condition_id": "wave_sadness_C",
+      "factors": { "target_recalibration": false, "tightened_smoothness": true },
+      "config": "configs/ablations/ablation_wave_sadness_C_v1.json",
+      "out_dir": "outputs/experiments/ablation_wave_sadness_C_v1"
+    },
+    {
+      "condition_id": "wave_sadness_D",
+      "factors": { "target_recalibration": true, "tightened_smoothness": true },
+      "config": "configs/ablations/ablation_wave_sadness_D_v1.json",
+      "out_dir": "outputs/experiments/ablation_wave_sadness_D_v1"
+    }
+  ]
+}

@@ -37,10 +37,34 @@ def vector_to_profile(vector: Sequence[float]) -> dict[str, float]:
 class OuterLearningContext:
     gesture: str
     target_state: str
+    # Optional ablation knobs. Tuples keep the dataclass hashable and
+    # deterministic; use the *_dict helpers for mapping views.
+    target_vad_override: tuple[tuple[str, float], ...] | None = None
+    extra_optimiser_overrides: tuple[tuple[str, float], ...] | None = None
 
     @property
     def key(self) -> str:
         return f"{self.gesture}::{self.target_state}"
+
+    @property
+    def target_vad_override_dict(self) -> dict[str, float] | None:
+        if self.target_vad_override is None:
+            return None
+        return {str(k): float(v) for k, v in self.target_vad_override}
+
+    @property
+    def extra_optimiser_overrides_dict(self) -> dict[str, float] | None:
+        if self.extra_optimiser_overrides is None:
+            return None
+        return {str(k): v for k, v in self.extra_optimiser_overrides}
+
+    @staticmethod
+    def freeze_mapping(
+        mapping: Mapping[str, float] | None,
+    ) -> tuple[tuple[str, float], ...] | None:
+        if mapping is None:
+            return None
+        return tuple(sorted((str(k), mapping[k]) for k in mapping))
 
 
 @dataclass(frozen=True)

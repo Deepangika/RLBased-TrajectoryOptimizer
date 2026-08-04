@@ -104,8 +104,8 @@ def test_explicit_target_is_validated_and_serializable():
     [
         ({}, "exactly one"),
         (
-            {"target_state": "happiness", "target_vad": DIRECT_VAD},
-            "exactly one",
+            {"target_state": "", "target_vad": DIRECT_VAD},
+            "non-empty string",
         ),
         (
             {

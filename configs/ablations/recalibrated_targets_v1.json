@@ -1,0 +1,3489 @@
+{
+  "contexts": [
+    {
+      "axes_moved": [
+        "valence",
+        "arousal",
+        "dominance"
+      ],
+      "canonical_target_vad": {
+        "arousal": 0.85,
+        "dominance": 0.2,
+        "valence": 0.1
+      },
+      "gesture": "beckon",
+      "observation_count": 60,
+      "reachable_envelope": {
+        "arousal": {
+          "p10": 0.5,
+          "p90": 0.7550000000000001
+        },
+        "dominance": {
+          "p10": 0.3,
+          "p90": 0.6
+        },
+        "valence": {
+          "p10": 0.3,
+          "p90": 0.7050000000000001
+        }
+      },
+      "recalibrated_target_vad": {
+        "arousal": 0.755,
+        "dominance": 0.3,
+        "valence": 0.3
+      },
+      "target_state": "fear"
+    },
+    {
+      "axes_moved": [
+        "valence",
+        "arousal",
+        "dominance"
+      ],
+      "canonical_target_vad": {
+        "arousal": 0.2,
+        "dominance": 0.2,
+        "valence": 0.1
+      },
+      "gesture": "wave",
+      "observation_count": 60,
+      "reachable_envelope": {
+        "arousal": {
+          "p10": 0.4,
+          "p90": 0.6
+        },
+        "dominance": {
+          "p10": 0.3,
+          "p90": 0.6
+        },
+        "valence": {
+          "p10": 0.49000000000000005,
+          "p90": 0.7
+        }
+      },
+      "recalibrated_target_vad": {
+        "arousal": 0.4,
+        "dominance": 0.3,
+        "valence": 0.49
+      },
+      "target_state": "sadness"
+    }
+  ],
+  "evidence": {
+    "excludes_learned_candidates": true,
+    "predates_outer_learning": true,
+    "record_count": 72,
+    "source_artifact": "outputs/experiments/baseline_fixed_profiles/full_gemini_live/paired_results.json",
+    "source_run_identity": {
+      "configuration": {
+        "cases": [
+          {
+            "candidate_id": "wave-anger-projected__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "wave",
+              "target_mode": "named",
+              "target_state": "anger",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.8,
+                "valence": 0.15
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "detour_weight": 4.0,
+              "flow_boundness_target_weight": 1.5,
+              "local_maxiter": 100,
+              "max_delta": 0.15,
+              "max_dev_weight": 6.0,
+              "max_end_delta": 0.1,
+              "maxiter": 75,
+              "n_spatial_basis": 4,
+              "n_timing_basis": 6,
+              "nearest_path_weight": 12.0,
+              "path_length_weight": 6.0,
+              "popsize": 8,
+              "preserve_weight": 0.5,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.05,
+              "smooth_weight": 0.05,
+              "time_roughness_weight": 0.1,
+              "time_target_weight": 0.1,
+              "weight_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.060769926001542476,
+              "shape_arcness": 0.3019278354332854,
+              "space_indirectness": 0.537744411680609,
+              "time": 0.1399206958859102,
+              "weight": 0.15075242009678008
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.85,
+                "shape_arcness": 0.15,
+                "space_indirectness": 0.1,
+                "time": 0.85,
+                "weight": 0.9
+              },
+              "projected_feasible_laban_target": {
+                "flow_boundness": 0.7265753311,
+                "shape_arcness": 0.1622706712,
+                "space_indirectness": 0.1546006793,
+                "time": 0.7891497611,
+                "weight": 0.7780272194
+              }
+            }
+          },
+          {
+            "candidate_id": "wave-anger-projected__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "wave",
+              "target_mode": "named",
+              "target_state": "anger",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.8,
+                "valence": 0.15
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "detour_weight": 4.0,
+              "flow_boundness_target_weight": 1.5,
+              "local_maxiter": 100,
+              "max_delta": 0.15,
+              "max_dev_weight": 6.0,
+              "max_end_delta": 0.1,
+              "maxiter": 75,
+              "n_spatial_basis": 4,
+              "n_timing_basis": 6,
+              "nearest_path_weight": 12.0,
+              "path_length_weight": 6.0,
+              "popsize": 8,
+              "preserve_weight": 0.5,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.05,
+              "smooth_weight": 0.05,
+              "time_roughness_weight": 0.1,
+              "time_target_weight": 0.1,
+              "weight_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.7265753311,
+              "shape_arcness": 0.1622706712,
+              "space_indirectness": 0.1546006793,
+              "time": 0.7891497611,
+              "weight": 0.7780272194
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.85,
+                "shape_arcness": 0.15,
+                "space_indirectness": 0.1,
+                "time": 0.85,
+                "weight": 0.9
+              },
+              "projected_feasible_laban_target": {
+                "flow_boundness": 0.7265753311,
+                "shape_arcness": 0.1622706712,
+                "space_indirectness": 0.1546006793,
+                "time": 0.7891497611,
+                "weight": 0.7780272194
+              }
+            }
+          },
+          {
+            "candidate_id": "wave-disgust-projected__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "wave",
+              "target_mode": "named",
+              "target_state": "disgust",
+              "target_vad": {
+                "arousal": 0.45,
+                "dominance": 0.6,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "detour_weight": 4.0,
+              "flow_boundness_target_weight": 1.5,
+              "local_maxiter": 100,
+              "max_delta": 0.15,
+              "max_dev_weight": 6.0,
+              "max_end_delta": 0.1,
+              "maxiter": 75,
+              "n_spatial_basis": 4,
+              "n_timing_basis": 6,
+              "nearest_path_weight": 12.0,
+              "path_length_weight": 6.0,
+              "popsize": 8,
+              "preserve_weight": 0.5,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.05,
+              "smooth_weight": 0.05,
+              "time_roughness_weight": 0.1,
+              "time_target_weight": 0.1,
+              "weight_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.060769926001542476,
+              "shape_arcness": 0.3019278354332854,
+              "space_indirectness": 0.537744411680609,
+              "time": 0.1399206958859102,
+              "weight": 0.15075242009678008
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.7,
+                "shape_arcness": 0.2,
+                "space_indirectness": 0.15,
+                "time": 0.4,
+                "weight": 0.45
+              },
+              "projected_feasible_laban_target": {
+                "flow_boundness": 0.2569935038,
+                "shape_arcness": 0.2075726686,
+                "space_indirectness": 0.3508188415,
+                "time": 0.2913735675,
+                "weight": 0.3152650269
+              }
+            }
+          },
+          {
+            "candidate_id": "wave-disgust-projected__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "wave",
+              "target_mode": "named",
+              "target_state": "disgust",
+              "target_vad": {
+                "arousal": 0.45,
+                "dominance": 0.6,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "detour_weight": 4.0,
+              "flow_boundness_target_weight": 1.5,
+              "local_maxiter": 100,
+              "max_delta": 0.15,
+              "max_dev_weight": 6.0,
+              "max_end_delta": 0.1,
+              "maxiter": 75,
+              "n_spatial_basis": 4,
+              "n_timing_basis": 6,
+              "nearest_path_weight": 12.0,
+              "path_length_weight": 6.0,
+              "popsize": 8,
+              "preserve_weight": 0.5,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.05,
+              "smooth_weight": 0.05,
+              "time_roughness_weight": 0.1,
+              "time_target_weight": 0.1,
+              "weight_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.2569935038,
+              "shape_arcness": 0.2075726686,
+              "space_indirectness": 0.3508188415,
+              "time": 0.2913735675,
+              "weight": 0.3152650269
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.7,
+                "shape_arcness": 0.2,
+                "space_indirectness": 0.15,
+                "time": 0.4,
+                "weight": 0.45
+              },
+              "projected_feasible_laban_target": {
+                "flow_boundness": 0.2569935038,
+                "shape_arcness": 0.2075726686,
+                "space_indirectness": 0.3508188415,
+                "time": 0.2913735675,
+                "weight": 0.3152650269
+              }
+            }
+          },
+          {
+            "candidate_id": "wave-fear-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "wave",
+              "target_mode": "named",
+              "target_state": "fear",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "detour_weight": 4.0,
+              "flow_boundness_target_weight": 1.5,
+              "local_maxiter": 100,
+              "max_delta": 0.15,
+              "max_dev_weight": 6.0,
+              "max_end_delta": 0.1,
+              "maxiter": 75,
+              "n_spatial_basis": 4,
+              "n_timing_basis": 6,
+              "nearest_path_weight": 12.0,
+              "path_length_weight": 6.0,
+              "popsize": 8,
+              "preserve_weight": 0.5,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.05,
+              "smooth_weight": 0.05,
+              "time_roughness_weight": 0.1,
+              "time_target_weight": 0.1,
+              "weight_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.060769926001542476,
+              "shape_arcness": 0.3019278354332854,
+              "space_indirectness": 0.537744411680609,
+              "time": 0.1399206958859102,
+              "weight": 0.15075242009678008
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.75,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.65,
+                "time": 0.8,
+                "weight": 0.35
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "wave-fear-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "wave",
+              "target_mode": "named",
+              "target_state": "fear",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "detour_weight": 4.0,
+              "flow_boundness_target_weight": 1.5,
+              "local_maxiter": 100,
+              "max_delta": 0.15,
+              "max_dev_weight": 6.0,
+              "max_end_delta": 0.1,
+              "maxiter": 75,
+              "n_spatial_basis": 4,
+              "n_timing_basis": 6,
+              "nearest_path_weight": 12.0,
+              "path_length_weight": 6.0,
+              "popsize": 8,
+              "preserve_weight": 0.5,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.05,
+              "smooth_weight": 0.05,
+              "time_roughness_weight": 0.1,
+              "time_target_weight": 0.1,
+              "weight_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.75,
+              "shape_arcness": 0.25,
+              "space_indirectness": 0.65,
+              "time": 0.8,
+              "weight": 0.35
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.75,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.65,
+                "time": 0.8,
+                "weight": 0.35
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "wave-happiness-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "wave",
+              "target_mode": "named",
+              "target_state": "happiness",
+              "target_vad": {
+                "arousal": 0.75,
+                "dominance": 0.65,
+                "valence": 0.9
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "detour_weight": 4.0,
+              "flow_boundness_target_weight": 0.35,
+              "local_maxiter": 100,
+              "max_delta": 0.15,
+              "max_dev_weight": 6.0,
+              "max_end_delta": 0.1,
+              "maxiter": 45,
+              "n_spatial_basis": 4,
+              "nearest_path_weight": 12.0,
+              "path_length_weight": 6.0,
+              "popsize": 5,
+              "preserve_weight": 0.5,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.05,
+              "smooth_weight": 0.05,
+              "time_roughness_weight": 0.1,
+              "time_target_weight": 0.1,
+              "weight_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.060769926001542476,
+              "shape_arcness": 0.3019278354332854,
+              "space_indirectness": 0.537744411680609,
+              "time": 0.1399206958859102,
+              "weight": 0.15075242009678008
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.2,
+                "shape_arcness": 0.7,
+                "space_indirectness": 0.3,
+                "time": 0.55,
+                "weight": 0.5
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "wave-happiness-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "wave",
+              "target_mode": "named",
+              "target_state": "happiness",
+              "target_vad": {
+                "arousal": 0.75,
+                "dominance": 0.65,
+                "valence": 0.9
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "detour_weight": 4.0,
+              "flow_boundness_target_weight": 0.35,
+              "local_maxiter": 100,
+              "max_delta": 0.15,
+              "max_dev_weight": 6.0,
+              "max_end_delta": 0.1,
+              "maxiter": 45,
+              "n_spatial_basis": 4,
+              "nearest_path_weight": 12.0,
+              "path_length_weight": 6.0,
+              "popsize": 5,
+              "preserve_weight": 0.5,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.05,
+              "smooth_weight": 0.05,
+              "time_roughness_weight": 0.1,
+              "time_target_weight": 0.1,
+              "weight_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.2,
+              "shape_arcness": 0.7,
+              "space_indirectness": 0.3,
+              "time": 0.55,
+              "weight": 0.5
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.2,
+                "shape_arcness": 0.7,
+                "space_indirectness": 0.3,
+                "time": 0.55,
+                "weight": 0.5
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "wave-sadness-projected__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "wave",
+              "target_mode": "named",
+              "target_state": "sadness",
+              "target_vad": {
+                "arousal": 0.2,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "detour_weight": 4.0,
+              "flow_boundness_target_weight": 1.5,
+              "local_maxiter": 100,
+              "max_delta": 0.15,
+              "max_dev_weight": 6.0,
+              "max_end_delta": 0.1,
+              "maxiter": 75,
+              "n_spatial_basis": 4,
+              "n_timing_basis": 6,
+              "nearest_path_weight": 12.0,
+              "path_length_weight": 6.0,
+              "popsize": 8,
+              "preserve_weight": 0.5,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.05,
+              "smooth_weight": 0.05,
+              "time_roughness_weight": 0.1,
+              "time_target_weight": 0.1,
+              "weight_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.060769926001542476,
+              "shape_arcness": 0.3019278354332854,
+              "space_indirectness": 0.537744411680609,
+              "time": 0.1399206958859102,
+              "weight": 0.15075242009678008
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.35,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.25,
+                "time": 0.15,
+                "weight": 0.12
+              },
+              "projected_feasible_laban_target": {
+                "flow_boundness": 0.2054143719,
+                "shape_arcness": 0.2326816966,
+                "space_indirectness": 0.3085070133,
+                "time": 0.1320374762,
+                "weight": 0.1428744257
+              }
+            }
+          },
+          {
+            "candidate_id": "wave-sadness-projected__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "wave",
+              "target_mode": "named",
+              "target_state": "sadness",
+              "target_vad": {
+                "arousal": 0.2,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "detour_weight": 4.0,
+              "flow_boundness_target_weight": 1.5,
+              "local_maxiter": 100,
+              "max_delta": 0.15,
+              "max_dev_weight": 6.0,
+              "max_end_delta": 0.1,
+              "maxiter": 75,
+              "n_spatial_basis": 4,
+              "n_timing_basis": 6,
+              "nearest_path_weight": 12.0,
+              "path_length_weight": 6.0,
+              "popsize": 8,
+              "preserve_weight": 0.5,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.05,
+              "smooth_weight": 0.05,
+              "time_roughness_weight": 0.1,
+              "time_target_weight": 0.1,
+              "weight_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.2054143719,
+              "shape_arcness": 0.2326816966,
+              "space_indirectness": 0.3085070133,
+              "time": 0.1320374762,
+              "weight": 0.1428744257
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.35,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.25,
+                "time": 0.15,
+                "weight": 0.12
+              },
+              "projected_feasible_laban_target": {
+                "flow_boundness": 0.2054143719,
+                "shape_arcness": 0.2326816966,
+                "space_indirectness": 0.3085070133,
+                "time": 0.1320374762,
+                "weight": 0.1428744257
+              }
+            }
+          },
+          {
+            "candidate_id": "wave-surprise-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "wave",
+              "target_mode": "named",
+              "target_state": "surprise",
+              "target_vad": {
+                "arousal": 0.9,
+                "dominance": 0.5,
+                "valence": 0.6
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "detour_weight": 4.0,
+              "flow_boundness_target_weight": 0.35,
+              "local_maxiter": 100,
+              "max_delta": 0.15,
+              "max_dev_weight": 6.0,
+              "max_end_delta": 0.1,
+              "maxiter": 45,
+              "n_spatial_basis": 4,
+              "nearest_path_weight": 12.0,
+              "path_length_weight": 6.0,
+              "popsize": 5,
+              "preserve_weight": 0.5,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.05,
+              "smooth_weight": 0.05,
+              "time_roughness_weight": 0.1,
+              "time_target_weight": 0.1,
+              "weight_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.060769926001542476,
+              "shape_arcness": 0.3019278354332854,
+              "space_indirectness": 0.537744411680609,
+              "time": 0.1399206958859102,
+              "weight": 0.15075242009678008
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.25,
+                "shape_arcness": 0.65,
+                "space_indirectness": 0.45,
+                "time": 0.9,
+                "weight": 0.62
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "wave-surprise-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "wave",
+              "target_mode": "named",
+              "target_state": "surprise",
+              "target_vad": {
+                "arousal": 0.9,
+                "dominance": 0.5,
+                "valence": 0.6
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "detour_weight": 4.0,
+              "flow_boundness_target_weight": 0.35,
+              "local_maxiter": 100,
+              "max_delta": 0.15,
+              "max_dev_weight": 6.0,
+              "max_end_delta": 0.1,
+              "maxiter": 45,
+              "n_spatial_basis": 4,
+              "nearest_path_weight": 12.0,
+              "path_length_weight": 6.0,
+              "popsize": 5,
+              "preserve_weight": 0.5,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.05,
+              "smooth_weight": 0.05,
+              "time_roughness_weight": 0.1,
+              "time_target_weight": 0.1,
+              "weight_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.25,
+              "shape_arcness": 0.65,
+              "space_indirectness": 0.45,
+              "time": 0.9,
+              "weight": 0.62
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.25,
+                "shape_arcness": 0.65,
+                "space_indirectness": 0.45,
+                "time": 0.9,
+                "weight": 0.62
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "reach-anger-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "reach",
+              "target_mode": "named",
+              "target_state": "anger",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.8,
+                "valence": 0.15
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.0,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.0,
+              "time": 0.0060050414713089,
+              "weight": 0.04512744670475053
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.85,
+                "shape_arcness": 0.15,
+                "space_indirectness": 0.1,
+                "time": 0.85,
+                "weight": 0.9
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "reach-anger-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "reach",
+              "target_mode": "named",
+              "target_state": "anger",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.8,
+                "valence": 0.15
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.85,
+              "shape_arcness": 0.15,
+              "space_indirectness": 0.1,
+              "time": 0.85,
+              "weight": 0.9
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.85,
+                "shape_arcness": 0.15,
+                "space_indirectness": 0.1,
+                "time": 0.85,
+                "weight": 0.9
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "reach-disgust-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "reach",
+              "target_mode": "named",
+              "target_state": "disgust",
+              "target_vad": {
+                "arousal": 0.45,
+                "dominance": 0.6,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.0,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.0,
+              "time": 0.0060050414713089,
+              "weight": 0.04512744670475053
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.7,
+                "shape_arcness": 0.2,
+                "space_indirectness": 0.15,
+                "time": 0.4,
+                "weight": 0.45
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "reach-disgust-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "reach",
+              "target_mode": "named",
+              "target_state": "disgust",
+              "target_vad": {
+                "arousal": 0.45,
+                "dominance": 0.6,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.7,
+              "shape_arcness": 0.2,
+              "space_indirectness": 0.15,
+              "time": 0.4,
+              "weight": 0.45
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.7,
+                "shape_arcness": 0.2,
+                "space_indirectness": 0.15,
+                "time": 0.4,
+                "weight": 0.45
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "reach-fear-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "reach",
+              "target_mode": "named",
+              "target_state": "fear",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.0,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.0,
+              "time": 0.0060050414713089,
+              "weight": 0.04512744670475053
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.75,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.65,
+                "time": 0.8,
+                "weight": 0.35
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "reach-fear-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "reach",
+              "target_mode": "named",
+              "target_state": "fear",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.75,
+              "shape_arcness": 0.25,
+              "space_indirectness": 0.65,
+              "time": 0.8,
+              "weight": 0.35
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.75,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.65,
+                "time": 0.8,
+                "weight": 0.35
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "reach-happiness-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "reach",
+              "target_mode": "named",
+              "target_state": "happiness",
+              "target_vad": {
+                "arousal": 0.75,
+                "dominance": 0.65,
+                "valence": 0.9
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.0,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.0,
+              "time": 0.0060050414713089,
+              "weight": 0.04512744670475053
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.2,
+                "shape_arcness": 0.7,
+                "space_indirectness": 0.3,
+                "time": 0.55,
+                "weight": 0.5
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "reach-happiness-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "reach",
+              "target_mode": "named",
+              "target_state": "happiness",
+              "target_vad": {
+                "arousal": 0.75,
+                "dominance": 0.65,
+                "valence": 0.9
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.2,
+              "shape_arcness": 0.7,
+              "space_indirectness": 0.3,
+              "time": 0.55,
+              "weight": 0.5
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.2,
+                "shape_arcness": 0.7,
+                "space_indirectness": 0.3,
+                "time": 0.55,
+                "weight": 0.5
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "reach-sadness-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "reach",
+              "target_mode": "named",
+              "target_state": "sadness",
+              "target_vad": {
+                "arousal": 0.2,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.0,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.0,
+              "time": 0.0060050414713089,
+              "weight": 0.04512744670475053
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.35,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.25,
+                "time": 0.15,
+                "weight": 0.12
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "reach-sadness-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "reach",
+              "target_mode": "named",
+              "target_state": "sadness",
+              "target_vad": {
+                "arousal": 0.2,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.35,
+              "shape_arcness": 0.25,
+              "space_indirectness": 0.25,
+              "time": 0.15,
+              "weight": 0.12
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.35,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.25,
+                "time": 0.15,
+                "weight": 0.12
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "reach-surprise-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "reach",
+              "target_mode": "named",
+              "target_state": "surprise",
+              "target_vad": {
+                "arousal": 0.9,
+                "dominance": 0.5,
+                "valence": 0.6
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.0,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.0,
+              "time": 0.0060050414713089,
+              "weight": 0.04512744670475053
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.25,
+                "shape_arcness": 0.65,
+                "space_indirectness": 0.45,
+                "time": 0.9,
+                "weight": 0.62
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "reach-surprise-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "reach",
+              "target_mode": "named",
+              "target_state": "surprise",
+              "target_vad": {
+                "arousal": 0.9,
+                "dominance": 0.5,
+                "valence": 0.6
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.25,
+              "shape_arcness": 0.65,
+              "space_indirectness": 0.45,
+              "time": 0.9,
+              "weight": 0.62
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.25,
+                "shape_arcness": 0.65,
+                "space_indirectness": 0.45,
+                "time": 0.9,
+                "weight": 0.62
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "point-anger-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "point",
+              "target_mode": "named",
+              "target_state": "anger",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.8,
+                "valence": 0.15
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.0,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.0,
+              "time": 0.17472027098609197,
+              "weight": 0.3679918978693256
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.85,
+                "shape_arcness": 0.15,
+                "space_indirectness": 0.1,
+                "time": 0.85,
+                "weight": 0.9
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "point-anger-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "point",
+              "target_mode": "named",
+              "target_state": "anger",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.8,
+                "valence": 0.15
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.85,
+              "shape_arcness": 0.15,
+              "space_indirectness": 0.1,
+              "time": 0.85,
+              "weight": 0.9
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.85,
+                "shape_arcness": 0.15,
+                "space_indirectness": 0.1,
+                "time": 0.85,
+                "weight": 0.9
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "point-disgust-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "point",
+              "target_mode": "named",
+              "target_state": "disgust",
+              "target_vad": {
+                "arousal": 0.45,
+                "dominance": 0.6,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.0,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.0,
+              "time": 0.17472027098609197,
+              "weight": 0.3679918978693256
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.7,
+                "shape_arcness": 0.2,
+                "space_indirectness": 0.15,
+                "time": 0.4,
+                "weight": 0.45
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "point-disgust-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "point",
+              "target_mode": "named",
+              "target_state": "disgust",
+              "target_vad": {
+                "arousal": 0.45,
+                "dominance": 0.6,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 75,
+              "popsize": 8,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.7,
+              "shape_arcness": 0.2,
+              "space_indirectness": 0.15,
+              "time": 0.4,
+              "weight": 0.45
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.7,
+                "shape_arcness": 0.2,
+                "space_indirectness": 0.15,
+                "time": 0.4,
+                "weight": 0.45
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "point-fear-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "point",
+              "target_mode": "named",
+              "target_state": "fear",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.0,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.0,
+              "time": 0.17472027098609197,
+              "weight": 0.3679918978693256
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.75,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.65,
+                "time": 0.8,
+                "weight": 0.35
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "point-fear-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "point",
+              "target_mode": "named",
+              "target_state": "fear",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.75,
+              "shape_arcness": 0.25,
+              "space_indirectness": 0.65,
+              "time": 0.8,
+              "weight": 0.35
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.75,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.65,
+                "time": 0.8,
+                "weight": 0.35
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "point-happiness-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "point",
+              "target_mode": "named",
+              "target_state": "happiness",
+              "target_vad": {
+                "arousal": 0.75,
+                "dominance": 0.65,
+                "valence": 0.9
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.0,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.0,
+              "time": 0.17472027098609197,
+              "weight": 0.3679918978693256
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.2,
+                "shape_arcness": 0.7,
+                "space_indirectness": 0.3,
+                "time": 0.55,
+                "weight": 0.5
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "point-happiness-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "point",
+              "target_mode": "named",
+              "target_state": "happiness",
+              "target_vad": {
+                "arousal": 0.75,
+                "dominance": 0.65,
+                "valence": 0.9
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.2,
+              "shape_arcness": 0.7,
+              "space_indirectness": 0.3,
+              "time": 0.55,
+              "weight": 0.5
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.2,
+                "shape_arcness": 0.7,
+                "space_indirectness": 0.3,
+                "time": 0.55,
+                "weight": 0.5
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "point-sadness-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "point",
+              "target_mode": "named",
+              "target_state": "sadness",
+              "target_vad": {
+                "arousal": 0.2,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.0,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.0,
+              "time": 0.17472027098609197,
+              "weight": 0.3679918978693256
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.35,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.25,
+                "time": 0.15,
+                "weight": 0.12
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "point-sadness-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "point",
+              "target_mode": "named",
+              "target_state": "sadness",
+              "target_vad": {
+                "arousal": 0.2,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.35,
+              "shape_arcness": 0.25,
+              "space_indirectness": 0.25,
+              "time": 0.15,
+              "weight": 0.12
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.35,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.25,
+                "time": 0.15,
+                "weight": 0.12
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "point-surprise-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "point",
+              "target_mode": "named",
+              "target_state": "surprise",
+              "target_vad": {
+                "arousal": 0.9,
+                "dominance": 0.5,
+                "valence": 0.6
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.0,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.0,
+              "time": 0.17472027098609197,
+              "weight": 0.3679918978693256
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.25,
+                "shape_arcness": 0.65,
+                "space_indirectness": 0.45,
+                "time": 0.9,
+                "weight": 0.62
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "point-surprise-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "point",
+              "target_mode": "named",
+              "target_state": "surprise",
+              "target_vad": {
+                "arousal": 0.9,
+                "dominance": 0.5,
+                "valence": 0.6
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 75,
+              "popsize": 8,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.25,
+              "shape_arcness": 0.65,
+              "space_indirectness": 0.45,
+              "time": 0.9,
+              "weight": 0.62
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.25,
+                "shape_arcness": 0.65,
+                "space_indirectness": 0.45,
+                "time": 0.9,
+                "weight": 0.62
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "circle-anger-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "circle",
+              "target_mode": "named",
+              "target_state": "anger",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.8,
+                "valence": 0.15
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.16989558757526335,
+              "shape_arcness": 0.14305918096175352,
+              "space_indirectness": 0.18134117862857102,
+              "time": 0.21915362930289717,
+              "weight": 0.21507232828897835
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.85,
+                "shape_arcness": 0.15,
+                "space_indirectness": 0.1,
+                "time": 0.85,
+                "weight": 0.9
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "circle-anger-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "circle",
+              "target_mode": "named",
+              "target_state": "anger",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.8,
+                "valence": 0.15
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.85,
+              "shape_arcness": 0.15,
+              "space_indirectness": 0.1,
+              "time": 0.85,
+              "weight": 0.9
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.85,
+                "shape_arcness": 0.15,
+                "space_indirectness": 0.1,
+                "time": 0.85,
+                "weight": 0.9
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "circle-disgust-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "circle",
+              "target_mode": "named",
+              "target_state": "disgust",
+              "target_vad": {
+                "arousal": 0.45,
+                "dominance": 0.6,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.16989558757526335,
+              "shape_arcness": 0.14305918096175352,
+              "space_indirectness": 0.18134117862857102,
+              "time": 0.21915362930289717,
+              "weight": 0.21507232828897835
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.7,
+                "shape_arcness": 0.2,
+                "space_indirectness": 0.15,
+                "time": 0.4,
+                "weight": 0.45
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "circle-disgust-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "circle",
+              "target_mode": "named",
+              "target_state": "disgust",
+              "target_vad": {
+                "arousal": 0.45,
+                "dominance": 0.6,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.7,
+              "shape_arcness": 0.2,
+              "space_indirectness": 0.15,
+              "time": 0.4,
+              "weight": 0.45
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.7,
+                "shape_arcness": 0.2,
+                "space_indirectness": 0.15,
+                "time": 0.4,
+                "weight": 0.45
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "circle-fear-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "circle",
+              "target_mode": "named",
+              "target_state": "fear",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.16989558757526335,
+              "shape_arcness": 0.14305918096175352,
+              "space_indirectness": 0.18134117862857102,
+              "time": 0.21915362930289717,
+              "weight": 0.21507232828897835
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.75,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.65,
+                "time": 0.8,
+                "weight": 0.35
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "circle-fear-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "circle",
+              "target_mode": "named",
+              "target_state": "fear",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.75,
+              "shape_arcness": 0.25,
+              "space_indirectness": 0.65,
+              "time": 0.8,
+              "weight": 0.35
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.75,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.65,
+                "time": 0.8,
+                "weight": 0.35
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "circle-happiness-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "circle",
+              "target_mode": "named",
+              "target_state": "happiness",
+              "target_vad": {
+                "arousal": 0.75,
+                "dominance": 0.65,
+                "valence": 0.9
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.16989558757526335,
+              "shape_arcness": 0.14305918096175352,
+              "space_indirectness": 0.18134117862857102,
+              "time": 0.21915362930289717,
+              "weight": 0.21507232828897835
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.2,
+                "shape_arcness": 0.7,
+                "space_indirectness": 0.3,
+                "time": 0.55,
+                "weight": 0.5
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "circle-happiness-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "circle",
+              "target_mode": "named",
+              "target_state": "happiness",
+              "target_vad": {
+                "arousal": 0.75,
+                "dominance": 0.65,
+                "valence": 0.9
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.2,
+              "shape_arcness": 0.7,
+              "space_indirectness": 0.3,
+              "time": 0.55,
+              "weight": 0.5
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.2,
+                "shape_arcness": 0.7,
+                "space_indirectness": 0.3,
+                "time": 0.55,
+                "weight": 0.5
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "circle-sadness-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "circle",
+              "target_mode": "named",
+              "target_state": "sadness",
+              "target_vad": {
+                "arousal": 0.2,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.16989558757526335,
+              "shape_arcness": 0.14305918096175352,
+              "space_indirectness": 0.18134117862857102,
+              "time": 0.21915362930289717,
+              "weight": 0.21507232828897835
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.35,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.25,
+                "time": 0.15,
+                "weight": 0.12
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "circle-sadness-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "circle",
+              "target_mode": "named",
+              "target_state": "sadness",
+              "target_vad": {
+                "arousal": 0.2,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.35,
+              "shape_arcness": 0.25,
+              "space_indirectness": 0.25,
+              "time": 0.15,
+              "weight": 0.12
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.35,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.25,
+                "time": 0.15,
+                "weight": 0.12
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "circle-surprise-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "circle",
+              "target_mode": "named",
+              "target_state": "surprise",
+              "target_vad": {
+                "arousal": 0.9,
+                "dominance": 0.5,
+                "valence": 0.6
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.16989558757526335,
+              "shape_arcness": 0.14305918096175352,
+              "space_indirectness": 0.18134117862857102,
+              "time": 0.21915362930289717,
+              "weight": 0.21507232828897835
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.25,
+                "shape_arcness": 0.65,
+                "space_indirectness": 0.45,
+                "time": 0.9,
+                "weight": 0.62
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "circle-surprise-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "circle",
+              "target_mode": "named",
+              "target_state": "surprise",
+              "target_vad": {
+                "arousal": 0.9,
+                "dominance": 0.5,
+                "valence": 0.6
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 75,
+              "popsize": 8,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.25,
+              "shape_arcness": 0.65,
+              "space_indirectness": 0.45,
+              "time": 0.9,
+              "weight": 0.62
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.25,
+                "shape_arcness": 0.65,
+                "space_indirectness": 0.45,
+                "time": 0.9,
+                "weight": 0.62
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "beckon-anger-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "beckon",
+              "target_mode": "named",
+              "target_state": "anger",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.8,
+                "valence": 0.15
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.5465005411204834,
+              "shape_arcness": 0.0370873262036066,
+              "space_indirectness": 0.7784908586451159,
+              "time": 0.48247234332915323,
+              "weight": 0.33681292920114875
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.85,
+                "shape_arcness": 0.15,
+                "space_indirectness": 0.1,
+                "time": 0.85,
+                "weight": 0.9
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "beckon-anger-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "beckon",
+              "target_mode": "named",
+              "target_state": "anger",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.8,
+                "valence": 0.15
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 75,
+              "n_timing_basis": 5,
+              "popsize": 8,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.2
+            },
+            "profile": {
+              "flow_boundness": 0.85,
+              "shape_arcness": 0.15,
+              "space_indirectness": 0.1,
+              "time": 0.85,
+              "weight": 0.9
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.85,
+                "shape_arcness": 0.15,
+                "space_indirectness": 0.1,
+                "time": 0.85,
+                "weight": 0.9
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "beckon-disgust-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "beckon",
+              "target_mode": "named",
+              "target_state": "disgust",
+              "target_vad": {
+                "arousal": 0.45,
+                "dominance": 0.6,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.5465005411204834,
+              "shape_arcness": 0.0370873262036066,
+              "space_indirectness": 0.7784908586451159,
+              "time": 0.48247234332915323,
+              "weight": 0.33681292920114875
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.7,
+                "shape_arcness": 0.2,
+                "space_indirectness": 0.15,
+                "time": 0.4,
+                "weight": 0.45
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "beckon-disgust-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "beckon",
+              "target_mode": "named",
+              "target_state": "disgust",
+              "target_vad": {
+                "arousal": 0.45,
+                "dominance": 0.6,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_boundness_target_weight": 0.2,
+              "local_maxiter": 100,
+              "maxiter": 75,
+              "n_timing_basis": 5,
+              "popsize": 8,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.05,
+              "time_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.7,
+              "shape_arcness": 0.2,
+              "space_indirectness": 0.15,
+              "time": 0.4,
+              "weight": 0.45
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.7,
+                "shape_arcness": 0.2,
+                "space_indirectness": 0.15,
+                "time": 0.4,
+                "weight": 0.45
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "beckon-fear-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "beckon",
+              "target_mode": "named",
+              "target_state": "fear",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_boundness_target_weight": 0.1,
+              "local_maxiter": 100,
+              "maxiter": 75,
+              "n_timing_basis": 5,
+              "popsize": 8,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.06,
+              "time_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.5465005411204834,
+              "shape_arcness": 0.0370873262036066,
+              "space_indirectness": 0.7784908586451159,
+              "time": 0.48247234332915323,
+              "weight": 0.33681292920114875
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.75,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.65,
+                "time": 0.8,
+                "weight": 0.35
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "beckon-fear-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "beckon",
+              "target_mode": "named",
+              "target_state": "fear",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_boundness_target_weight": 0.1,
+              "local_maxiter": 100,
+              "maxiter": 75,
+              "n_timing_basis": 5,
+              "popsize": 8,
+              "seed": 7,
+              "shape_arcness_target_weight": 0.06,
+              "time_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.75,
+              "shape_arcness": 0.25,
+              "space_indirectness": 0.65,
+              "time": 0.8,
+              "weight": 0.35
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.75,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.65,
+                "time": 0.8,
+                "weight": 0.35
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "beckon-happiness-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "beckon",
+              "target_mode": "named",
+              "target_state": "happiness",
+              "target_vad": {
+                "arousal": 0.75,
+                "dominance": 0.65,
+                "valence": 0.9
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.5465005411204834,
+              "shape_arcness": 0.0370873262036066,
+              "space_indirectness": 0.7784908586451159,
+              "time": 0.48247234332915323,
+              "weight": 0.33681292920114875
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.2,
+                "shape_arcness": 0.7,
+                "space_indirectness": 0.3,
+                "time": 0.55,
+                "weight": 0.5
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "beckon-happiness-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "beckon",
+              "target_mode": "named",
+              "target_state": "happiness",
+              "target_vad": {
+                "arousal": 0.75,
+                "dominance": 0.65,
+                "valence": 0.9
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_boundness_target_weight": 0.2,
+              "local_maxiter": 100,
+              "maxiter": 75,
+              "n_timing_basis": 6,
+              "popsize": 8,
+              "seed": 7,
+              "time_target_weight": 0.2
+            },
+            "profile": {
+              "flow_boundness": 0.2,
+              "shape_arcness": 0.7,
+              "space_indirectness": 0.3,
+              "time": 0.55,
+              "weight": 0.5
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.2,
+                "shape_arcness": 0.7,
+                "space_indirectness": 0.3,
+                "time": 0.55,
+                "weight": 0.5
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "beckon-sadness-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "beckon",
+              "target_mode": "named",
+              "target_state": "sadness",
+              "target_vad": {
+                "arousal": 0.2,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.5465005411204834,
+              "shape_arcness": 0.0370873262036066,
+              "space_indirectness": 0.7784908586451159,
+              "time": 0.48247234332915323,
+              "weight": 0.33681292920114875
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.35,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.25,
+                "time": 0.15,
+                "weight": 0.12
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "beckon-sadness-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "beckon",
+              "target_mode": "named",
+              "target_state": "sadness",
+              "target_vad": {
+                "arousal": 0.2,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "popsize": 5,
+              "seed": 7
+            },
+            "profile": {
+              "flow_boundness": 0.35,
+              "shape_arcness": 0.25,
+              "space_indirectness": 0.25,
+              "time": 0.15,
+              "weight": 0.12
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.35,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.25,
+                "time": 0.15,
+                "weight": 0.12
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "beckon-surprise-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "beckon",
+              "target_mode": "named",
+              "target_state": "surprise",
+              "target_vad": {
+                "arousal": 0.9,
+                "dominance": 0.5,
+                "valence": 0.6
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_boundness_target_weight": 0.1,
+              "local_maxiter": 100,
+              "maxiter": 75,
+              "n_timing_basis": 6,
+              "popsize": 8,
+              "seed": 7,
+              "time_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.5465005411204834,
+              "shape_arcness": 0.0370873262036066,
+              "space_indirectness": 0.7784908586451159,
+              "time": 0.48247234332915323,
+              "weight": 0.33681292920114875
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.25,
+                "shape_arcness": 0.65,
+                "space_indirectness": 0.45,
+                "time": 0.9,
+                "weight": 0.62
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "beckon-surprise-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "beckon",
+              "target_mode": "named",
+              "target_state": "surprise",
+              "target_vad": {
+                "arousal": 0.9,
+                "dominance": 0.5,
+                "valence": 0.6
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_boundness_target_weight": 0.1,
+              "local_maxiter": 100,
+              "maxiter": 75,
+              "n_timing_basis": 6,
+              "popsize": 8,
+              "seed": 7,
+              "time_target_weight": 0.1
+            },
+            "profile": {
+              "flow_boundness": 0.25,
+              "shape_arcness": 0.65,
+              "space_indirectness": 0.45,
+              "time": 0.9,
+              "weight": 0.62
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.25,
+                "shape_arcness": 0.65,
+                "space_indirectness": 0.45,
+                "time": 0.9,
+                "weight": 0.62
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "celebratory-pump-anger-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "celebratory_pump",
+              "target_mode": "named",
+              "target_state": "anger",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.8,
+                "valence": 0.15
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_weight": 3.0,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "n_timing_basis": 5,
+              "popsize": 5,
+              "seed": 7,
+              "time_scale": 2.0
+            },
+            "profile": {
+              "flow_boundness": 0.5444938242458949,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.16332072841087233,
+              "time": 0.34031588951828134,
+              "weight": 0.5892538827500035
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.85,
+                "shape_arcness": 0.15,
+                "space_indirectness": 0.1,
+                "time": 0.85,
+                "weight": 0.9
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "celebratory-pump-anger-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "celebratory_pump",
+              "target_mode": "named",
+              "target_state": "anger",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.8,
+                "valence": 0.15
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_weight": 3.0,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "n_timing_basis": 5,
+              "popsize": 5,
+              "seed": 7,
+              "time_scale": 2.0
+            },
+            "profile": {
+              "flow_boundness": 0.85,
+              "shape_arcness": 0.15,
+              "space_indirectness": 0.1,
+              "time": 0.85,
+              "weight": 0.9
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.85,
+                "shape_arcness": 0.15,
+                "space_indirectness": 0.1,
+                "time": 0.85,
+                "weight": 0.9
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "celebratory-pump-disgust-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "celebratory_pump",
+              "target_mode": "named",
+              "target_state": "disgust",
+              "target_vad": {
+                "arousal": 0.45,
+                "dominance": 0.6,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_weight": 3.0,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "n_timing_basis": 5,
+              "popsize": 5,
+              "seed": 7,
+              "time_scale": 2.0
+            },
+            "profile": {
+              "flow_boundness": 0.5444938242458949,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.16332072841087233,
+              "time": 0.34031588951828134,
+              "weight": 0.5892538827500035
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.7,
+                "shape_arcness": 0.2,
+                "space_indirectness": 0.15,
+                "time": 0.4,
+                "weight": 0.45
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "celebratory-pump-disgust-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "celebratory_pump",
+              "target_mode": "named",
+              "target_state": "disgust",
+              "target_vad": {
+                "arousal": 0.45,
+                "dominance": 0.6,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_weight": 3.0,
+              "local_maxiter": 100,
+              "maxiter": 75,
+              "n_timing_basis": 5,
+              "popsize": 8,
+              "seed": 7,
+              "time_scale": 2.0
+            },
+            "profile": {
+              "flow_boundness": 0.7,
+              "shape_arcness": 0.2,
+              "space_indirectness": 0.15,
+              "time": 0.4,
+              "weight": 0.45
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.7,
+                "shape_arcness": 0.2,
+                "space_indirectness": 0.15,
+                "time": 0.4,
+                "weight": 0.45
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "celebratory-pump-fear-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "celebratory_pump",
+              "target_mode": "named",
+              "target_state": "fear",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_weight": 3.0,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "n_timing_basis": 5,
+              "popsize": 5,
+              "seed": 7,
+              "time_scale": 2.0
+            },
+            "profile": {
+              "flow_boundness": 0.5444938242458949,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.16332072841087233,
+              "time": 0.34031588951828134,
+              "weight": 0.5892538827500035
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.75,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.65,
+                "time": 0.8,
+                "weight": 0.35
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "celebratory-pump-fear-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "celebratory_pump",
+              "target_mode": "named",
+              "target_state": "fear",
+              "target_vad": {
+                "arousal": 0.85,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_weight": 3.0,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "n_timing_basis": 5,
+              "popsize": 5,
+              "seed": 7,
+              "time_scale": 2.0
+            },
+            "profile": {
+              "flow_boundness": 0.75,
+              "shape_arcness": 0.25,
+              "space_indirectness": 0.65,
+              "time": 0.8,
+              "weight": 0.35
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.75,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.65,
+                "time": 0.8,
+                "weight": 0.35
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "celebratory-pump-happiness-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "celebratory_pump",
+              "target_mode": "named",
+              "target_state": "happiness",
+              "target_vad": {
+                "arousal": 0.75,
+                "dominance": 0.65,
+                "valence": 0.9
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_weight": 3.0,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "n_timing_basis": 5,
+              "popsize": 5,
+              "seed": 7,
+              "time_scale": 2.0
+            },
+            "profile": {
+              "flow_boundness": 0.5444938242458949,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.16332072841087233,
+              "time": 0.34031588951828134,
+              "weight": 0.5892538827500035
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.2,
+                "shape_arcness": 0.7,
+                "space_indirectness": 0.3,
+                "time": 0.55,
+                "weight": 0.5
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "celebratory-pump-happiness-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "celebratory_pump",
+              "target_mode": "named",
+              "target_state": "happiness",
+              "target_vad": {
+                "arousal": 0.75,
+                "dominance": 0.65,
+                "valence": 0.9
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_weight": 3.0,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "n_timing_basis": 5,
+              "popsize": 5,
+              "seed": 7,
+              "time_scale": 2.0
+            },
+            "profile": {
+              "flow_boundness": 0.2,
+              "shape_arcness": 0.7,
+              "space_indirectness": 0.3,
+              "time": 0.55,
+              "weight": 0.5
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.2,
+                "shape_arcness": 0.7,
+                "space_indirectness": 0.3,
+                "time": 0.55,
+                "weight": 0.5
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "celebratory-pump-sadness-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "celebratory_pump",
+              "target_mode": "named",
+              "target_state": "sadness",
+              "target_vad": {
+                "arousal": 0.2,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_weight": 3.0,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "n_timing_basis": 5,
+              "popsize": 5,
+              "seed": 7,
+              "time_scale": 2.0
+            },
+            "profile": {
+              "flow_boundness": 0.5444938242458949,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.16332072841087233,
+              "time": 0.34031588951828134,
+              "weight": 0.5892538827500035
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.35,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.25,
+                "time": 0.15,
+                "weight": 0.12
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "celebratory-pump-sadness-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "celebratory_pump",
+              "target_mode": "named",
+              "target_state": "sadness",
+              "target_vad": {
+                "arousal": 0.2,
+                "dominance": 0.2,
+                "valence": 0.1
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_weight": 3.0,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "n_timing_basis": 5,
+              "popsize": 5,
+              "seed": 7,
+              "time_scale": 2.0
+            },
+            "profile": {
+              "flow_boundness": 0.35,
+              "shape_arcness": 0.25,
+              "space_indirectness": 0.25,
+              "time": 0.15,
+              "weight": 0.12
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.35,
+                "shape_arcness": 0.25,
+                "space_indirectness": 0.25,
+                "time": 0.15,
+                "weight": 0.12
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "celebratory-pump-surprise-original__seed-7__reference",
+            "candidate_name": "reference",
+            "context": {
+              "gesture": "celebratory_pump",
+              "target_mode": "named",
+              "target_state": "surprise",
+              "target_vad": {
+                "arousal": 0.9,
+                "dominance": 0.5,
+                "valence": 0.6
+              }
+            },
+            "motion_source": "reference",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_weight": 3.0,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "n_timing_basis": 5,
+              "popsize": 5,
+              "seed": 7,
+              "time_scale": 2.0
+            },
+            "profile": {
+              "flow_boundness": 0.5444938242458949,
+              "shape_arcness": 0.0,
+              "space_indirectness": 0.16332072841087233,
+              "time": 0.34031588951828134,
+              "weight": 0.5892538827500035
+            },
+            "require_feature_match": false,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.25,
+                "shape_arcness": 0.65,
+                "space_indirectness": 0.45,
+                "time": 0.9,
+                "weight": 0.62
+              },
+              "projected_feasible_laban_target": null
+            }
+          },
+          {
+            "candidate_id": "celebratory-pump-surprise-original__seed-7__styled",
+            "candidate_name": "styled",
+            "context": {
+              "gesture": "celebratory_pump",
+              "target_mode": "named",
+              "target_state": "surprise",
+              "target_vad": {
+                "arousal": 0.9,
+                "dominance": 0.5,
+                "valence": 0.6
+              }
+            },
+            "motion_source": "optimized",
+            "optimizer_overrides": {
+              "de_mutation": 0.5,
+              "de_recombination": 0.65,
+              "flow_weight": 3.0,
+              "local_maxiter": 100,
+              "maxiter": 45,
+              "n_timing_basis": 5,
+              "popsize": 5,
+              "seed": 7,
+              "time_scale": 2.0
+            },
+            "profile": {
+              "flow_boundness": 0.25,
+              "shape_arcness": 0.65,
+              "space_indirectness": 0.45,
+              "time": 0.9,
+              "weight": 0.62
+            },
+            "require_feature_match": true,
+            "seed": 7,
+            "target_layers": {
+              "original_affect_derived_laban_target": {
+                "flow_boundness": 0.25,
+                "shape_arcness": 0.65,
+                "space_indirectness": 0.45,
+                "time": 0.9,
+                "weight": 0.62
+              },
+              "projected_feasible_laban_target": null
+            }
+          }
+        ],
+        "evaluator": {
+          "model": "gemini-2.5-flash",
+          "prompt_version": "lma-vad-category-ambiguity-v2",
+          "provider": "gemini",
+          "schema_version": "gemini-gesture-assessment-v2",
+          "settings": {
+            "render_style": {
+              "arm_color": "C1",
+              "arm_line_width": 1.5,
+              "figure_size_inches": [
+                6.0,
+                6.0
+              ],
+              "marker": "o",
+              "marker_size": 6.0,
+              "show_grid": true,
+              "show_time": true,
+              "trace_alpha": 0.5,
+              "trace_color": "C1",
+              "trace_line_width": 1.5,
+              "trace_mode": "cumulative_full_sequence"
+            },
+            "renderer_version": "variant-only-mp4-sequence-v3-frozen-style",
+            "response_mime_type": "application/json",
+            "temperature": 0.2,
+            "video_duration_seconds": 2.0,
+            "video_final_hold_seconds": 0.5,
+            "video_fps": null,
+            "video_inter_repeat_transition_seconds": 0.5,
+            "video_lead_in_seconds": 0.5,
+            "video_repetitions": 2
+          }
+        },
+        "format_version": 4,
+        "repeats": 5,
+        "reward_config": {
+          "arousal_weight": 0.4,
+          "clip_negative_margin": false,
+          "dominance_weight": 0.4,
+          "evaluator_failure_mode": "raise",
+          "invalid_realisation_reward": -1.0,
+          "joint_limit_tolerance": 1e-06,
+          "margin_weight": 0.5,
+          "max_feature_error_penalty_weight": 0.0,
+          "max_feature_error_threshold": 0.1,
+          "maximum_path_length_ratio": 1.3,
+          "minimum_path_length_ratio": 0.7,
+          "perceptual_reward_mode": "vad",
+          "realisation_penalty_weight": 0.25,
+          "reject_excessive_feature_error": true,
+          "repeat_evaluations": 5,
+          "reward_margin_mode": "raw",
+          "stability_penalty_weight": 0.0,
+          "target_probability_weight": 0.5,
+          "valence_weight": 0.2
+        },
+        "runner": {
+          "frozen_protocol": {
+            "final_hold_seconds": 0.5,
+            "gesture_duration_seconds": 2.0,
+            "gesture_wide_camera_limits": true,
+            "independent_prompt_version": "lma-vad-category-ambiguity-v2",
+            "independent_repeats": 5,
+            "independent_schema_version": "gemini-gesture-assessment-v2",
+            "independent_target_blind": true,
+            "inter_repeat_transition_seconds": 0.5,
+            "lead_in_seconds": 0.5,
+            "model": "gemini-2.5-flash",
+            "paired_neither_enabled": true,
+            "paired_preference_repeats": 5,
+            "paired_prompt_version": "blinded-target-affect-ab-v1",
+            "paired_schema_version": "paired-affect-preference-v1",
+            "render_style": {
+              "arm_color": "C1",
+              "arm_line_width": 1.5,
+              "figure_size_inches": [
+                6.0,
+                6.0
+              ],
+              "marker": "o",
+              "marker_size": 6.0,
+              "show_grid": true,
+              "show_time": true,
+              "trace_alpha": 0.5,
+              "trace_color": "C1",
+              "trace_line_width": 1.5,
+              "trace_mode": "cumulative_full_sequence"
+            },
+            "renderer_version": "variant-only-mp4-sequence-v3-frozen-style",
+            "repetitions": 2,
+            "temperature": 0.2,
+            "total_clip_duration_seconds": 5.5
+          },
+          "gesture_wide_camera_limits": true,
+          "implementation": "paired-reference-styled-v2",
+          "local_maxiter": 100,
+          "maxiter": 45,
+          "popsize": 5
+        }
+      },
+      "sha256": "57d8ce4fb8039144e738547cb9b04325e3c85ccb4e86b444d9b6b286447bffe1"
+    }
+  },
+  "format_version": 1,
+  "label": "evaluator-derived provisional targets; reflects the frozen Gemini protocol, not human perceptual ground truth",
+  "procedure": {
+    "aggregation": "per-repeat observations pooled per gesture",
+    "description": "Per gesture, pool every per-repeat Gemini VAD observation from the archived baseline paired evaluation, take the per-axis p10-p90 envelope, and clip the canonical named target to that envelope.",
+    "lower_percentile": 10.0,
+    "upper_percentile": 90.0
+  },
+  "procedure_version": "recalibrated-targets-p10-p90-clip-v1",
+  "status": "frozen"
+}

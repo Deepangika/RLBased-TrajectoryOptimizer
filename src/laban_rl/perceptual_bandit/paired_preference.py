@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from laban_rl.config import FEATURE_KEYS
 from laban_rl.optimiser_api import LabanOptimisationResult
+from laban_rl.perceptual_bandit.call_budget import get_active_budget
 from laban_rl.perceptual_bandit.environment import Context
 from laban_rl.perceptual_bandit.evaluation_cache import (
     EvaluatorCacheIdentity,
@@ -306,6 +307,9 @@ perceptually meaningful or neither clip expresses the target.
 
         backoff = initial_backoff
         for attempt in range(max_retries + 1):
+            budget = get_active_budget()
+            if budget is not None:
+                budget.charge()
             try:
                 response = self.video_evaluator.client.models.generate_content(
                     model=self.model,

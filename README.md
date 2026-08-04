@@ -1,16 +1,25 @@
-# Updated CEM Live Retest V2
+# RL-Based Trajectory Optimizer for Affective Robot Motion
 
-Laban-based contextual bandit pipeline for gesture style optimization and perception-aligned training.
+Laban-based framework that learns gesture-conditioned Laban profiles for
+affective robot arm motion, evaluated with perception-aligned rewards.
 
 ## What this project does
 
+- Learns a separate affective Laban profile for every context
+  `c = (gesture, intended affective state)` — profiles are gesture-conditioned
+  because the Laban dimensions and their perceptual effects depend on the
+  underlying gesture
+- The action/profile contains five Laban dimensions: Weight, Time,
+  Flow (boundness), Space (indirectness), and Shape (arcness)
 - Optimizes gesture style profiles with a CEM outer loop
 - Uses a direct inner optimizer for trajectory realization
-- Supports mock and Gemini evaluators for perceptual feedback
+- Supports synthetic, synthetic-invalid, mock, and Gemini evaluators
 - Uses valence-arousal-dominance (VAD) as the primary perceptual reward
 - Retains Ekman emotion probabilities as secondary diagnostics
 - Provides evaluation and debugging scripts for diagnostics and ablations
 - Includes wave, reach, point, circle, beckon, and celebratory-pump references
+  (reach remains only in the archived baseline and is excluded from the
+  current planned outer-learning experiments)
 
 ## Project layout
 
@@ -33,10 +42,14 @@ Laban-based contextual bandit pipeline for gesture style optimization and percep
 
 ## Environment setup
 
-1. Create and activate a Python environment (conda or venv)
+1. Create and activate a Python environment (conda, venv, or uv)
 2. Install dependencies
 
    pip install -r requirements.txt
+
+   or with uv (recommended on Windows):
+
+   uv sync
 
 3. Optional editable install
 
@@ -307,8 +320,121 @@ and `train_cem_contextual_bandit.py` refuse to write inside that directory unles
 
 ## Gesture-conditioned outer learning
 
-The next experiment learns a separate Laban-affect distribution for every
-gesture-state context instead of reusing one fixed profile per emotion.
+This is the current main experiment. Instead of reusing one fixed profile per
+emotion, it learns a separate Laban-affect distribution for every
+`(gesture, target_state)` context.
+
+### Pipeline
+
+The two-level architecture per candidate:
+
+1. the outer learner samples a correlated Laban profile from the
+   context-specific distribution;
+2. the inner optimiser attempts to realise it as a feasible joint trajectory;
+3. strict physical, gesture-preservation, and feature-realisation checks are
+   applied (canonical `strict_realisability` gate);
+4. feasible motions are rendered;
+5. an evaluator returns an affective/perceptual assessment;
+6. feasible elites update the context-specific multivariate distribution;
+7. top candidates undergo independent inner-optimiser validation with a
+   separate seed and cache namespace;
+8. only independently validated feasible candidates can be selected.
+
+Evaluators:
+
+- **synthetic** — closed-form hidden-optimum objective; validates learning
+  machinery (convergence, covariance adaptation) with zero rendering cost;
+- **synthetic_invalid** — explicitly injects infeasible candidates to test
+  that invalid candidates are blocked everywhere;
+- **mock** — deterministic seeded stand-in for the VLM; exercises the full
+  real pipeline (inner optimiser, rendering, caching) without API calls;
+- **gemini** — live Gemini VLM evaluation of rendered videos.
+
+Synthetic and mock rewards validate software and learning behaviour only.
+They are engineering diagnostics and must never be described as evidence of
+perceived affect. Gemini results are machine-evaluator evidence pending
+comparison with human perception.
+
+### Multivariate outer learner
+
+Each gesture–state context has its own mean and full covariance in a latent
+logistic-normal space:
+
+```text
+z ~ N(mu_{g,e}, Sigma_{g,e}),    a = sigmoid(z)
+```
+
+The full covariance models dependencies between the five Laban dimensions
+rather than sampling each dimension independently. Contexts never share
+state; `beckon-fear` and `wave-sadness` evolve independently. The initial
+covariance snapshot is immutable, covariance history entries are
+deep-copied, and the covariance is repaired/verified to stay symmetric
+positive definite after every update.
+
+### Feasibility and robust ranking
+
+- Formal feasibility threshold: maximum absolute feature error `<= 0.10`.
+- Robust elite margin: maximum absolute feature error `<= 0.08`.
+- The robust margin **does not redefine formal feasibility**; a candidate
+  with error in `(0.08, 0.10]` remains formally feasible but is ranked as
+  *marginally feasible*.
+- Elite/shortlist ranking is lexicographic and feasibility-first:
+  strict feasibility, then robust feasibility, then reward, then lower
+  maximum feature error, then lower realisation RMSE, then a deterministic
+  index tie-break. Infeasible candidates can never become elites or final
+  selections, regardless of reward.
+- Independent validation remains mandatory; robust training status cannot
+  bypass it.
+- Outcome taxonomy distinguishes `no_feasible_candidates` (no candidate ever
+  passed strict feasibility during training) from
+  `no_validation_feasible_candidate` (feasible training candidates existed
+  but none survived independent validation). Both are unsuccessful stage
+  outcomes.
+
+### Checkpoint and resume
+
+- Every evaluated candidate is checkpointed atomically
+  (`checkpoint/candidates/round_XXX/sample_XXX.json`).
+- The distribution mean/covariance is saved after every completed round
+  (`checkpoint/rounds/round_XXX_state.json`).
+- Candidate seeds are deterministic (derived from base seed, context, round,
+  and sample index), so resumed and uninterrupted runs are equivalent.
+- `--resume` recovers completed candidates without recomputation; malformed
+  or partial checkpoints are recomputed, never trusted.
+- Resume verifies saved run settings and refuses to continue if any
+  scientifically important setting differs (including the robust margin).
+- `--workers N` provides optional process-level parallelism and defaults to
+  `1`. Use `--workers 1` for the current live experiments.
+
+### Baseline versus outer learning
+
+The archived fixed-profile baseline
+(`outputs/experiments/baseline_fixed_profiles/`) evaluated fixed hypothesised
+profiles with the VLM; it did **not** learn profiles. It is immutable and
+protected: the runners refuse to write inside it unless
+`--overwrite-baseline` is supplied explicitly for developer maintenance. The
+outer-learning experiment initialises from that baseline (including projected
+wave targets when present) and compares against its recorded rewards.
+Synthetic/mock rewards are never compared with Gemini baseline rewards.
+
+### Current validation status (engineering validation only)
+
+- Full test suite: 171 passed at the time of the beckon–fear robustness
+  diagnostic.
+- Synthetic multi-round convergence diagnostic passed (six contexts, mean
+  moved toward hidden optima, covariance adapted, SPD preserved).
+- Medium Stage A mock run: wave–sadness selected a validated candidate;
+  the initial beckon–fear attempt failed independent validation
+  (feature errors 0.132/0.133 vs the 0.10 tolerance).
+- Targeted beckon–fear robustness diagnostic: 18/32 strictly feasible,
+  14/32 robustly feasible, 2/4 shortlist candidates survived independent
+  validation; selected candidate validated at maximum feature error 0.0193
+  and RMSE 0.0093.
+
+These results validate the learning and integration machinery. They are not
+evidence of human-recognisable affect.
+
+### Commands
 
 Run the synthetic offline diagnostic first:
 
@@ -330,6 +456,65 @@ python scripts/evaluation/run_outer_learning_experiment.py \
   --evaluator mock \
   --out outputs/experiments/outer_learning_v1
 ```
+
+Resume an interrupted run with the identical command plus `--resume`.
+
+Targeted beckon–fear robustness diagnostic (mock, no Gemini):
+
+```text
+python scripts/evaluation/run_outer_learning_experiment.py \
+  --config configs/outer_learning_beckon_fear_robustness_v1.json \
+  --stage stage_a \
+  --evaluator mock \
+  --rounds-min 3 --rounds-max 4 --samples-per-round 8 --elite-count 3 \
+  --candidate-vlm-repeats 1 --validation-top-k 4 \
+  --validation-vlm-repeats 1 --paired-validation-repeats 1 \
+  --workers 1 \
+  --out outputs/experiments/outer_learning_beckon_fear_robustness_v1
+```
+
+Live Gemini execution changes `--evaluator mock` to `--evaluator gemini`,
+sets `--model gemini-2.5-flash --temperature 0.2`, and requires the
+`GOOGLE_API_KEY` environment variable (see the credentials section below and
+the official Gemini API setup instructions). Never place the key in source,
+configs, or caches.
+
+### Output structure
+
+Each context directory under the stage output contains:
+
+- `stage_status.json` (stage level) — truthful `all_successful` aggregation,
+  saved run settings (evaluator, model, seed, thresholds, robust margin,
+  workers, resume), and resume summary;
+- `checkpoint/` — per-candidate records and per-round distribution state;
+- `round_history.csv`, `sample_history.csv`, `elite_history.csv`,
+  `mean_history.csv`, `correlation_history.csv`, `reward_history.csv` —
+  training histories including per-candidate robustness fields;
+- `initial_profile.json` / `learned_profile.json` — initial and final
+  profiles with the immutable initial covariance snapshot;
+- `covariance_history.npz` — per-round covariance matrices;
+- `independent_validation.json` — shortlist with training-versus-validation
+  seeds, feature errors, and feasibility survival;
+- `selected_validated_profile.json` — only written for a valid selection;
+- `profile_comparison.json` — original affect-derived target, projected
+  target, initial/final CEM means, selected and achieved profiles;
+- `final_motion.mp4` / `final_motion.gif` — only for a valid selection;
+- `run_manifest.json`, `stopping_reason.json`, and evaluator logs.
+
+### Reproducibility and limitations
+
+- Saved run settings record seed, model name, temperature, prompt/schema
+  versions, inner-optimiser settings, feasibility thresholds, and the robust
+  margin; resume refuses mismatches.
+- Mock-versus-live distinction is enforced in reporting; mock rewards are
+  not comparable with Gemini rewards.
+- VLM (Gemini) evaluation still requires later comparison with human
+  perception; no human-valid affect recognition has been established.
+- The inner optimiser retains some seed sensitivity: candidates feasible
+  under one optimiser seed may fail re-optimisation under another, which is
+  why independent validation and shortlist redundancy (top-k >= 4) exist.
+- Reach remains in the archived baseline but is excluded from the current
+  planned outer-learning experiments.
 
 The outer learner:
 
@@ -487,11 +672,14 @@ prints credential values.
 
 ## Testing
 
-Run the test suite:
+Run the complete test suite:
 
-  python -m pytest -q tests
+  python -m pytest -q
 
-Current suite status after cleanup: all tests passing.
+(or `uv run --with pytest python -m pytest -q` with uv-managed environments)
+
+Current suite status: 171 tests passing at the time of the beckon–fear
+robustness diagnostic.
 
 ## Normalization calibration
 

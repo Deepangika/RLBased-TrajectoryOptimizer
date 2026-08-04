@@ -42,6 +42,12 @@ from laban_rl.perceptual_bandit.environment import (
     PerceptualBanditEnvironment,
 )
 from laban_rl.perceptual_bandit.evaluation_cache import PerceptualObservationCache
+from laban_rl.perceptual_bandit.call_budget import (
+    CallBudgetExhausted,
+    GeminiCallBudget,
+    get_active_budget,
+    set_active_budget,
+)
 from laban_rl.perceptual_bandit.gemini_evaluator import GeminiProVideoEvaluator
 from laban_rl.perceptual_bandit.outer_learning import (
     ContextualOuterLearner,
@@ -130,6 +136,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "Robust-elite ranking margin. Candidates at or below this maximum "
             "feature error are ranked as robustly feasible. Does not redefine "
             "formal feasibility, which stays at --max-feature-error-threshold."
+        ),
+    )
+    parser.add_argument(
+        "--max-gemini-calls",
+        type=int,
+        default=110,
+        help=(
+            "Hard ceiling on the total number of Gemini API calls for this run, "
+            "including billable retries. The run stops safely before the call "
+            "that would exceed the ceiling. Only applies with --evaluator gemini."
         ),
     )
     return parser.parse_args(argv)
@@ -1070,6 +1086,9 @@ def run_context(
         else None
     )
     for round_index in range(1, rounds_max + 1):
+        _budget = get_active_budget()
+        if _budget is not None:
+            _budget.set_category("search")
         samples = distribution.sample_batch(
             samples_per_round,
             round_index=round_index,
@@ -1161,6 +1180,10 @@ def run_context(
                     payload = payload_by_index[sample_index]
                     try:
                         output = _evaluate_candidate_payload(payload)
+                    except CallBudgetExhausted:
+                        stop = "call_budget_exhausted"
+                        selection_status = "call_budget_exhausted"
+                        break
                     except Exception:
                         stop = stopping_reason(
                             round_index=round_index,
@@ -1327,7 +1350,7 @@ def run_context(
                             checkpoint_payload,
                         )
                         _write_json(checkpoint_state_path, checkpoint_state)
-        if stop == "evaluator_failure":
+        if stop in ("evaluator_failure", "call_budget_exhausted"):
             break
         sample_records.sort(key=lambda item: item[0])
         robust_count = 0
@@ -1382,7 +1405,7 @@ def run_context(
             observed = result_dict.get("mean_observed_vad")
             if observed and (round_best_vad is None or reward >= max(round_rewards)):
                 round_best_vad = dict(observed)
-        if stop == "evaluator_failure":
+        if stop in ("evaluator_failure", "call_budget_exhausted"):
             break
         require_reward_consumption(completed_samples)
         elites = distribution.update(
@@ -1496,7 +1519,10 @@ def run_context(
 
     validation_rows: list[dict[str, Any]] = []
     had_feasible_training = False
-    if stop != "evaluator_failure":
+    if stop not in ("evaluator_failure", "call_budget_exhausted"):
+        _budget = get_active_budget()
+        if _budget is not None:
+            _budget.set_category("validation")
         feasible_ranked = sorted(
             [row for row in archived_records if bool(row["sample"].feasible)],
             key=lambda row: robust_rank_key(row["sample"]),
@@ -1516,6 +1542,10 @@ def run_context(
                     synthetic=synthetic,
                     synthetic_invalid=synthetic_invalid,
                 )
+            except CallBudgetExhausted:
+                stop = "call_budget_exhausted"
+                selection_status = "call_budget_exhausted"
+                break
             except Exception:
                 stop = "evaluator_failure"
                 selection_status = "evaluator_failure"
@@ -1574,6 +1604,8 @@ def run_context(
                 final_selected_opt_result = optimisation_result
         if selection_status == "pending":
             selection_status = "selected" if final_selected_result is not None else "no_valid_candidate"
+    elif stop == "call_budget_exhausted":
+        selection_status = "call_budget_exhausted"
     else:
         selection_status = "evaluator_failure"
 
@@ -1583,6 +1615,9 @@ def run_context(
         learned_vs_reference = {"status": "skipped_no_valid_candidate", "records": []}
         learned_vs_baseline = {"status": "skipped_no_valid_candidate", "records": []}
     if selection_status == "selected" and not synthetic and final_selected_opt_result is not None:
+        _budget = get_active_budget()
+        if _budget is not None:
+            _budget.set_category("paired")
         target_layers = {
             "original_affect_hypothesis": dict(baseline.original_affect_hypothesis),
             "projected_feasible_initialisation": (
@@ -1601,32 +1636,42 @@ def run_context(
             context.target_state,
             candidate="styled",
         )
-        learned_vs_reference = _paired_validation(
-            pair_id=f"{context.gesture}-{context.target_state}-learned-vs-reference",
-            context=target_context,
-            learned=final_selected_opt_result,
-            other=reference_result,
-            target_layers=target_layers,
-            out_path=out_dir / "paired_learned_vs_reference.json",
-            cache_root=_short_cache_root(out_dir, "pr"),
-            repeats=paired_validation_repeats,
-            evaluator_name=evaluator_name,
-            model=model,
-            temperature=temperature,
-        )
-        learned_vs_baseline = _paired_validation(
-            pair_id=f"{context.gesture}-{context.target_state}-learned-vs-baseline",
-            context=target_context,
-            learned=final_selected_opt_result,
-            other=baseline_result,
-            target_layers=target_layers,
-            out_path=out_dir / "paired_learned_vs_baseline.json",
-            cache_root=_short_cache_root(out_dir, "pb"),
-            repeats=paired_validation_repeats,
-            evaluator_name=evaluator_name,
-            model=model,
-            temperature=temperature,
-        )
+        try:
+            learned_vs_reference = _paired_validation(
+                pair_id=f"{context.gesture}-{context.target_state}-learned-vs-reference",
+                context=target_context,
+                learned=final_selected_opt_result,
+                other=reference_result,
+                target_layers=target_layers,
+                out_path=out_dir / "paired_learned_vs_reference.json",
+                cache_root=_short_cache_root(out_dir, "pr"),
+                repeats=paired_validation_repeats,
+                evaluator_name=evaluator_name,
+                model=model,
+                temperature=temperature,
+            )
+        except CallBudgetExhausted:
+            stop = "call_budget_exhausted"
+            learned_vs_reference = {"status": "skipped_call_budget_exhausted", "records": []}
+        try:
+            if stop == "call_budget_exhausted":
+                raise CallBudgetExhausted("budget already exhausted before baseline pairing")
+            learned_vs_baseline = _paired_validation(
+                pair_id=f"{context.gesture}-{context.target_state}-learned-vs-baseline",
+                context=target_context,
+                learned=final_selected_opt_result,
+                other=baseline_result,
+                target_layers=target_layers,
+                out_path=out_dir / "paired_learned_vs_baseline.json",
+                cache_root=_short_cache_root(out_dir, "pb"),
+                repeats=paired_validation_repeats,
+                evaluator_name=evaluator_name,
+                model=model,
+                temperature=temperature,
+            )
+        except CallBudgetExhausted:
+            stop = "call_budget_exhausted"
+            learned_vs_baseline = {"status": "skipped_call_budget_exhausted", "records": []}
         _render_final_assets(
             out_dir,
             final_selected_opt_result,
@@ -1692,7 +1737,9 @@ def run_context(
         (final_vad["valence"] - 0.5) * (target_vad["valence"] - 0.5) >= 0.0
         and (final_vad["arousal"] - 0.5) * (target_vad["arousal"] - 0.5) >= 0.0
     )
-    if stop == "evaluator_failure":
+    if stop == "call_budget_exhausted" or selection_status == "call_budget_exhausted":
+        outcome = "call_budget_exhausted"
+    elif stop == "evaluator_failure":
         outcome = "evaluator_failure"
     elif selection_status != "selected":
         # Distinguish "training never produced a feasible candidate" from
@@ -1944,6 +1991,36 @@ def main(argv: list[str] | None = None) -> int:
         if args.robust_elite_max_feature_error is not None
         else defaults.get("robust_elite_max_feature_error", 0.08)
     )
+    live_estimate = _estimate_live_calls(
+        stage_payload,
+        rounds_max=rounds_max,
+        samples_per_round=samples_per_round,
+        candidate_vlm_repeats=candidate_vlm_repeats,
+        validation_top_k=validation_top_k,
+        validation_vlm_repeats=validation_vlm_repeats,
+        paired_validation_repeats=paired_validation_repeats,
+    )
+    call_budget: GeminiCallBudget | None = None
+    if args.evaluator == "gemini":
+        if args.max_gemini_calls < 1:
+            raise RuntimeError("--max-gemini-calls must be at least 1.")
+        if args.workers != 1:
+            raise RuntimeError(
+                "The Gemini call budget requires --workers 1 so every call is "
+                "counted in a single process."
+            )
+        if int(live_estimate["estimated_total_calls"]) > int(args.max_gemini_calls):
+            raise RuntimeError(
+                f"Estimated maximum Gemini calls "
+                f"({live_estimate['estimated_total_calls']}) exceed the hard "
+                f"ceiling of {args.max_gemini_calls}. Reduce the experimental "
+                "settings or raise --max-gemini-calls explicitly."
+            )
+        call_budget = GeminiCallBudget(
+            args.max_gemini_calls,
+            stage_out / "gemini_call_budget.json",
+        )
+        set_active_budget(call_budget)
     stage_status = []
     for context in contexts:
         result = run_context(
@@ -1978,15 +2055,6 @@ def main(argv: list[str] | None = None) -> int:
             workers=args.workers,
         )
         stage_status.append(result)
-    live_estimate = _estimate_live_calls(
-        stage_payload,
-        rounds_max=rounds_max,
-        samples_per_round=samples_per_round,
-        candidate_vlm_repeats=candidate_vlm_repeats,
-        validation_top_k=validation_top_k,
-        validation_vlm_repeats=validation_vlm_repeats,
-        paired_validation_repeats=paired_validation_repeats,
-    )
     _write_json(
         stage_out / "stage_status.json",
         {
@@ -2009,8 +2077,14 @@ def main(argv: list[str] | None = None) -> int:
                 "robust_elite_max_feature_error": robust_elite_max_feature_error,
                 "workers": args.workers,
                 "resume": bool(args.resume),
+                "max_gemini_calls": (
+                    int(args.max_gemini_calls) if args.evaluator == "gemini" else None
+                ),
             },
             "estimated_live_calls": live_estimate,
+            "gemini_call_budget": (
+                call_budget.summary() if call_budget is not None else None
+            ),
             "resume_summary": {
                 "resume_used": bool(args.resume),
                 "contexts_with_resume_events": int(

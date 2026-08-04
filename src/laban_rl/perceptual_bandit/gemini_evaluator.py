@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field, model_validator
 from laban_rl.config import EMOTION_STATES
 from laban_rl.affect import VAD_KEYS
 from laban_rl.optimiser_api import LabanOptimisationResult
+from laban_rl.perceptual_bandit.call_budget import get_active_budget
 from laban_rl.perceptual_bandit.environment import (
     Context,
     PerceptualEvaluation,
@@ -503,6 +504,9 @@ Return:
         last_error = None
         
         for attempt in range(max_retries + 1):
+            budget = get_active_budget()
+            if budget is not None:
+                budget.charge()
             try:
                 response = self.client.models.generate_content(
                     model=self.model,

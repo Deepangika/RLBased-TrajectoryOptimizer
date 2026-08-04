@@ -419,8 +419,7 @@ Synthetic/mock rewards are never compared with Gemini baseline rewards.
 
 ### Current validation status (engineering validation only)
 
-- Full test suite: 171 passed at the time of the beckon–fear robustness
-  diagnostic.
+- Full test suite: 201 passed after the live-pilot diagnostic additions.
 - Synthetic multi-round convergence diagnostic passed (six contexts, mean
   moved toward hidden optima, covariance adapted, SPD preserved).
 - Medium Stage A mock run: wave–sadness selected a validated candidate;
@@ -433,6 +432,74 @@ Synthetic/mock rewards are never compared with Gemini baseline rewards.
 
 These results validate the learning and integration machinery. They are not
 evidence of human-recognisable affect.
+
+### Live Gemini pilot results (two contexts, gemini-2.5-flash)
+
+Two live Stage A pilot runs were completed with an identical frozen protocol
+(5 rounds x 8 samples, 2 search repeats, top-k 4 x 5 validation repeats,
+2 x 5 paired repeats, robust margin 0.08, hard 110-call budget per run):
+
+| Context | Calls used | Abs reward vs baseline | Paired vs baseline | Paired vs reference | Corrected outcome |
+|---|---|---|---|---|---|
+| beckon–fear | 79/110 | −0.096 (worse) | 5/5 (strong) | 3/5 (inconclusive) | `paired_only_improvement` |
+| wave–sadness | 75/110 | −0.038 (worse) | 2/5 (inconclusive) | 1/5 (none) | `no_perceptual_improvement` |
+
+Key findings from the offline diagnostic
+(`scripts/evaluation/analyse_live_pilot_diagnostics.py`):
+
+- absolute VAD reward and paired preference diverged in beckon–fear and
+  agreed (both negative) in wave–sadness;
+- the reward regression is driven by dominance error in beckon–fear and
+  valence error in wave–sadness;
+- learned motions have substantially higher jerk than baselines
+  (beckon: ~5x, wave: ~3x RMS joint jerk), and Gemini reasoning explicitly
+  codes this as "erratic/trembling" (rewarded for fear, penalised for
+  sadness);
+- the earlier `relative_preference_improvement` label for wave–sadness was
+  too generous for a 2/5 raw count and has been superseded by taxonomy v2.
+
+Further balanced-matrix expansion is paused until the perceptual objective
+and preservation/smoothness trade-off are re-examined. These are
+machine-evaluator (Gemini) results only; no human perceptual evidence exists.
+
+### Success taxonomy (v2): execution vs selection vs perception
+
+Stage summaries distinguish three claims that must never be conflated:
+
+- **execution_success** — the run completed without evaluator failure or
+  budget exhaustion;
+- **selection_success** — an independently validated feasible candidate was
+  selected;
+- **perceptual_improvement** — the selected motion improved under a
+  predefined perceptual criterion (conservative paired rule for 5 repeats:
+  >=4/5 strong, 2–3/5 weak/inconclusive, <=1/5 none; raw counts are always
+  recorded beside labels).
+
+`all_successful` in `stage_status.json` is an execution/selection statement
+only. The per-context `corrected_assessment` block (taxonomy v2, in
+`stage_status.json`, `stopping_reason.json`, and `profile_comparison.json`)
+is the only place a perceptual claim may be quoted from.
+
+### Offline pilot diagnostics
+
+Analyse saved live artifacts (zero API calls, no new learning):
+
+```text
+python scripts/evaluation/analyse_live_pilot_diagnostics.py \
+  --beckon-fear-run outputs/experiments/outer_learning_beckon_fear_live_flash_v1 \
+  --wave-sadness-run outputs/experiments/outer_learning_wave_sadness_live_flash_v1 \
+  --baseline-root outputs/experiments/baseline_fixed_profiles \
+  --out outputs/experiments/live_pilot_diagnostics_v1
+```
+
+It produces reward decomposition, per-round search behaviour,
+training-to-validation robustness, gesture-preservation/motion-quality
+metrics, transparent keyword coding of evaluator reasoning, a metric
+agreement table, nine plots, and corrected (taxonomy v2) stage summaries.
+It runs integrity checks first (model/temperature match, context separation,
+covariance SPD and initial != final, selected-candidate validation
+feasibility, call accounting including retries, raw paired counts) and
+fails loudly if any check fails.
 
 ### Commands
 
@@ -678,8 +745,8 @@ Run the complete test suite:
 
 (or `uv run --with pytest python -m pytest -q` with uv-managed environments)
 
-Current suite status: 171 tests passing at the time of the beckon–fear
-robustness diagnostic.
+Current suite status: 201 tests passing after the live-pilot diagnostic and
+corrected-taxonomy additions.
 
 ## Normalization calibration
 

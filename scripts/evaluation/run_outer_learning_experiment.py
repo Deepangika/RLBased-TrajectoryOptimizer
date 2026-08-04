@@ -49,6 +49,7 @@ from laban_rl.perceptual_bandit.call_budget import (
     set_active_budget,
 )
 from laban_rl.perceptual_bandit.gemini_evaluator import GeminiProVideoEvaluator
+from laban_rl.perceptual_bandit.outcome_taxonomy import assess_perceptual_outcome
 from laban_rl.perceptual_bandit.outer_learning import (
     ContextualOuterLearner,
     LatentGaussianCEMDistribution,
@@ -1773,6 +1774,20 @@ def run_context(
     else:
         outcome = "mock_validation_complete"
 
+    corrected_assessment = assess_perceptual_outcome(
+        execution_success=stop not in ("evaluator_failure", "call_budget_exhausted"),
+        selection_success=selection_status == "selected",
+        selected_validation_reward=(
+            float(final_selected_result["validation_reward"])
+            if final_selected_result is not None
+            else None
+        ),
+        baseline_validation_reward=baseline_validation_reward,
+        paired_vs_baseline=learned_vs_baseline,
+        paired_vs_reference=learned_vs_reference,
+        comparison_status=comparison_status,
+    )
+
     profile_comparison = {
         "reference_profile": load_baseline_motion(
             context.gesture,
@@ -1825,6 +1840,7 @@ def run_context(
             "learned_vs_baseline": learned_vs_baseline,
         },
         "outcome": outcome,
+        "corrected_assessment": corrected_assessment,
     }
     if selection_status == "selected" and learned_vs_baseline.get("status") not in {"synthetic_not_run", "complete"}:
         raise RuntimeError("Baseline comparison is mandatory for final outcomes.")
@@ -1876,6 +1892,7 @@ def run_context(
             "selection_status": selection_status,
             "rounds_completed": len(round_history),
             "comparison_status": comparison_status,
+            "corrected_assessment": corrected_assessment,
         },
     )
     _write_json(
@@ -1935,6 +1952,7 @@ def run_context(
         "context": asdict(context),
         "stopping_reason": stop,
         "outcome": outcome,
+        "corrected_assessment": corrected_assessment,
         "selection_status": selection_status,
         "selected_validation_reward": selected_validation_reward,
         "baseline_validation_reward": baseline_validation_reward,
@@ -2061,6 +2079,22 @@ def main(argv: list[str] | None = None) -> int:
             "stage": args.stage,
             "all_successful": all(
                 _successful_outcome(item["outcome"]) for item in stage_status
+            ),
+            "all_successful_meaning": (
+                "execution/selection success only; see corrected_assessment "
+                "per context for perceptual outcomes"
+            ),
+            "all_executions_successful": all(
+                bool(item.get("corrected_assessment", {}).get("execution_success", False))
+                for item in stage_status
+            ),
+            "all_selections_successful": all(
+                bool(item.get("corrected_assessment", {}).get("selection_success", False))
+                for item in stage_status
+            ),
+            "all_perceptual_improvements": all(
+                item.get("corrected_assessment", {}).get("perceptual_improvement") is True
+                for item in stage_status
             ),
             "saved_run_settings": {
                 "evaluator": args.evaluator,

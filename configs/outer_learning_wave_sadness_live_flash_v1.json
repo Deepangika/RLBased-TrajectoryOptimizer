@@ -1,0 +1,38 @@
+{
+  "format_version": 1,
+  "experiment_name": "outer_learning_wave_sadness_live_flash_v1",
+  "baseline_experiment_name": "fixed_profile_baseline_v1",
+  "description": "Live wave-sadness Gemini Stage A run replicating the frozen beckon-fear live protocol exactly: gemini-2.5-flash, temperature 0.2, 5 rounds x 8 samples x 2 repeats, validation top-k 4 x 5 repeats, 2 paired comparisons x 5 repeats, hard 110-call ceiling. Official feasibility tolerance 0.10; robust ranking margin 0.08 (ordering only, never redefines feasibility). Inner-optimiser settings and projected feasible initialisation come from the baseline matrix. Canonical VAD target unchanged (no recalibration) to preserve a clean replication.",
+  "primary_gestures": [
+    "wave"
+  ],
+  "defaults": {
+    "rounds_min": 3,
+    "rounds_max": 4,
+    "samples_per_round": 8,
+    "elite_count": 3,
+    "candidate_vlm_repeats": 1,
+    "validation_top_k": 4,
+    "validation_vlm_repeats": 1,
+    "paired_validation_repeats": 1,
+    "robust_elite_max_feature_error": 0.08
+  },
+  "stages": {
+    "mock": {
+      "contexts": [
+        { "gesture": "wave", "target_state": "sadness" }
+      ]
+    },
+    "stage_a": {
+      "contexts": [
+        { "gesture": "wave", "target_state": "sadness" }
+      ]
+    },
+    "stage_b": {
+      "contexts": []
+    },
+    "full": {
+      "contexts": []
+    }
+  }
+}

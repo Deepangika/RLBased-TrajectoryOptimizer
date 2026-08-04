@@ -51,6 +51,7 @@ from laban_rl.perceptual_bandit.outer_learning import (
     classify_outcome,
     profile_to_vector,
     require_reward_consumption,
+    robust_rank_key,
     sigmoid,
     stopping_reason,
     vector_to_profile,
@@ -121,6 +122,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--realisation-penalty-weight", type=float, default=0.25)
     parser.add_argument("--max-feature-error-threshold", type=float, default=0.10)
+    parser.add_argument(
+        "--robust-elite-max-feature-error",
+        type=float,
+        default=None,
+        help=(
+            "Robust-elite ranking margin. Candidates at or below this maximum "
+            "feature error are ranked as robustly feasible. Does not redefine "
+            "formal feasibility, which stays at --max-feature-error-threshold."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -264,7 +275,60 @@ def _checkpoint_record_is_complete(
     return True
 
 
-def _checkpoint_to_completed_sample(payload: dict[str, Any]) -> LatentSample:
+def _robustness_fields(
+    *,
+    feasible: bool,
+    result_dict: dict[str, Any],
+    tolerance: float,
+    robust_margin: float,
+    sample_index: int,
+) -> dict[str, Any]:
+    """Diagnostic ranking fields. Never redefines formal feasibility."""
+    raw_error = result_dict.get("max_abs_feature_error")
+    max_error = float(raw_error) if raw_error is not None else None
+    robust = bool(feasible and max_error is not None and max_error <= robust_margin)
+    if not feasible:
+        category = "infeasible"
+    elif robust:
+        category = "robust_feasible"
+    else:
+        category = "marginal_feasible"
+    return {
+        "strictly_feasible": bool(feasible),
+        "robustly_feasible": robust,
+        "max_abs_feature_error": max_error,
+        "distance_to_official_tolerance": (
+            float(tolerance) - max_error if max_error is not None else None
+        ),
+        "distance_to_robust_margin": (
+            float(robust_margin) - max_error if max_error is not None else None
+        ),
+        "ranking_category": category,
+        "sample_index": int(sample_index),
+    }
+
+
+def _checkpoint_to_completed_sample(
+    payload: dict[str, Any],
+    *,
+    tolerance: float,
+    robust_margin: float,
+) -> LatentSample:
+    result = payload["result"] if isinstance(payload.get("result"), dict) else {}
+    metadata = {
+        "mean_observed_vad": result.get("mean_observed_vad"),
+        "realisation_rmse": result.get("realisation_rmse"),
+        "candidate_seed": int(payload["candidate_seed"]),
+    }
+    metadata.update(
+        _robustness_fields(
+            feasible=bool(payload["feasible"]),
+            result_dict=result,
+            tolerance=tolerance,
+            robust_margin=robust_margin,
+            sample_index=int(payload["sample_index"]),
+        )
+    )
     return LatentSample(
         sample_id=str(payload["sample_id"]),
         round_index=int(payload["round_index"]),
@@ -273,18 +337,7 @@ def _checkpoint_to_completed_sample(payload: dict[str, Any]) -> LatentSample:
         reward=float(payload["reward"]),
         feasible=bool(payload["feasible"]),
         evaluation_consumed=True,
-        metadata={
-            "mean_observed_vad": (
-                payload["result"].get("mean_observed_vad")
-                if isinstance(payload.get("result"), dict)
-                else None
-            ),
-            "realisation_rmse": (
-                payload["result"].get("realisation_rmse")
-                if isinstance(payload.get("result"), dict)
-                else None
-            ),
-        },
+        metadata=metadata,
     )
 
 
@@ -359,6 +412,7 @@ def _checkpoint_settings_payload(
     maximum_action_std_for_convergence: float,
     realisation_penalty_weight: float,
     max_feature_error_threshold: float,
+    robust_elite_max_feature_error: float,
     seed: int,
 ) -> dict[str, Any]:
     return {
@@ -386,6 +440,7 @@ def _checkpoint_settings_payload(
         "maximum_action_std_for_convergence": float(maximum_action_std_for_convergence),
         "realisation_penalty_weight": float(realisation_penalty_weight),
         "max_feature_error_threshold": float(max_feature_error_threshold),
+        "robust_elite_max_feature_error": float(robust_elite_max_feature_error),
         "seed": int(seed),
     }
 
@@ -873,6 +928,7 @@ def run_context(
     realisation_penalty_weight: float,
     max_feature_error_threshold: float,
     seed: int,
+    robust_elite_max_feature_error: float = 0.08,
     resume: bool = False,
     workers: int = 1,
 ) -> dict[str, Any]:
@@ -911,6 +967,11 @@ def run_context(
     optimiser_overrides.setdefault("seed", seed)
     if workers < 1:
         raise ValueError("workers must be at least 1.")
+    if not 0.0 < robust_elite_max_feature_error <= max_feature_error_threshold:
+        raise ValueError(
+            "robust_elite_max_feature_error must be positive and must not "
+            "exceed the official max_feature_error_threshold."
+        )
     synthetic_invalid = evaluator_name == "synthetic_invalid"
     synthetic = evaluator_name == "synthetic" or synthetic_invalid
     effective_workers = 1 if synthetic else workers
@@ -939,6 +1000,7 @@ def run_context(
         maximum_action_std_for_convergence=maximum_action_std_for_convergence,
         realisation_penalty_weight=realisation_penalty_weight,
         max_feature_error_threshold=max_feature_error_threshold,
+        robust_elite_max_feature_error=robust_elite_max_feature_error,
         seed=seed,
     )
     checkpoint_state_path = _checkpoint_state_file(out_dir)
@@ -1061,7 +1123,11 @@ def run_context(
                     sample_index=sample_index,
                     candidate_seed=candidate_seed,
                 ):
-                    completed = _checkpoint_to_completed_sample(checkpoint_payload)
+                    completed = _checkpoint_to_completed_sample(
+                        checkpoint_payload,
+                        tolerance=max_feature_error_threshold,
+                        robust_margin=robust_elite_max_feature_error,
+                    )
                     sample_records.append(
                         (
                             sample_index,
@@ -1131,6 +1197,14 @@ def run_context(
                         metadata={
                             "mean_observed_vad": result_dict.get("mean_observed_vad"),
                             "realisation_rmse": result_dict.get("realisation_rmse"),
+                            "candidate_seed": int(payload["candidate_seed"]),
+                            **_robustness_fields(
+                                feasible=feasible,
+                                result_dict=result_dict,
+                                tolerance=max_feature_error_threshold,
+                                robust_margin=robust_elite_max_feature_error,
+                                sample_index=sample_index,
+                            ),
                         },
                     )
                     sample_records.append(
@@ -1214,6 +1288,14 @@ def run_context(
                             metadata={
                                 "mean_observed_vad": result_dict.get("mean_observed_vad"),
                                 "realisation_rmse": result_dict.get("realisation_rmse"),
+                                "candidate_seed": int(payload["candidate_seed"]),
+                                **_robustness_fields(
+                                    feasible=feasible,
+                                    result_dict=result_dict,
+                                    tolerance=max_feature_error_threshold,
+                                    robust_margin=robust_elite_max_feature_error,
+                                    sample_index=sample_index,
+                                ),
                             },
                         )
                         sample_records.append(
@@ -1248,14 +1330,21 @@ def run_context(
         if stop == "evaluator_failure":
             break
         sample_records.sort(key=lambda item: item[0])
+        robust_count = 0
+        marginal_count = 0
         for sample_index, completed, result_dict, optimisation_summary in sample_records:
             reward = float(completed.reward)
             reasons = _canonical_feasibility(
                 result_dict,
                 tolerance=max_feature_error_threshold,
             )[1]
+            metadata = completed.metadata or {}
             if completed.feasible:
                 feasible_count += 1
+                if bool(metadata.get("robustly_feasible", False)):
+                    robust_count += 1
+                else:
+                    marginal_count += 1
             completed_samples.append(completed)
             round_rewards.append(reward)
             sample_row = {
@@ -1273,6 +1362,12 @@ def run_context(
                 "mean_vad_reward": result_dict.get("mean_vad_reward"),
                 "max_abs_feature_error": result_dict.get("max_abs_feature_error"),
                 "synthetic_objective_distance": result_dict.get("synthetic_objective_distance"),
+                "strictly_feasible": bool(metadata.get("strictly_feasible", completed.feasible)),
+                "robustly_feasible": bool(metadata.get("robustly_feasible", False)),
+                "distance_to_official_tolerance": metadata.get("distance_to_official_tolerance"),
+                "distance_to_robust_margin": metadata.get("distance_to_robust_margin"),
+                "ranking_category": metadata.get("ranking_category"),
+                "candidate_seed": metadata.get("candidate_seed"),
             }
             for key in FEATURE_KEYS:
                 sample_row[key] = completed.action[key]
@@ -1298,11 +1393,15 @@ def run_context(
         diagnostics = distribution.last_update
         covariance_matrices.append(np.asarray(distribution.covariance, dtype=float).copy())
         for elite in elites:
+            elite_metadata = elite.metadata or {}
             elite_history.append(
                 {
                     "round": round_index,
                     "sample_id": elite.sample_id,
                     "reward": elite.reward,
+                    "ranking_category": elite_metadata.get("ranking_category"),
+                    "robustly_feasible": bool(elite_metadata.get("robustly_feasible", False)),
+                    "max_abs_feature_error": elite_metadata.get("max_abs_feature_error"),
                 }
             )
         mean_profile = distribution.mean_action()
@@ -1353,7 +1452,17 @@ def run_context(
                 "best_reward": round_best,
                 "mean_reward": float(np.mean(round_rewards)) if round_rewards else float("nan"),
                 "feasible_candidates": feasible_count,
+                "robust_candidates": robust_count,
+                "marginal_candidates": marginal_count,
                 "elite_count": len(elites),
+                "marginal_elites_used": int(
+                    sum(
+                        1
+                        for elite in elites
+                        if not bool((elite.metadata or {}).get("robustly_feasible", True))
+                    )
+                ),
+                "insufficient_robust_candidates": bool(robust_count < len(elites)),
                 "action_std": current_std,
             }
         )
@@ -1386,12 +1495,13 @@ def run_context(
             break
 
     validation_rows: list[dict[str, Any]] = []
+    had_feasible_training = False
     if stop != "evaluator_failure":
         feasible_ranked = sorted(
             [row for row in archived_records if bool(row["sample"].feasible)],
-            key=lambda row: float(row["sample"].reward),
-            reverse=True,
+            key=lambda row: robust_rank_key(row["sample"]),
         )
+        had_feasible_training = bool(feasible_ranked)
         if not feasible_ranked:
             selection_status = "no_valid_candidate"
             stop = stop or "no_feasible_candidates"
@@ -1437,6 +1547,24 @@ def run_context(
                     "ineligibility_reasons": reasons,
                     "profile": dict(item["sample"].action),
                     "result": result_dict,
+                    "training_seed": (item["sample"].metadata or {}).get("candidate_seed"),
+                    "validation_seed": int(seed),
+                    "training_max_abs_feature_error": (item["sample"].metadata or {}).get("max_abs_feature_error"),
+                    "validation_max_abs_feature_error": result_dict.get("max_abs_feature_error"),
+                    "training_realisation_rmse": (item["sample"].metadata or {}).get("realisation_rmse"),
+                    "validation_realisation_rmse": result_dict.get("realisation_rmse"),
+                    "training_ranking_category": (item["sample"].metadata or {}).get("ranking_category"),
+                    "training_robustly_feasible": bool(
+                        (item["sample"].metadata or {}).get("robustly_feasible", False)
+                    ),
+                    "feasibility_survived_seed_change": bool(validation_feasible),
+                    "max_feature_error_change": (
+                        float(result_dict["max_abs_feature_error"])
+                        - float((item["sample"].metadata or {})["max_abs_feature_error"])
+                        if result_dict.get("max_abs_feature_error") is not None
+                        and (item["sample"].metadata or {}).get("max_abs_feature_error") is not None
+                        else None
+                    ),
                 }
             )
             if not validation_feasible:
@@ -1567,7 +1695,14 @@ def run_context(
     if stop == "evaluator_failure":
         outcome = "evaluator_failure"
     elif selection_status != "selected":
-        outcome = "no_feasible_candidates"
+        # Distinguish "training never produced a feasible candidate" from
+        # "feasible training candidates existed but none survived independent
+        # validation". Both remain unsuccessful stage outcomes.
+        outcome = (
+            "no_validation_feasible_candidate"
+            if had_feasible_training
+            else "no_feasible_candidates"
+        )
     elif synthetic:
         final_distance = float(final_selected_result["result"]["synthetic_objective_distance"])
         if final_distance <= 0.03:
@@ -1672,6 +1807,9 @@ def run_context(
             "maximum_eigenvalue": maximum_eigenvalue,
             "covariance_history_rounds": covariance_history_rounds,
             "round_weight_decay": round_weight_decay,
+            "realisation_penalty_weight": realisation_penalty_weight,
+            "max_feature_error_threshold": max_feature_error_threshold,
+            "robust_elite_max_feature_error": robust_elite_max_feature_error,
             "baseline_directory": str(BASELINE_ROOT),
             "selection_status": selection_status,
             "comparison_status": comparison_status,
@@ -1801,6 +1939,11 @@ def main(argv: list[str] | None = None) -> int:
     validation_top_k = int(args.validation_top_k or defaults["validation_top_k"])
     validation_vlm_repeats = int(args.validation_vlm_repeats or defaults["validation_vlm_repeats"])
     paired_validation_repeats = int(args.paired_validation_repeats or defaults["paired_validation_repeats"])
+    robust_elite_max_feature_error = float(
+        args.robust_elite_max_feature_error
+        if args.robust_elite_max_feature_error is not None
+        else defaults.get("robust_elite_max_feature_error", 0.08)
+    )
     stage_status = []
     for context in contexts:
         result = run_context(
@@ -1829,6 +1972,7 @@ def main(argv: list[str] | None = None) -> int:
             maximum_action_std_for_convergence=args.maximum_action_std_for_convergence,
             realisation_penalty_weight=args.realisation_penalty_weight,
             max_feature_error_threshold=args.max_feature_error_threshold,
+            robust_elite_max_feature_error=robust_elite_max_feature_error,
             seed=args.seed,
             resume=args.resume,
             workers=args.workers,
@@ -1861,6 +2005,8 @@ def main(argv: list[str] | None = None) -> int:
                 "validation_top_k": validation_top_k,
                 "validation_vlm_repeats": validation_vlm_repeats,
                 "paired_validation_repeats": paired_validation_repeats,
+                "max_feature_error_threshold": args.max_feature_error_threshold,
+                "robust_elite_max_feature_error": robust_elite_max_feature_error,
                 "workers": args.workers,
                 "resume": bool(args.resume),
             },

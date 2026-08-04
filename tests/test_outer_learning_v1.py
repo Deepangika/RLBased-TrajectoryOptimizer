@@ -1049,3 +1049,300 @@ def test_resume_on_fresh_context_starts_normally(tmp_path: Path, monkeypatch: py
     assert result["selection_status"] == "selected"
     assert result["resume_events"] == 0
     assert result["recovered_candidates"] == 0
+
+
+# ---------------------------------------------------------------------------
+# Robust-elite ranking and outcome-taxonomy regression tests
+# ---------------------------------------------------------------------------
+
+from laban_rl.perceptual_bandit.outer_learning import robust_rank_key
+
+
+def _context_kwargs(out_dir, **overrides):
+    kwargs = dict(
+        evaluator_name="synthetic",
+        model="gemini-2.5-flash",
+        temperature=0.2,
+        rounds_min=1,
+        rounds_max=1,
+        samples_per_round=3,
+        elite_count=2,
+        candidate_vlm_repeats=1,
+        validation_top_k=2,
+        validation_vlm_repeats=1,
+        paired_validation_repeats=1,
+        covariance_shrinkage=0.5,
+        covariance_smoothing=0.3,
+        mean_smoothing=0.4,
+        minimum_eigenvalue=1e-3,
+        maximum_eigenvalue=1.0,
+        covariance_history_rounds=3,
+        round_weight_decay=0.5,
+        plateau_patience=3,
+        minimum_reward_improvement=0.01,
+        maximum_action_std_for_convergence=0.04,
+        realisation_penalty_weight=0.25,
+        max_feature_error_threshold=0.10,
+        seed=7,
+        workers=1,
+        resume=False,
+    )
+    kwargs["out_dir"] = out_dir
+    kwargs.update(overrides)
+    return kwargs
+
+
+def _ranked_sample(base, *, reward, feasible=True, robust=True, max_error=0.05, rmse=0.0, index=0):
+    return LatentSample(
+        sample_id=base.sample_id,
+        round_index=base.round_index,
+        action=base.action,
+        latent=base.latent,
+        reward=reward,
+        feasible=feasible,
+        evaluation_consumed=True,
+        metadata={
+            "robustly_feasible": robust,
+            "max_abs_feature_error": max_error,
+            "realisation_rmse": rmse,
+            "sample_index": index,
+        },
+    )
+
+
+def test_formal_feasibility_tolerance_unchanged_by_robust_margin():
+    marginal_result = {
+        "valid_realisation": True,
+        "physically_acceptable": True,
+        "feature_realisation_acceptable": True,
+        "realisation_rmse": 0.05,
+        "max_abs_feature_error": 0.09,
+    }
+    feasible, _ = strict_realisability(marginal_result, tolerance=0.10)
+    assert feasible is True
+    infeasible_result = dict(marginal_result, max_abs_feature_error=0.11)
+    feasible, _ = strict_realisability(infeasible_result, tolerance=0.10)
+    assert feasible is False
+    fields = outer_learning_runner._robustness_fields(
+        feasible=True,
+        result_dict=marginal_result,
+        tolerance=0.10,
+        robust_margin=0.08,
+        sample_index=0,
+    )
+    assert fields["strictly_feasible"] is True
+    assert fields["robustly_feasible"] is False
+    assert fields["ranking_category"] == "marginal_feasible"
+    assert fields["distance_to_official_tolerance"] == pytest.approx(0.01)
+    assert fields["distance_to_robust_margin"] == pytest.approx(-0.01)
+    robust_fields = outer_learning_runner._robustness_fields(
+        feasible=True,
+        result_dict=dict(marginal_result, max_abs_feature_error=0.07),
+        tolerance=0.10,
+        robust_margin=0.08,
+        sample_index=1,
+    )
+    assert robust_fields["robustly_feasible"] is True
+    assert robust_fields["ranking_category"] == "robust_feasible"
+
+
+def test_robust_feasible_outranks_marginal_feasible():
+    distribution = _distribution()
+    bases = distribution.sample_batch(2, round_index=1, prefix="rank")
+    marginal_high = _ranked_sample(bases[0], reward=0.95, robust=False, max_error=0.09, index=0)
+    robust_low = _ranked_sample(bases[1], reward=0.60, robust=True, max_error=0.05, index=1)
+    ranked = sorted([marginal_high, robust_low], key=robust_rank_key)
+    assert ranked[0].sample_id == robust_low.sample_id
+    elites = distribution.update([marginal_high, robust_low], round_index=1, elite_count=1)
+    assert elites[0].sample_id == robust_low.sample_id
+
+
+def test_marginal_feasible_outranks_infeasible_high_reward():
+    distribution = _distribution()
+    bases = distribution.sample_batch(2, round_index=1, prefix="rank")
+    infeasible_high = _ranked_sample(bases[0], reward=0.99, feasible=False, robust=False, max_error=0.5, index=0)
+    marginal = _ranked_sample(bases[1], reward=0.40, robust=False, max_error=0.09, index=1)
+    elites = distribution.update([infeasible_high, marginal], round_index=1, elite_count=2)
+    assert [elite.sample_id for elite in elites] == [marginal.sample_id]
+
+
+def test_marginal_candidates_fill_elite_slots_when_robust_insufficient():
+    distribution = _distribution()
+    bases = distribution.sample_batch(4, round_index=1, prefix="rank")
+    robust = _ranked_sample(bases[0], reward=0.50, robust=True, max_error=0.04, index=0)
+    marginal_a = _ranked_sample(bases[1], reward=0.90, robust=False, max_error=0.09, index=1)
+    marginal_b = _ranked_sample(bases[2], reward=0.80, robust=False, max_error=0.095, index=2)
+    marginal_c = _ranked_sample(bases[3], reward=0.70, robust=False, max_error=0.085, index=3)
+    elites = distribution.update(
+        [robust, marginal_a, marginal_b, marginal_c],
+        round_index=1,
+        elite_count=3,
+    )
+    ids = [elite.sample_id for elite in elites]
+    assert ids == [robust.sample_id, marginal_a.sample_id, marginal_b.sample_id]
+
+
+def test_robust_ranking_is_deterministic():
+    distribution = _distribution()
+    bases = distribution.sample_batch(3, round_index=1, prefix="rank")
+    tied_a = _ranked_sample(bases[0], reward=0.70, robust=True, max_error=0.05, rmse=0.01, index=0)
+    tied_b = _ranked_sample(bases[1], reward=0.70, robust=True, max_error=0.05, rmse=0.01, index=1)
+    other = _ranked_sample(bases[2], reward=0.60, robust=True, max_error=0.05, index=2)
+    first = sorted([tied_b, other, tied_a], key=robust_rank_key)
+    second = sorted([tied_a, tied_b, other], key=robust_rank_key)
+    assert [item.sample_id for item in first] == [item.sample_id for item in second]
+    assert [item.sample_id for item in first] == [
+        tied_a.sample_id,
+        tied_b.sample_id,
+        other.sample_id,
+    ]
+
+
+def _feature_error_evaluate_factory(training_errors, validation_error):
+    """Fake _evaluate_profile with configurable max feature errors."""
+    state = {"training_calls": 0, "validation_calls": 0}
+
+    def fake_evaluate(_environment, _context, profile, out_dir, *, synthetic, synthetic_invalid=False):
+        if "validation" in Path(out_dir).parts:
+            state["validation_calls"] += 1
+            error = validation_error
+            reward = 0.75
+        else:
+            error = training_errors[state["training_calls"] % len(training_errors)]
+            state["training_calls"] += 1
+            reward = 0.9 - 0.01 * state["training_calls"]
+        feasible = error <= 0.10
+        return {
+            "outer_reward": reward,
+            "mean_observed_vad": {"valence": 0.5, "arousal": 0.5, "dominance": 0.5},
+            "mean_vad_reward": reward,
+            "valid_realisation": feasible,
+            "physically_acceptable": feasible,
+            "feature_realisation_acceptable": feasible,
+            "realisation_rmse": error,
+            "max_abs_feature_error": error,
+            "synthetic_objective_distance": 0.2,
+        }, None
+
+    return fake_evaluate, state
+
+
+def test_no_validation_feasible_candidate_outcome(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    _patch_runner_baseline(monkeypatch)
+    fake_evaluate, state = _feature_error_evaluate_factory(
+        training_errors=[0.05, 0.09],
+        validation_error=0.13,
+    )
+    monkeypatch.setattr(outer_learning_runner, "_evaluate_profile", fake_evaluate)
+    context = OuterLearningContext("wave", "anger")
+    out_dir = tmp_path / "validation_all_fail"
+    result = outer_learning_runner.run_context(
+        context=context,
+        **_context_kwargs(out_dir, samples_per_round=2, elite_count=1),
+    )
+    assert state["validation_calls"] >= 1
+    assert result["selection_status"] == "no_valid_candidate"
+    assert result["outcome"] == "no_validation_feasible_candidate"
+    assert outer_learning_runner._successful_outcome(result["outcome"]) is False
+    assert not (out_dir / "selected_validated_profile.json").exists()
+    assert not (out_dir / "paired_learned_vs_baseline.json").exists()
+    assert not (out_dir / "paired_learned_vs_reference.json").exists()
+    assert not (out_dir / "final_motion.mp4").exists()
+    assert not (out_dir / "final_motion.gif").exists()
+
+
+def test_zero_feasible_training_still_reports_no_feasible_candidates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    _patch_runner_baseline(monkeypatch)
+    context = OuterLearningContext("wave", "anger")
+    out_dir = tmp_path / "no_training_feasible"
+    result = outer_learning_runner.run_context(
+        context=context,
+        **_context_kwargs(out_dir, evaluator_name="synthetic_invalid", samples_per_round=2, elite_count=1),
+    )
+    assert result["selection_status"] == "no_valid_candidate"
+    assert result["outcome"] == "no_feasible_candidates"
+
+
+def test_robustness_fields_are_saved(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    _patch_runner_baseline(monkeypatch)
+    fake_evaluate, _state = _feature_error_evaluate_factory(
+        training_errors=[0.05, 0.09],
+        validation_error=0.05,
+    )
+    monkeypatch.setattr(outer_learning_runner, "_evaluate_profile", fake_evaluate)
+    context = OuterLearningContext("wave", "anger")
+    out_dir = tmp_path / "robustness_fields"
+    result = outer_learning_runner.run_context(
+        context=context,
+        **_context_kwargs(out_dir, samples_per_round=2, elite_count=1),
+    )
+    rows = _read_csv_rows(out_dir / "sample_history.csv")
+    assert {"strictly_feasible", "robustly_feasible", "ranking_category", "distance_to_official_tolerance", "distance_to_robust_margin"}.issubset(rows[0])
+    categories = {row["ranking_category"] for row in rows}
+    assert categories == {"robust_feasible", "marginal_feasible"}
+    for row in rows:
+        assert row["strictly_feasible"] == "True"
+        if row["ranking_category"] == "robust_feasible":
+            assert row["robustly_feasible"] == "True"
+        else:
+            assert row["robustly_feasible"] == "False"
+    validation_payload = json.loads((out_dir / "independent_validation.json").read_text(encoding="utf-8"))
+    candidate = validation_payload["candidates"][0]
+    assert candidate["training_seed"] is not None
+    assert candidate["validation_seed"] == 7
+    assert candidate["training_max_abs_feature_error"] is not None
+    assert candidate["validation_max_abs_feature_error"] == pytest.approx(0.05)
+    assert candidate["feasibility_survived_seed_change"] is True
+    assert candidate["max_feature_error_change"] is not None
+    # Robust training candidate must be validated ahead of the marginal one.
+    assert candidate["training_ranking_category"] == "robust_feasible"
+    assert result["selection_status"] == "selected"
+
+
+def test_independent_validation_cannot_be_bypassed_by_robust_status(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    _patch_runner_baseline(monkeypatch)
+    # Training candidates are all robust, but independent validation fails.
+    fake_evaluate, state = _feature_error_evaluate_factory(
+        training_errors=[0.02],
+        validation_error=0.20,
+    )
+    monkeypatch.setattr(outer_learning_runner, "_evaluate_profile", fake_evaluate)
+    context = OuterLearningContext("wave", "anger")
+    out_dir = tmp_path / "no_bypass"
+    result = outer_learning_runner.run_context(
+        context=context,
+        **_context_kwargs(out_dir, samples_per_round=2, elite_count=1),
+    )
+    assert state["validation_calls"] >= 1
+    assert result["selection_status"] == "no_valid_candidate"
+    assert result["outcome"] == "no_validation_feasible_candidate"
+    assert not (out_dir / "selected_validated_profile.json").exists()
+
+
+def test_resume_rejects_changed_robust_margin(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    _patch_runner_baseline(monkeypatch)
+    context = OuterLearningContext("wave", "anger")
+    out_dir = tmp_path / "resume_robust_margin"
+    outer_learning_runner.run_context(
+        context=context,
+        **_context_kwargs(out_dir, robust_elite_max_feature_error=0.08),
+    )
+    with pytest.raises(RuntimeError, match="saved run settings differ"):
+        outer_learning_runner.run_context(
+            context=context,
+            **_context_kwargs(out_dir, robust_elite_max_feature_error=0.06, resume=True),
+        )
+
+
+def test_robust_margin_cannot_exceed_official_tolerance(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    _patch_runner_baseline(monkeypatch)
+    context = OuterLearningContext("wave", "anger")
+    with pytest.raises(ValueError, match="robust_elite_max_feature_error"):
+        outer_learning_runner.run_context(
+            context=context,
+            **_context_kwargs(tmp_path / "bad_margin", robust_elite_max_feature_error=0.20),
+        )
+
+
+def test_no_validation_feasible_outcome_is_not_successful():
+    assert outer_learning_runner._successful_outcome("no_validation_feasible_candidate") is False

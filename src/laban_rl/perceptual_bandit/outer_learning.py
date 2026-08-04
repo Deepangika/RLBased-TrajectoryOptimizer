@@ -106,6 +106,32 @@ def penalized_vad_reward(
     ) - realisation_penalty_weight * float(realisation_error)
 
 
+def robust_rank_key(sample: LatentSample) -> tuple[float, float, float, float, int]:
+    """Lexicographic feasibility-first ranking key for formally feasible samples.
+
+    Sort ascending. Ordering priority:
+    1. robustly feasible candidates before marginally feasible ones;
+    2. higher reward;
+    3. lower maximum absolute feature error;
+    4. lower realisation RMSE;
+    5. deterministic sample-index tie-breaker.
+
+    Samples without robustness metadata (e.g. synthetic diagnostics) are
+    treated as robust so ranking degrades to the original reward ordering.
+    The key never redefines formal feasibility; infeasible candidates must
+    be excluded before ranking.
+    """
+    metadata = sample.metadata or {}
+    robust = metadata.get("robustly_feasible")
+    robust_flag = 1 if (robust is None or bool(robust)) else 0
+    raw_error = metadata.get("max_abs_feature_error")
+    max_error = float(raw_error) if raw_error is not None else 0.0
+    raw_rmse = metadata.get("realisation_rmse")
+    rmse = float(raw_rmse) if raw_rmse is not None else 0.0
+    tie_break = int(metadata.get("sample_index", 0))
+    return (-float(robust_flag), -float(sample.reward), max_error, rmse, tie_break)
+
+
 def classify_outcome(
     *,
     valid_realisation: bool,
@@ -378,7 +404,7 @@ class LatentGaussianCEMDistribution:
                 correlation_matrix=self._correlation_matrix(self.covariance).tolist(),
             )
             return []
-        ranked = sorted(feasible, key=lambda sample: sample.reward, reverse=True)
+        ranked = sorted(feasible, key=robust_rank_key)
         elites = ranked[: max(1, min(elite_count, len(ranked)))]
         self.elite_history.append((round_index, elites))
         if len(self.elite_history) > self.covariance_history_rounds:

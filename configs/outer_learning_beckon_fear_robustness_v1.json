@@ -1,0 +1,38 @@
+{
+  "format_version": 1,
+  "experiment_name": "outer_learning_beckon_fear_robustness_v1",
+  "baseline_experiment_name": "fixed_profile_baseline_v1",
+  "description": "Targeted beckon-fear mock diagnostic testing feasibility-margin-aware elite ranking. Official feasibility tolerance stays at 0.10; robust ranking margin is 0.08 (diagnostic ordering only, never redefines feasibility). Inner-optimiser settings come from the baseline matrix (beckon-fear: maxiter=75, popsize=8, n_timing_basis=5). Mock evaluator only; no Gemini calls.",
+  "primary_gestures": [
+    "beckon"
+  ],
+  "defaults": {
+    "rounds_min": 3,
+    "rounds_max": 4,
+    "samples_per_round": 8,
+    "elite_count": 3,
+    "candidate_vlm_repeats": 1,
+    "validation_top_k": 4,
+    "validation_vlm_repeats": 1,
+    "paired_validation_repeats": 1,
+    "robust_elite_max_feature_error": 0.08
+  },
+  "stages": {
+    "mock": {
+      "contexts": [
+        { "gesture": "beckon", "target_state": "fear" }
+      ]
+    },
+    "stage_a": {
+      "contexts": [
+        { "gesture": "beckon", "target_state": "fear" }
+      ]
+    },
+    "stage_b": {
+      "contexts": []
+    },
+    "full": {
+      "contexts": []
+    }
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "format_version": 1,
+  "experiment_name": "gesture_conditioned_outer_learning_v1",
+  "baseline_experiment_name": "fixed_profile_baseline_v1",
+  "primary_gestures": [
+    "wave",
+    "point",
+    "circle",
+    "beckon",
+    "celebratory_pump"
+  ],
+  "defaults": {
+    "rounds_min": 5,
+    "rounds_max": 8,
+    "samples_per_round": 16,
+    "elite_count": 6,
+    "candidate_vlm_repeats": 2,
+    "validation_top_k": 3,
+    "validation_vlm_repeats": 5,
+    "paired_validation_repeats": 5
+  },
+  "mock_validation_recommendation": {
+    "rounds": 12,
+    "samples_per_round": 24,
+    "elite_count": 8,
+    "seeds": [
+      7,
+      17,
+      27
+    ],
+    "candidate_repeats": 1,
+    "covariance": "full",
+    "covariance_history_rounds": 3
+  },
+  "stages": {
+    "mock": {
+      "contexts": [
+        { "gesture": "beckon", "target_state": "fear" },
+        { "gesture": "wave", "target_state": "anger" },
+        { "gesture": "wave", "target_state": "sadness" },
+        { "gesture": "celebratory_pump", "target_state": "anger" },
+        { "gesture": "point", "target_state": "sadness" },
+        { "gesture": "circle", "target_state": "happiness" }
+      ]
+    },
+    "stage_a": {
+      "contexts": [
+        { "gesture": "beckon", "target_state": "fear" },
+        { "gesture": "wave", "target_state": "sadness" }
+      ]
+    },
+    "stage_b": {
+      "contexts": [
+        { "gesture": "wave", "target_state": "anger" },
+        { "gesture": "celebratory_pump", "target_state": "anger" },
+        { "gesture": "point", "target_state": "sadness" },
+        { "gesture": "circle", "target_state": "happiness" }
+      ]
+    },
+    "full": {
+      "contexts": [
+        { "gesture": "wave", "target_state": "anger" },
+        { "gesture": "wave", "target_state": "disgust" },
+        { "gesture": "wave", "target_state": "fear" },
+        { "gesture": "wave", "target_state": "happiness" },
+        { "gesture": "wave", "target_state": "sadness" },
+        { "gesture": "wave", "target_state": "surprise" },
+        { "gesture": "point", "target_state": "anger" },
+        { "gesture": "point", "target_state": "disgust" },
+        { "gesture": "point", "target_state": "fear" },
+        { "gesture": "point", "target_state": "happiness" },
+        { "gesture": "point", "target_state": "sadness" },
+        { "gesture": "point", "target_state": "surprise" },
+        { "gesture": "circle", "target_state": "anger" },
+        { "gesture": "circle", "target_state": "disgust" },
+        { "gesture": "circle", "target_state": "fear" },
+        { "gesture": "circle", "target_state": "happiness" },
+        { "gesture": "circle", "target_state": "sadness" },
+        { "gesture": "circle", "target_state": "surprise" },
+        { "gesture": "beckon", "target_state": "anger" },
+        { "gesture": "beckon", "target_state": "disgust" },
+        { "gesture": "beckon", "target_state": "fear" },
+        { "gesture": "beckon", "target_state": "happiness" },
+        { "gesture": "beckon", "target_state": "sadness" },
+        { "gesture": "beckon", "target_state": "surprise" },
+        { "gesture": "celebratory_pump", "target_state": "anger" },
+        { "gesture": "celebratory_pump", "target_state": "disgust" },
+        { "gesture": "celebratory_pump", "target_state": "fear" },
+        { "gesture": "celebratory_pump", "target_state": "happiness" },
+        { "gesture": "celebratory_pump", "target_state": "sadness" },
+        { "gesture": "celebratory_pump", "target_state": "surprise" }
+      ]
+    }
+  }
+}

@@ -165,6 +165,7 @@ class PairedPreferenceCache:
         )
         key = hashlib.sha256(_canonical_bytes(identity)).hexdigest()
         path = self._path(key)
+        path.parent.mkdir(parents=True, exist_ok=True)
         observations: list[dict[str, Any]] = []
         if path.exists():
             payload = json.loads(path.read_text(encoding="utf-8"))

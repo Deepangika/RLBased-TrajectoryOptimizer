@@ -295,6 +295,53 @@ original, projected, requested, and achieved Laban profiles; projection and
 realisation errors; VAD changes; preference rates; variability; and path
 preservation metrics.
 
+The completed fixed-profile live run should be preserved under:
+
+```text
+outputs/experiments/baseline_fixed_profiles/
+```
+
+This protected baseline is immutable by default. `run_paired_perceptual_experiment.py`
+and `train_cem_contextual_bandit.py` refuse to write inside that directory unless
+`--overwrite-baseline` is supplied explicitly for developer maintenance.
+
+## Gesture-conditioned outer learning
+
+The next experiment learns a separate Laban-affect distribution for every
+gesture-state context instead of reusing one fixed profile per emotion.
+
+Run the synthetic offline diagnostic first:
+
+```text
+python scripts/evaluation/run_outer_learning_experiment.py \
+  --config configs/outer_learning_diagnostic_v1.json \
+  --stage mock \
+  --evaluator synthetic \
+  --out outputs/experiments/outer_learning_v1
+```
+
+After mock validation passes, run Stage A without Gemini by using the real
+inner optimiser and the mock evaluator:
+
+```text
+python scripts/evaluation/run_outer_learning_experiment.py \
+  --config configs/outer_learning_diagnostic_v1.json \
+  --stage stage_a \
+  --evaluator mock \
+  --out outputs/experiments/outer_learning_v1
+```
+
+The outer learner:
+
+- keeps an independent context distribution for every `(gesture, target_state)`;
+- samples a full-covariance latent Gaussian and maps actions through `sigmoid`;
+- initialises from the preserved fixed-profile baseline, including projected
+  wave targets when present;
+- updates the mean and covariance only from consumed evaluator rewards;
+- records explicit stopping reasons and partial outcomes; and
+- writes per-context histories, validation results, covariance logs, comparison
+  reports, and final motion assets.
+
 Use the paired runner before human validation instead of running separate VAD
 and categorical evaluator passes. It renders each candidate once, stores every
 structured repeat observation in a content-addressed cache, and derives both

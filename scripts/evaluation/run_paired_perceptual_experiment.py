@@ -38,6 +38,7 @@ from laban_rl.perceptual_bandit.experiment import (
 from laban_rl.perceptual_bandit.full_reporting import (
     write_full_experiment_report,
 )
+from laban_rl.perceptual_bandit.baseline import guard_baseline_output_path
 from laban_rl.perceptual_bandit.gemini_evaluator import (
     PROMPT_VERSION,
     SCHEMA_VERSION,
@@ -106,6 +107,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--gesture-wide-camera-limits",
         action="store_true",
         help="Use one camera envelope for every clip of the same gesture.",
+    )
+    parser.add_argument(
+        "--overwrite-baseline",
+        action="store_true",
+        help=(
+            "Developer-only: permit writing inside the protected fixed-profile "
+            "baseline directory."
+        ),
     )
     parser.add_argument("--no-plots", action="store_true")
     args = parser.parse_args(argv)
@@ -403,6 +412,10 @@ def main(argv: list[str] | None = None) -> int:
         return result
 
     destination = _resolve(args.out)
+    guard_baseline_output_path(
+        destination,
+        overwrite_baseline=args.overwrite_baseline,
+    )
     if args.gesture_wide_camera_limits:
         for case in cases:
             inner_runner(

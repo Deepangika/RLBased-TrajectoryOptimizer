@@ -45,6 +45,7 @@ from laban_rl.perceptual_bandit.compatibility import (
     validate_checkpoint,
 )
 from laban_rl.perceptual_bandit.evaluation_cache import PerceptualObservationCache
+from laban_rl.perceptual_bandit.baseline import guard_baseline_output_path
 from laban_rl.perceptual_bandit.selection import (
     select_feasible_incumbent,
     strict_realisability,
@@ -577,6 +578,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Explicitly resume a compatible checkpoint in the output folder.",
     )
+    parser.add_argument(
+        "--overwrite-baseline",
+        action="store_true",
+        help=(
+            "Developer-only: permit writing inside the protected fixed-profile "
+            "baseline directory."
+        ),
+    )
     args = parser.parse_args(argv)
     explicit_values = (
         args.target_valence,
@@ -745,7 +754,13 @@ def validate_checkpoint_context(
         )
 
 
-def safe_output_folder(out_dir: Path, overwrite: bool, resume: bool = False) -> bool:
+def safe_output_folder(
+    out_dir: Path,
+    overwrite: bool,
+    resume: bool = False,
+    *,
+    overwrite_baseline: bool = False,
+) -> bool:
     """
     Ensure output folder is safe. Returns True if resuming from checkpoint.
     
@@ -753,6 +768,10 @@ def safe_output_folder(out_dir: Path, overwrite: bool, resume: bool = False) -> 
     run begins, even when a checkpoint is present.  Without --overwrite, if a
     --resume is required to continue a checkpoint; otherwise an error is raised.
     """
+    guard_baseline_output_path(
+        out_dir,
+        overwrite_baseline=overwrite_baseline,
+    )
     checkpoint_path = out_dir / "latest_checkpoint.pt"
     has_checkpoint = checkpoint_path.exists()
     
@@ -1044,7 +1063,12 @@ def main() -> None:
         out_dir = PROJECT_ROOT / out_dir
 
     # Check if we're resuming from checkpoint
-    is_resuming = safe_output_folder(out_dir, args.overwrite, args.resume)
+    is_resuming = safe_output_folder(
+        out_dir,
+        args.overwrite,
+        args.resume,
+        overwrite_baseline=args.overwrite_baseline,
+    )
 
     # Load checkpoint if resuming
     checkpoint_data = None

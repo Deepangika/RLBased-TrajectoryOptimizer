@@ -1,0 +1,317 @@
+{
+  "description": "Point preliminary Stage A consolidated results. All rewards are Gemini machine-evaluator scores under the original canonical VAD targets; not human perceptual evidence.",
+  "contexts": [
+    {
+      "context": "point-anger",
+      "canonical_target_vad": {
+        "arousal": 0.85,
+        "dominance": 0.8,
+        "valence": 0.15
+      },
+      "effective_target_vad": {
+        "arousal": 0.85,
+        "dominance": 0.8,
+        "valence": 0.15
+      },
+      "target_vad_recalibrated": false,
+      "learned_validation_reward": 0.6833177809300395,
+      "learned_mean_observed_vad": {
+        "arousal": 0.5333333333333333,
+        "dominance": 0.5666666666666668,
+        "valence": 0.6333333333333333
+      },
+      "learned_max_abs_feature_error": 9.50554532338499e-05,
+      "archived_baseline_reward": 0.6639999999999999,
+      "reevaluated_baseline_reward": 0.7374284648759062,
+      "reevaluated_reference_reward": -1.0,
+      "reference_reeval_detail": {
+        "max_abs_feature_error": 0.28903531065631344,
+        "mean_observed_vad": {},
+        "mean_vad_reward": null,
+        "realisation_rmse": 0.13474556109992095,
+        "reward": -1.0,
+        "status": "evaluated"
+      },
+      "improvement_over_archived_baseline": 0.019317780930039552,
+      "improvement_over_reevaluated_baseline": -0.05411068394586671,
+      "paired": {
+        "vs_baseline": {
+          "learned_preference_rate": 0.0,
+          "opponent_preference_rate": 0.6666666666666666,
+          "neither_rate": 0.3333333333333333,
+          "choice_counts": {
+            "neither": 1,
+            "reference": 2,
+            "styled": 0
+          },
+          "mean_confidence": 0.7999999999999999
+        },
+        "vs_reference": {
+          "learned_preference_rate": 1.0,
+          "opponent_preference_rate": 0.0,
+          "neither_rate": 0.0,
+          "choice_counts": {
+            "neither": 0,
+            "reference": 0,
+            "styled": 3
+          },
+          "mean_confidence": 0.8000000000000002
+        }
+      },
+      "feasibility": {
+        "candidates_attempted": 18,
+        "strictly_feasible": 11,
+        "feasible_proportion": 0.6111111111111112,
+        "failures_by_reason": {
+          "infeasible": 7
+        }
+      },
+      "outcome": "relative_preference_improvement",
+      "selection_status": "selected",
+      "stopping_reason": "perceptual_success",
+      "comparison_status": "comparable",
+      "gemini_calls_by_category": {
+        "search": 22,
+        "validation": 6,
+        "paired": 6,
+        "baseline_reevaluation": 3
+      },
+      "gemini_calls_total": 37,
+      "call_ceiling": 65
+    },
+    {
+      "context": "point-disgust",
+      "canonical_target_vad": {
+        "arousal": 0.45,
+        "dominance": 0.6,
+        "valence": 0.1
+      },
+      "effective_target_vad": {
+        "arousal": 0.45,
+        "dominance": 0.6,
+        "valence": 0.1
+      },
+      "target_vad_recalibrated": false,
+      "learned_validation_reward": 0.8266663024682996,
+      "learned_mean_observed_vad": {
+        "arousal": 0.45,
+        "dominance": 0.46666666666666673,
+        "valence": 0.5
+      },
+      "learned_max_abs_feature_error": 2.8661063689039423e-06,
+      "archived_baseline_reward": 0.812,
+      "reevaluated_baseline_reward": 0.8703439661885352,
+      "reevaluated_reference_reward": -1.0,
+      "reference_reeval_detail": {
+        "max_abs_feature_error": 0.28903531065631344,
+        "mean_observed_vad": {},
+        "mean_vad_reward": null,
+        "realisation_rmse": 0.13474556109992095,
+        "reward": -1.0,
+        "status": "evaluated"
+      },
+      "improvement_over_archived_baseline": 0.014666302468299586,
+      "improvement_over_reevaluated_baseline": -0.043677663720235516,
+      "paired": {
+        "vs_baseline": {
+          "learned_preference_rate": 0.0,
+          "opponent_preference_rate": 0.0,
+          "neither_rate": 1.0,
+          "choice_counts": {
+            "neither": 3,
+            "reference": 0,
+            "styled": 0
+          },
+          "mean_confidence": 1.0
+        },
+        "vs_reference": {
+          "learned_preference_rate": 1.0,
+          "opponent_preference_rate": 0.0,
+          "neither_rate": 0.0,
+          "choice_counts": {
+            "neither": 0,
+            "reference": 0,
+            "styled": 3
+          },
+          "mean_confidence": 0.7333333333333334
+        }
+      },
+      "feasibility": {
+        "candidates_attempted": 18,
+        "strictly_feasible": 12,
+        "feasible_proportion": 0.6666666666666666,
+        "failures_by_reason": {
+          "infeasible": 6
+        }
+      },
+      "outcome": "relative_preference_improvement",
+      "selection_status": "selected",
+      "stopping_reason": "perceptual_success",
+      "comparison_status": "comparable",
+      "gemini_calls_by_category": {
+        "search": 24,
+        "validation": 9,
+        "paired": 6,
+        "baseline_reevaluation": 3
+      },
+      "gemini_calls_total": 42,
+      "call_ceiling": 65
+    },
+    {
+      "context": "point-happiness",
+      "canonical_target_vad": {
+        "arousal": 0.75,
+        "dominance": 0.65,
+        "valence": 0.9
+      },
+      "effective_target_vad": {
+        "arousal": 0.75,
+        "dominance": 0.65,
+        "valence": 0.9
+      },
+      "target_vad_recalibrated": false,
+      "learned_validation_reward": 0.822980169219179,
+      "learned_mean_observed_vad": {
+        "arousal": 0.5333333333333333,
+        "dominance": 0.6833333333333332,
+        "valence": 0.5833333333333334
+      },
+      "learned_max_abs_feature_error": 0.0023218058503161054,
+      "archived_baseline_reward": 0.792,
+      "reevaluated_baseline_reward": 0.7733331990297273,
+      "reevaluated_reference_reward": -1.0,
+      "reference_reeval_detail": {
+        "max_abs_feature_error": 0.28903531065631344,
+        "mean_observed_vad": {},
+        "mean_vad_reward": null,
+        "realisation_rmse": 0.13474556109992095,
+        "reward": -1.0,
+        "status": "evaluated"
+      },
+      "improvement_over_archived_baseline": 0.03098016921917901,
+      "improvement_over_reevaluated_baseline": 0.049646970189451745,
+      "paired": {
+        "vs_baseline": {
+          "learned_preference_rate": 0.3333333333333333,
+          "opponent_preference_rate": 0.3333333333333333,
+          "neither_rate": 0.3333333333333333,
+          "choice_counts": {
+            "neither": 1,
+            "reference": 1,
+            "styled": 1
+          },
+          "mean_confidence": 0.8333333333333334
+        },
+        "vs_reference": {
+          "learned_preference_rate": 0.6666666666666666,
+          "opponent_preference_rate": 0.3333333333333333,
+          "neither_rate": 0.0,
+          "choice_counts": {
+            "neither": 0,
+            "reference": 1,
+            "styled": 2
+          },
+          "mean_confidence": 0.7666666666666666
+        }
+      },
+      "feasibility": {
+        "candidates_attempted": 18,
+        "strictly_feasible": 13,
+        "feasible_proportion": 0.7222222222222222,
+        "failures_by_reason": {
+          "infeasible": 5
+        }
+      },
+      "outcome": "relative_preference_improvement",
+      "selection_status": "selected",
+      "stopping_reason": "maximum_budget_reached",
+      "comparison_status": "comparable",
+      "gemini_calls_by_category": {
+        "search": 26,
+        "validation": 9,
+        "paired": 6,
+        "baseline_reevaluation": 3
+      },
+      "gemini_calls_total": 44,
+      "call_ceiling": 65
+    },
+    {
+      "context": "point-surprise",
+      "canonical_target_vad": {
+        "arousal": 0.9,
+        "dominance": 0.5,
+        "valence": 0.6
+      },
+      "effective_target_vad": {
+        "arousal": 0.9,
+        "dominance": 0.5,
+        "valence": 0.6
+      },
+      "target_vad_recalibrated": false,
+      "learned_validation_reward": 0.7833065586644543,
+      "learned_mean_observed_vad": {
+        "arousal": 0.5499999999999999,
+        "dominance": 0.6333333333333333,
+        "valence": 0.5166666666666667
+      },
+      "learned_max_abs_feature_error": 0.05002464640532697,
+      "archived_baseline_reward": 0.776,
+      "reevaluated_baseline_reward": 0.7167000800275063,
+      "reevaluated_reference_reward": -1.0,
+      "reference_reeval_detail": {
+        "max_abs_feature_error": 0.28903531065631344,
+        "mean_observed_vad": {},
+        "mean_vad_reward": null,
+        "realisation_rmse": 0.13474556109992095,
+        "reward": -1.0,
+        "status": "evaluated"
+      },
+      "improvement_over_archived_baseline": 0.007306558664454288,
+      "improvement_over_reevaluated_baseline": 0.06660647863694802,
+      "paired": {
+        "vs_baseline": {
+          "learned_preference_rate": 0.0,
+          "opponent_preference_rate": 0.0,
+          "neither_rate": 1.0,
+          "choice_counts": {
+            "neither": 3,
+            "reference": 0,
+            "styled": 0
+          },
+          "mean_confidence": 1.0
+        },
+        "vs_reference": {
+          "learned_preference_rate": 0.0,
+          "opponent_preference_rate": 0.3333333333333333,
+          "neither_rate": 0.6666666666666666,
+          "choice_counts": {
+            "neither": 2,
+            "reference": 1,
+            "styled": 0
+          },
+          "mean_confidence": 0.9333333333333332
+        }
+      },
+      "feasibility": {
+        "candidates_attempted": 18,
+        "strictly_feasible": 14,
+        "feasible_proportion": 0.7777777777777778,
+        "failures_by_reason": {
+          "infeasible": 4
+        }
+      },
+      "outcome": "quadrant_match_without_stable_reward",
+      "selection_status": "selected",
+      "stopping_reason": "perceptual_success",
+      "comparison_status": "comparable",
+      "gemini_calls_by_category": {
+        "search": 28,
+        "validation": 9,
+        "paired": 6,
+        "baseline_reevaluation": 3
+      },
+      "gemini_calls_total": 46,
+      "call_ceiling": 65
+    }
+  ]
+}

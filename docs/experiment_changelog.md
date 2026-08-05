@@ -1,5 +1,26 @@
 # Experiment changelog
 
+## 2026-08 — Point preliminary Stage A: anger, disgust, happiness, surprise (live Gemini)
+
+Preliminary outer-learning runs for point–{anger,disgust,happiness,surprise}
+with the original canonical VAD targets and original inner-optimiser smoothness
+(no recalibration). Gemini 2.5 Flash, temp 0.2, seed 7, strict feasibility 0.10,
+robust 0.08, feasibility-first selection; 3 rounds × 6 candidates × 2 repeats,
+3 elites, validation top-3 × 3 repeats, paired vs baseline and vs reference × 3
+repeats, hard 65-call ceiling per context. New: each fixed baseline and the
+reference motion were re-evaluated live under the same target and scoring as
+the learned candidate (`baseline_reevaluation.json`, common yardstick).
+
+Results (`docs/point_preliminary_v1/consolidated_table.md`): all four contexts
+completed within budget (37–46 calls) with valid selections. Under the common
+yardstick the learned candidate beat the re-evaluated fixed baseline for
+happiness (+0.050) and surprise (+0.067) but not anger (−0.054) or disgust
+(−0.044); paired preferences were mostly ties/neither, with the baseline
+preferred 2/3 for anger. The reference motion fails the strict feasibility gate
+under every styled target (max feature error 0.289 → reward −1.0), acting as a
+feasibility control only. Machine-evaluator scores; not human perceptual
+evidence.
+
 ## 2026-08 — 2×2 ablation: VAD target recalibration × tightened smoothness (live Gemini)
 
 Controlled factorial on beckon–fear and wave–sadness reusing the two archived

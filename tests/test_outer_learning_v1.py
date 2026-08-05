@@ -1346,3 +1346,19 @@ def test_robust_margin_cannot_exceed_official_tolerance(tmp_path: Path, monkeypa
 
 def test_no_validation_feasible_outcome_is_not_successful():
     assert outer_learning_runner._successful_outcome("no_validation_feasible_candidate") is False
+
+
+def test_synthetic_mode_skips_baseline_reevaluation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    _patch_runner_baseline(monkeypatch)
+    context = OuterLearningContext("wave", "anger")
+    out_dir = tmp_path / "synthetic_no_reeval"
+    result = outer_learning_runner.run_context(
+        context=context,
+        **_context_kwargs(out_dir),
+    )
+    assert result["baseline_reevaluation"]["status"] == "not_run"
+    assert result["baseline_reevaluation"]["candidates"] == {}
+    assert result["reevaluated_baseline_reward"] is None
+    assert result["reevaluated_reference_reward"] is None
+    assert result["improvement_over_reevaluated_baseline"] is None
+    assert not (out_dir / "baseline_reevaluation.json").exists()

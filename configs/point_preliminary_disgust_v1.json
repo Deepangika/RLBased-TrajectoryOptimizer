@@ -1,0 +1,29 @@
+{
+  "format_version": 1,
+  "experiment_name": "point_preliminary_stage_a_v1",
+  "baseline_experiment_name": "fixed_profile_baseline_v1",
+  "primary_gestures": [
+    "point"
+  ],
+  "defaults": {
+    "rounds_min": 3,
+    "rounds_max": 3,
+    "samples_per_round": 6,
+    "elite_count": 3,
+    "candidate_vlm_repeats": 2,
+    "validation_top_k": 3,
+    "validation_vlm_repeats": 3,
+    "paired_validation_repeats": 3
+  },
+  "notes": "Preliminary Stage A for the point gesture. Original canonical VAD targets (no recalibration), original inner smoothness settings. 65-call hard ceiling per context; includes live baseline/reference re-evaluation under the same target and scoring configuration.",
+  "stages": {
+    "stage_a": {
+      "contexts": [
+        {
+          "gesture": "point",
+          "target_state": "disgust"
+        }
+      ]
+    }
+  }
+}

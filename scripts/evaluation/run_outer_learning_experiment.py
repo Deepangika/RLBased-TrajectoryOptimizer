@@ -1735,6 +1735,55 @@ def run_context(
             gesture=context.gesture,
         )
 
+    # Live re-evaluation of the fixed baseline (styled) and reference motions
+    # under the same effective target and scoring configuration as the learned
+    # candidates. Provides a common-yardstick comparison; the archived
+    # baseline reward is retained separately for provenance.
+    baseline_reevaluation: dict[str, Any] = {
+        "status": "not_run",
+        "repeats": int(validation_vlm_repeats),
+        "effective_target_vad": dict(target_context.target_vad or {}),
+        "candidates": {},
+    }
+    if not synthetic and validation_environment is not None:
+        _budget = get_active_budget()
+        if _budget is not None:
+            _budget.set_category("baseline_reevaluation")
+        for candidate_name in ("styled", "reference"):
+            try:
+                motion = load_baseline_motion(
+                    context.gesture,
+                    context.target_state,
+                    candidate=candidate_name,
+                )
+                reeval_step = validation_environment.step_from_result(
+                    context=target_context,
+                    optimisation_result=motion,
+                )
+                reeval_dict = reeval_step.to_dict()
+                baseline_reevaluation["candidates"][candidate_name] = {
+                    "status": "evaluated",
+                    "reward": float(reeval_dict["outer_reward"]),
+                    "mean_vad_reward": reeval_dict.get("mean_vad_reward"),
+                    "mean_observed_vad": dict(
+                        reeval_dict.get("mean_observed_vad") or {}
+                    ),
+                    "realisation_rmse": reeval_dict.get("realisation_rmse"),
+                    "max_abs_feature_error": reeval_dict.get("max_abs_feature_error"),
+                }
+            except CallBudgetExhausted:
+                baseline_reevaluation["candidates"][candidate_name] = {
+                    "status": "call_budget_exhausted",
+                }
+                break
+            except Exception as exc:  # honest failure, never fabricate a reward
+                baseline_reevaluation["candidates"][candidate_name] = {
+                    "status": "evaluator_failure",
+                    "error": str(exc),
+                }
+        baseline_reevaluation["status"] = "completed"
+        _write_json(out_dir / "baseline_reevaluation.json", baseline_reevaluation)
+
     final_vad = dict(
         final_selected_result["mean_observed_vad"] if final_selected_result is not None
         else baseline.baseline_observed_vad
@@ -2021,6 +2070,21 @@ def run_context(
         "selected_validation_reward": selected_validation_reward,
         "baseline_validation_reward": baseline_validation_reward,
         "improvement_over_baseline": delta_vs_baseline,
+        "baseline_reevaluation": baseline_reevaluation,
+        "reevaluated_baseline_reward": (
+            baseline_reevaluation["candidates"].get("styled", {}).get("reward")
+        ),
+        "reevaluated_reference_reward": (
+            baseline_reevaluation["candidates"].get("reference", {}).get("reward")
+        ),
+        "improvement_over_reevaluated_baseline": (
+            selected_validation_reward
+            - float(baseline_reevaluation["candidates"]["styled"]["reward"])
+            if selected_validation_reward is not None
+            and baseline_reevaluation["candidates"].get("styled", {}).get("reward")
+            is not None
+            else None
+        ),
         "comparison_status": comparison_status,
         "initial_synthetic_objective_distance": synthetic_initial_distance,
         "final_synthetic_objective_distance": final_synthetic_distance,

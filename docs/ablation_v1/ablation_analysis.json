@@ -1,0 +1,451 @@
+{
+  "contexts": {
+    "beckon_fear": {
+      "conditions": {
+        "A": {
+          "candidates_attempted": 40,
+          "candidates_feasible": 28,
+          "canonical_target_vad": {
+            "arousal": 0.85,
+            "dominance": 0.2,
+            "valence": 0.1
+          },
+          "corrected_outcome": null,
+          "effective_target_vad": {
+            "arousal": 0.85,
+            "dominance": 0.2,
+            "valence": 0.1
+          },
+          "feasible_proportion": 0.7,
+          "gemini_calls_used": 79,
+          "gesture": "beckon",
+          "paired_vs_baseline": {
+            "learned_fraction": 1.0,
+            "neither_fraction": 0.0,
+            "opponent_fraction": 0.0
+          },
+          "paired_vs_reference": {
+            "learned_fraction": 0.6,
+            "neither_fraction": 0.2,
+            "opponent_fraction": 0.2
+          },
+          "reward_improvement_vs_fixed_baseline": -0.09598500909255547,
+          "rounds_completed": 5,
+          "selected_motion": {
+            "peak_jerk": 42977.36350795701,
+            "reference_rms_jerk": 823.9946302772875,
+            "rms_jerk": 7803.357813239099
+          },
+          "selection_status": "selected",
+          "stopping_reason": "reward_plateau",
+          "target_state": "fear",
+          "target_vad_recalibrated": false
+        },
+        "B": {
+          "candidates_attempted": 40,
+          "candidates_feasible": 26,
+          "canonical_target_vad": {
+            "arousal": 0.85,
+            "dominance": 0.2,
+            "valence": 0.1
+          },
+          "corrected_outcome": "absolute_only_improvement",
+          "effective_target_vad": {
+            "arousal": 0.755,
+            "dominance": 0.3,
+            "valence": 0.3
+          },
+          "feasible_proportion": 0.65,
+          "gemini_calls_used": 83,
+          "gesture": "beckon",
+          "paired_vs_baseline": {
+            "learned_fraction": 0.0,
+            "neither_fraction": 0.0,
+            "opponent_fraction": 1.0
+          },
+          "paired_vs_reference": {
+            "learned_fraction": 1.0,
+            "neither_fraction": 0.0,
+            "opponent_fraction": 0.0
+          },
+          "reward_improvement_vs_fixed_baseline": 0.0018991569761163118,
+          "rounds_completed": 5,
+          "selected_motion": {
+            "peak_jerk": 4419.43390050738,
+            "reference_rms_jerk": 823.9946302772875,
+            "rms_jerk": 1144.7388396761269
+          },
+          "selection_status": "selected",
+          "stopping_reason": "perceptual_success",
+          "target_state": "fear",
+          "target_vad_recalibrated": true
+        },
+        "C": {
+          "candidates_attempted": 40,
+          "candidates_feasible": 23,
+          "canonical_target_vad": {
+            "arousal": 0.85,
+            "dominance": 0.2,
+            "valence": 0.1
+          },
+          "corrected_outcome": "no_perceptual_improvement",
+          "effective_target_vad": {
+            "arousal": 0.85,
+            "dominance": 0.2,
+            "valence": 0.1
+          },
+          "feasible_proportion": 0.575,
+          "gemini_calls_used": 68,
+          "gesture": "beckon",
+          "paired_vs_baseline": {
+            "learned_fraction": 0.0,
+            "neither_fraction": 0.0,
+            "opponent_fraction": 1.0
+          },
+          "paired_vs_reference": {
+            "learned_fraction": 1.0,
+            "neither_fraction": 0.0,
+            "opponent_fraction": 0.0
+          },
+          "reward_improvement_vs_fixed_baseline": -0.16839458411203467,
+          "rounds_completed": 5,
+          "selected_motion": {
+            "peak_jerk": 7693.58788402953,
+            "reference_rms_jerk": 823.9946302772875,
+            "rms_jerk": 1503.7364902250722
+          },
+          "selection_status": "selected",
+          "stopping_reason": "maximum_budget_reached",
+          "target_state": "fear",
+          "target_vad_recalibrated": false
+        },
+        "D": {
+          "candidates_attempted": 40,
+          "candidates_feasible": 26,
+          "canonical_target_vad": {
+            "arousal": 0.85,
+            "dominance": 0.2,
+            "valence": 0.1
+          },
+          "corrected_outcome": "no_perceptual_improvement",
+          "effective_target_vad": {
+            "arousal": 0.755,
+            "dominance": 0.3,
+            "valence": 0.3
+          },
+          "feasible_proportion": 0.65,
+          "gemini_calls_used": 83,
+          "gesture": "beckon",
+          "paired_vs_baseline": {
+            "learned_fraction": 0.2,
+            "neither_fraction": 0.0,
+            "opponent_fraction": 0.8
+          },
+          "paired_vs_reference": {
+            "learned_fraction": 1.0,
+            "neither_fraction": 0.0,
+            "opponent_fraction": 0.0
+          },
+          "reward_improvement_vs_fixed_baseline": -0.00778709317694859,
+          "rounds_completed": 5,
+          "selected_motion": {
+            "peak_jerk": 4147.72974184585,
+            "reference_rms_jerk": 823.9946302772875,
+            "rms_jerk": 1184.4005590980653
+          },
+          "selection_status": "selected",
+          "stopping_reason": "perceptual_success",
+          "target_state": "fear",
+          "target_vad_recalibrated": true
+        }
+      },
+      "contrasts": {
+        "feasible_proportion": {
+          "interaction": 0.125,
+          "status": "complete",
+          "target_recalibration_effect": 0.012500000000000067,
+          "tightened_smoothness_effect": -0.0625,
+          "values": {
+            "A": 0.7,
+            "B": 0.65,
+            "C": 0.575,
+            "D": 0.65
+          }
+        },
+        "paired_vs_baseline_learned_fraction": {
+          "interaction": 1.2,
+          "status": "complete",
+          "target_recalibration_effect": -0.4,
+          "tightened_smoothness_effect": -0.4,
+          "values": {
+            "A": 1.0,
+            "B": 0.0,
+            "C": 0.0,
+            "D": 0.2
+          }
+        },
+        "paired_vs_reference_learned_fraction": {
+          "interaction": -0.4,
+          "status": "complete",
+          "target_recalibration_effect": 0.2,
+          "tightened_smoothness_effect": 0.2,
+          "values": {
+            "A": 0.6,
+            "B": 1.0,
+            "C": 1.0,
+            "D": 1.0
+          }
+        },
+        "reward_improvement_vs_fixed_baseline": {
+          "interaction": 0.0627233248664143,
+          "status": "complete",
+          "target_recalibration_effect": 0.12924582850187893,
+          "tightened_smoothness_effect": -0.04104791258627205,
+          "values": {
+            "A": -0.09598500909255547,
+            "B": 0.0018991569761163118,
+            "C": -0.16839458411203467,
+            "D": -0.00778709317694859
+          }
+        },
+        "selected_rms_jerk": {
+          "interaction": 6339.283042435965,
+          "status": "complete",
+          "target_recalibration_effect": -3488.9774523449896,
+          "tightened_smoothness_effect": -3129.9798017960447,
+          "values": {
+            "A": 7803.357813239099,
+            "B": 1144.7388396761269,
+            "C": 1503.7364902250722,
+            "D": 1184.4005590980653
+          }
+        }
+      }
+    },
+    "wave_sadness": {
+      "conditions": {
+        "A": {
+          "candidates_attempted": 40,
+          "candidates_feasible": 26,
+          "canonical_target_vad": {
+            "arousal": 0.2,
+            "dominance": 0.2,
+            "valence": 0.1
+          },
+          "corrected_outcome": null,
+          "effective_target_vad": {
+            "arousal": 0.2,
+            "dominance": 0.2,
+            "valence": 0.1
+          },
+          "feasible_proportion": 0.65,
+          "gemini_calls_used": 75,
+          "gesture": "wave",
+          "paired_vs_baseline": {
+            "learned_fraction": 0.4,
+            "neither_fraction": 0.4,
+            "opponent_fraction": 0.2
+          },
+          "paired_vs_reference": {
+            "learned_fraction": 0.2,
+            "neither_fraction": 0.0,
+            "opponent_fraction": 0.8
+          },
+          "reward_improvement_vs_fixed_baseline": -0.037896531752122375,
+          "rounds_completed": 5,
+          "selected_motion": {
+            "peak_jerk": 1429.301407671818,
+            "reference_rms_jerk": 60.50135874007481,
+            "rms_jerk": 223.67308493167585
+          },
+          "selection_status": "selected",
+          "stopping_reason": "reward_plateau",
+          "target_state": "sadness",
+          "target_vad_recalibrated": false
+        },
+        "B": {
+          "candidates_attempted": 40,
+          "candidates_feasible": 29,
+          "canonical_target_vad": {
+            "arousal": 0.2,
+            "dominance": 0.2,
+            "valence": 0.1
+          },
+          "corrected_outcome": "absolute_only_improvement",
+          "effective_target_vad": {
+            "arousal": 0.4,
+            "dominance": 0.3,
+            "valence": 0.49
+          },
+          "feasible_proportion": 0.725,
+          "gemini_calls_used": 92,
+          "gesture": "wave",
+          "paired_vs_baseline": {
+            "learned_fraction": 0.0,
+            "neither_fraction": 0.8,
+            "opponent_fraction": 0.2
+          },
+          "paired_vs_reference": {
+            "learned_fraction": 0.0,
+            "neither_fraction": 0.2,
+            "opponent_fraction": 0.8
+          },
+          "reward_improvement_vs_fixed_baseline": 0.18606747326266537,
+          "rounds_completed": 5,
+          "selected_motion": {
+            "peak_jerk": 116.93008429340736,
+            "reference_rms_jerk": 60.50135874007481,
+            "rms_jerk": 69.08984893354817
+          },
+          "selection_status": "selected",
+          "stopping_reason": "perceptual_success",
+          "target_state": "sadness",
+          "target_vad_recalibrated": true
+        },
+        "C": {
+          "candidates_attempted": 40,
+          "candidates_feasible": 23,
+          "canonical_target_vad": {
+            "arousal": 0.2,
+            "dominance": 0.2,
+            "valence": 0.1
+          },
+          "corrected_outcome": "no_perceptual_improvement",
+          "effective_target_vad": {
+            "arousal": 0.2,
+            "dominance": 0.2,
+            "valence": 0.1
+          },
+          "feasible_proportion": 0.575,
+          "gemini_calls_used": 93,
+          "gesture": "wave",
+          "paired_vs_baseline": {
+            "learned_fraction": 0.0,
+            "neither_fraction": 0.2,
+            "opponent_fraction": 0.8
+          },
+          "paired_vs_reference": {
+            "learned_fraction": 0.4,
+            "neither_fraction": 0.0,
+            "opponent_fraction": 0.6
+          },
+          "reward_improvement_vs_fixed_baseline": -0.0043886552509919685,
+          "rounds_completed": 5,
+          "selected_motion": {
+            "peak_jerk": 195.9357988319781,
+            "reference_rms_jerk": 60.50135874007481,
+            "rms_jerk": 76.28531833643801
+          },
+          "selection_status": "selected",
+          "stopping_reason": "maximum_budget_reached",
+          "target_state": "sadness",
+          "target_vad_recalibrated": false
+        },
+        "D": {
+          "candidates_attempted": 40,
+          "candidates_feasible": 26,
+          "canonical_target_vad": {
+            "arousal": 0.2,
+            "dominance": 0.2,
+            "valence": 0.1
+          },
+          "corrected_outcome": "absolute_only_improvement",
+          "effective_target_vad": {
+            "arousal": 0.4,
+            "dominance": 0.3,
+            "valence": 0.49
+          },
+          "feasible_proportion": 0.65,
+          "gemini_calls_used": 91,
+          "gesture": "wave",
+          "paired_vs_baseline": {
+            "learned_fraction": 0.2,
+            "neither_fraction": 0.0,
+            "opponent_fraction": 0.8
+          },
+          "paired_vs_reference": {
+            "learned_fraction": 0.2,
+            "neither_fraction": 0.0,
+            "opponent_fraction": 0.8
+          },
+          "reward_improvement_vs_fixed_baseline": 0.1740873857459635,
+          "rounds_completed": 5,
+          "selected_motion": {
+            "peak_jerk": 192.21233961496856,
+            "reference_rms_jerk": 60.50135874007481,
+            "rms_jerk": 87.77113195260087
+          },
+          "selection_status": "selected",
+          "stopping_reason": "perceptual_success",
+          "target_state": "sadness",
+          "target_vad_recalibrated": true
+        }
+      },
+      "contrasts": {
+        "feasible_proportion": {
+          "interaction": 1.1102230246251565e-16,
+          "status": "complete",
+          "target_recalibration_effect": 0.07500000000000001,
+          "tightened_smoothness_effect": -0.07500000000000001,
+          "values": {
+            "A": 0.65,
+            "B": 0.725,
+            "C": 0.575,
+            "D": 0.65
+          }
+        },
+        "paired_vs_baseline_learned_fraction": {
+          "interaction": 0.6000000000000001,
+          "status": "complete",
+          "target_recalibration_effect": -0.1,
+          "tightened_smoothness_effect": -0.1,
+          "values": {
+            "A": 0.4,
+            "B": 0.0,
+            "C": 0.0,
+            "D": 0.2
+          }
+        },
+        "paired_vs_reference_learned_fraction": {
+          "interaction": 0.0,
+          "status": "complete",
+          "target_recalibration_effect": -0.2,
+          "tightened_smoothness_effect": 0.2,
+          "values": {
+            "A": 0.2,
+            "B": 0.0,
+            "C": 0.4,
+            "D": 0.2
+          }
+        },
+        "reward_improvement_vs_fixed_baseline": {
+          "interaction": -0.04548796401783228,
+          "status": "complete",
+          "target_recalibration_effect": 0.2012200230058716,
+          "tightened_smoothness_effect": 0.010763894492214265,
+          "values": {
+            "A": -0.037896531752122375,
+            "B": 0.18606747326266537,
+            "C": -0.0043886552509919685,
+            "D": 0.1740873857459635
+          }
+        },
+        "selected_rms_jerk": {
+          "interaction": 166.06904961429055,
+          "status": "complete",
+          "target_recalibration_effect": -71.54871119098242,
+          "tightened_smoothness_effect": -64.35324178809257,
+          "values": {
+            "A": 223.67308493167585,
+            "B": 69.08984893354817,
+            "C": 76.28531833643801,
+            "D": 87.77113195260087
+          }
+        }
+      }
+    }
+  },
+  "descriptive_only": true,
+  "format_version": 1,
+  "note": "Recalibrated conditions use a different reward target; only within-run improvements and preference/feasibility/smoothness metrics are compared across conditions."
+}

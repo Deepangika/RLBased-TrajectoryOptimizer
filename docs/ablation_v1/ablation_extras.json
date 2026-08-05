@@ -1,0 +1,360 @@
+{
+  "contexts": {
+    "beckon_fear": {
+      "A": {
+        "mean": {
+          "rounds": 5,
+          "displacement_norm": 0.14333037422268843
+        },
+        "covariance": {
+          "initial_trace": 2.6920550567643513,
+          "final_trace": 2.056385268348561,
+          "final_min_eig": 0.10629360058508926,
+          "spd": true
+        },
+        "language": {
+          "observations_with_text": 10,
+          "distortion_term_mentions": 36,
+          "mentions_per_observation": 3.6,
+          "top_terms": [
+            [
+              "erratic",
+              15
+            ],
+            [
+              "trembl",
+              8
+            ],
+            [
+              "jerk",
+              4
+            ],
+            [
+              "chaotic",
+              3
+            ],
+            [
+              "instabilit",
+              2
+            ],
+            [
+              "shak",
+              1
+            ]
+          ]
+        },
+        "stop_reason": "reward_plateau"
+      },
+      "B": {
+        "mean": {
+          "rounds": 5,
+          "displacement_norm": 0.15646405972498012
+        },
+        "covariance": {
+          "initial_trace": 2.6920550567643513,
+          "final_trace": 2.1559713758803536,
+          "final_min_eig": 0.14241817682412505,
+          "spd": true
+        },
+        "language": {
+          "observations_with_text": 10,
+          "distortion_term_mentions": 37,
+          "mentions_per_observation": 3.7,
+          "top_terms": [
+            [
+              "trembl",
+              11
+            ],
+            [
+              "jitter",
+              8
+            ],
+            [
+              "shak",
+              6
+            ],
+            [
+              "erratic",
+              6
+            ],
+            [
+              "instabilit",
+              4
+            ],
+            [
+              "chaotic",
+              2
+            ]
+          ]
+        },
+        "stop_reason": "perceptual_success"
+      },
+      "C": {
+        "mean": {
+          "rounds": 5,
+          "displacement_norm": 0.10749313839221711
+        },
+        "covariance": {
+          "initial_trace": 2.595587018948028,
+          "final_trace": 2.1019827543325205,
+          "final_min_eig": 0.11452278486690666,
+          "spd": true
+        },
+        "language": {
+          "observations_with_text": 10,
+          "distortion_term_mentions": 39,
+          "mentions_per_observation": 3.9,
+          "top_terms": [
+            [
+              "erratic",
+              11
+            ],
+            [
+              "trembl",
+              9
+            ],
+            [
+              "shak",
+              6
+            ],
+            [
+              "chaotic",
+              4
+            ],
+            [
+              "jerk",
+              3
+            ],
+            [
+              "jitter",
+              2
+            ]
+          ]
+        },
+        "stop_reason": "maximum_budget_reached"
+      },
+      "D": {
+        "mean": {
+          "rounds": 5,
+          "displacement_norm": 0.2048864808812828
+        },
+        "covariance": {
+          "initial_trace": 2.595587018948028,
+          "final_trace": 2.057019151774063,
+          "final_min_eig": 0.14178518132190746,
+          "spd": true
+        },
+        "language": {
+          "observations_with_text": 10,
+          "distortion_term_mentions": 39,
+          "mentions_per_observation": 3.9,
+          "top_terms": [
+            [
+              "erratic",
+              11
+            ],
+            [
+              "trembl",
+              9
+            ],
+            [
+              "shak",
+              8
+            ],
+            [
+              "jitter",
+              4
+            ],
+            [
+              "instabilit",
+              3
+            ],
+            [
+              "jerk",
+              2
+            ]
+          ]
+        },
+        "stop_reason": "perceptual_success"
+      }
+    },
+    "wave_sadness": {
+      "A": {
+        "mean": {
+          "rounds": 5,
+          "displacement_norm": 0.08517166792547361
+        },
+        "covariance": {
+          "initial_trace": 2.4382692688569203,
+          "final_trace": 2.1667530574929748,
+          "final_min_eig": 0.13202587866476914,
+          "spd": true
+        },
+        "language": {
+          "observations_with_text": 10,
+          "distortion_term_mentions": 5,
+          "mentions_per_observation": 0.5,
+          "top_terms": [
+            [
+              "erratic",
+              5
+            ],
+            [
+              "trembl",
+              0
+            ],
+            [
+              "shak",
+              0
+            ],
+            [
+              "jerk",
+              0
+            ],
+            [
+              "jitter",
+              0
+            ],
+            [
+              "unstable",
+              0
+            ]
+          ]
+        },
+        "stop_reason": "reward_plateau"
+      },
+      "B": {
+        "mean": {
+          "rounds": 5,
+          "displacement_norm": 0.17317908006574773
+        },
+        "covariance": {
+          "initial_trace": 2.4096360645837556,
+          "final_trace": 1.8543950975244887,
+          "final_min_eig": 0.09952778311637184,
+          "spd": true
+        },
+        "language": {
+          "observations_with_text": 10,
+          "distortion_term_mentions": 3,
+          "mentions_per_observation": 0.3,
+          "top_terms": [
+            [
+              "erratic",
+              3
+            ],
+            [
+              "trembl",
+              0
+            ],
+            [
+              "shak",
+              0
+            ],
+            [
+              "jerk",
+              0
+            ],
+            [
+              "jitter",
+              0
+            ],
+            [
+              "unstable",
+              0
+            ]
+          ]
+        },
+        "stop_reason": "perceptual_success"
+      },
+      "C": {
+        "mean": {
+          "rounds": 5,
+          "displacement_norm": 0.12165050846011982
+        },
+        "covariance": {
+          "initial_trace": 2.315343495033472,
+          "final_trace": 1.6395569159398602,
+          "final_min_eig": 0.09871821618949658,
+          "spd": true
+        },
+        "language": {
+          "observations_with_text": 10,
+          "distortion_term_mentions": 3,
+          "mentions_per_observation": 0.3,
+          "top_terms": [
+            [
+              "erratic",
+              1
+            ],
+            [
+              "jerk",
+              1
+            ],
+            [
+              "wobbl",
+              1
+            ],
+            [
+              "trembl",
+              0
+            ],
+            [
+              "shak",
+              0
+            ],
+            [
+              "jitter",
+              0
+            ]
+          ]
+        },
+        "stop_reason": "maximum_budget_reached"
+      },
+      "D": {
+        "mean": {
+          "rounds": 5,
+          "displacement_norm": 0.2113677638565966
+        },
+        "covariance": {
+          "initial_trace": 2.337021576873086,
+          "final_trace": 1.4432008142734312,
+          "final_min_eig": 0.08849610815082294,
+          "spd": true
+        },
+        "language": {
+          "observations_with_text": 10,
+          "distortion_term_mentions": 5,
+          "mentions_per_observation": 0.5,
+          "top_terms": [
+            [
+              "erratic",
+              5
+            ],
+            [
+              "trembl",
+              0
+            ],
+            [
+              "shak",
+              0
+            ],
+            [
+              "jerk",
+              0
+            ],
+            [
+              "jitter",
+              0
+            ],
+            [
+              "unstable",
+              0
+            ]
+          ]
+        },
+        "stop_reason": "perceptual_success"
+      }
+    }
+  }
+}

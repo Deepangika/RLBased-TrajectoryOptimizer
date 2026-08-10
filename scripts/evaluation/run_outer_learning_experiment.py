@@ -40,7 +40,10 @@ from laban_rl.perceptual_bandit.environment import (
     MockNoisyPerceptualEvaluator,
     PerceptualBanditEnvironment,
 )
-from laban_rl.perceptual_bandit.evaluation_cache import PerceptualObservationCache
+from laban_rl.perceptual_bandit.evaluation_cache import (
+    EvaluatorCacheIdentity,
+    PerceptualObservationCache,
+)
 from laban_rl.perceptual_bandit.call_budget import (
     CallBudgetExhausted,
     GeminiCallBudget,
@@ -65,10 +68,23 @@ from laban_rl.perceptual_bandit.outer_learning import (
 )
 from laban_rl.perceptual_bandit.paired_preference import (
     GeminiPairedPreferenceEvaluator,
+    GeminiPairedReferenceDiagnosticEvaluator,
     MockPairedPreferenceEvaluator,
+    MockPairedReferenceDiagnosticEvaluator,
     PairedPreferenceCache,
     PreferencePair,
     run_paired_preference_experiment,
+)
+from laban_rl.perceptual_bandit.reference_relative import (
+    REFERENCE_RELATIVE_CSV_FIELDS,
+    REFERENCE_RELATIVE_INTERPRETATION,
+    ReferenceRelativeThresholds,
+    aggregate_paired_diagnostic,
+    bootstrap_shift_interval,
+    classify_reference_relative_outcome,
+    compute_reference_relative_metrics,
+    reference_relative_csv_row,
+    summarise_vad_observations,
 )
 from laban_rl.perceptual_bandit.selection import strict_realisability
 from laban_rl.perceptual_bandit.variant_video import (
@@ -146,6 +162,41 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "Hard ceiling on the total number of Gemini API calls for this run, "
             "including billable retries. The run stops safely before the call "
             "that would exceed the ceiling. Only applies with --evaluator gemini."
+        ),
+    )
+    parser.add_argument(
+        "--evaluate-reference",
+        action="store_true",
+        help=(
+            "Opt-in: independently evaluate the unmodified reference motion "
+            "with the same evaluator settings and compute reference-relative "
+            "diagnostic metrics for the selected candidate."
+        ),
+    )
+    parser.add_argument(
+        "--reference-evaluation-repeats",
+        type=int,
+        default=None,
+        help=(
+            "Repeats for the reference-only evaluation. Defaults to the "
+            "validation VLM repeat count."
+        ),
+    )
+    parser.add_argument(
+        "--paired-reference-diagnostic",
+        action="store_true",
+        help=(
+            "Opt-in: run the blinded paired reference-vs-candidate diagnostic "
+            "comparison with dimension-level VAD questions."
+        ),
+    )
+    parser.add_argument(
+        "--paired-reference-repeats",
+        type=int,
+        default=None,
+        help=(
+            "Repeats for the paired reference diagnostic. Defaults to the "
+            "paired-validation repeat count."
         ),
     )
     return parser.parse_args(argv)
@@ -641,12 +692,16 @@ def _estimate_live_calls(
     validation_top_k: int,
     validation_vlm_repeats: int,
     paired_validation_repeats: int,
+    reference_evaluation_repeats: int = 0,
+    paired_reference_repeats: int = 0,
 ) -> dict[str, int]:
     contexts = len(stage_payload["contexts"])
     per_context = (
         rounds_max * samples_per_round * candidate_vlm_repeats
         + validation_top_k * validation_vlm_repeats
         + 2 * paired_validation_repeats
+        + int(reference_evaluation_repeats)
+        + int(paired_reference_repeats)
     )
     return {
         "contexts": contexts,
@@ -947,9 +1002,15 @@ def _paired_validation(
     evaluator_name: str,
     model: str,
     temperature: float,
+    diagnostic: bool = False,
 ) -> dict[str, Any]:
     if evaluator_name == "gemini":
-        evaluator = GeminiPairedPreferenceEvaluator(
+        evaluator_class = (
+            GeminiPairedReferenceDiagnosticEvaluator
+            if diagnostic
+            else GeminiPairedPreferenceEvaluator
+        )
+        evaluator = evaluator_class(
             model=model,
             temperature=temperature,
             video_duration_seconds=2.0,
@@ -960,7 +1021,11 @@ def _paired_validation(
             keep_uploaded_files=False,
         )
     else:
-        evaluator = MockPairedPreferenceEvaluator()
+        evaluator = (
+            MockPairedReferenceDiagnosticEvaluator()
+            if diagnostic
+            else MockPairedPreferenceEvaluator()
+        )
     try:
         return run_paired_preference_experiment(
             [
@@ -1014,6 +1079,10 @@ def run_context(
     robust_elite_max_feature_error: float = 0.08,
     resume: bool = False,
     workers: int = 1,
+    evaluate_reference: bool = False,
+    reference_evaluation_repeats: int | None = None,
+    paired_reference_diagnostic: bool = False,
+    paired_reference_repeats: int | None = None,
 ) -> dict[str, Any]:
     baseline = baseline_condition(context.gesture, context.target_state)
     target_context = _target_context_for(context)
@@ -1796,6 +1865,205 @@ def run_context(
         baseline_reevaluation["status"] = "completed"
         _write_json(out_dir / "baseline_reevaluation.json", baseline_reevaluation)
 
+    # Optional reference-first diagnostic: evaluate the unmodified reference
+    # motion under identical evaluator settings, then quantify the selected
+    # candidate's perceptual shift relative to it. Post-selection diagnosis
+    # only; it never influences training rewards or candidate selection.
+    reference_relative: dict[str, Any] = {"status": "not_run"}
+    reference_relative_row: dict[str, Any] | None = None
+    if evaluate_reference and not synthetic and validation_environment is not None:
+        reference_repeats = int(
+            reference_evaluation_repeats
+            if reference_evaluation_repeats is not None
+            else validation_vlm_repeats
+        )
+        thresholds = ReferenceRelativeThresholds(
+            near_target_tolerance=max_feature_error_threshold,
+        )
+        _budget = get_active_budget()
+        if _budget is not None:
+            _budget.set_category("reference_evaluation")
+        calls_before = int(_budget.total) if _budget is not None else None
+        reference_cache = PerceptualObservationCache(_short_cache_root(out_dir, "r"))
+        reference_evaluation: dict[str, Any] = {
+            "gesture": context.gesture,
+            "target_state": context.target_state,
+            "repeats": reference_repeats,
+            "model": model,
+            "status": "pending",
+        }
+        reference_summary = None
+        reference_observations: list[dict[str, Any]] = []
+        try:
+            reference_motion = load_baseline_motion(
+                context.gesture,
+                context.target_state,
+                candidate="reference",
+            )
+            evaluator_identity = EvaluatorCacheIdentity.from_evaluator(
+                validation_environment.evaluator
+            )
+            reference_evaluation["prompt_version"] = evaluator_identity.prompt_version
+            reference_evaluation["reference_asset"] = str(
+                reference_motion.output_dir
+            )
+            reference_evaluation["cache_key"] = reference_cache.cache_key(
+                context=target_context,
+                result=reference_motion,
+                evaluator_identity=evaluator_identity,
+            )
+            reference_observations = reference_cache.collect(
+                context=target_context,
+                result=reference_motion,
+                evaluator=validation_environment.evaluator,
+                repeats=reference_repeats,
+            )
+            reference_summary = summarise_vad_observations(reference_observations)
+            reference_evaluation.update(
+                {
+                    "status": "completed",
+                    "vad_mean": reference_summary["vad_mean"],
+                    "vad_sd": reference_summary["vad_sd"],
+                    "individual_evaluations": reference_observations,
+                    "successful_calls": int(reference_summary["valid_count"])
+                    + int(reference_summary["invalid_count"]),
+                    "attempted_calls": (
+                        int(_budget.total) - calls_before
+                        if _budget is not None and calls_before is not None
+                        else len(reference_observations)
+                    ),
+                }
+            )
+        except CallBudgetExhausted:
+            reference_evaluation["status"] = "call_budget_exhausted"
+        except Exception as exc:  # honest failure, never fabricate an estimate
+            reference_evaluation["status"] = "evaluator_failure"
+            reference_evaluation["error"] = str(exc)
+        _write_json(out_dir / "reference_evaluation.json", reference_evaluation)
+
+        paired_diagnostic_payload: dict[str, Any] | None = None
+        paired_diagnostic_summary: dict[str, Any] | None = None
+        if (
+            paired_reference_diagnostic
+            and selection_status == "selected"
+            and final_selected_opt_result is not None
+            and reference_evaluation["status"] == "completed"
+        ):
+            if _budget is not None:
+                _budget.set_category("paired_reference_diagnostic")
+            try:
+                paired_diagnostic_payload = _paired_validation(
+                    pair_id=(
+                        f"{context.gesture}-{context.target_state}"
+                        "-reference-diagnostic"
+                    ),
+                    context=target_context,
+                    learned=final_selected_opt_result,
+                    other=reference_motion,
+                    target_layers={},
+                    out_path=out_dir / "paired_reference_diagnostic.json",
+                    cache_root=_short_cache_root(out_dir, "rd"),
+                    repeats=int(
+                        paired_reference_repeats
+                        if paired_reference_repeats is not None
+                        else paired_validation_repeats
+                    ),
+                    evaluator_name=evaluator_name,
+                    model=model,
+                    temperature=temperature,
+                    diagnostic=True,
+                )
+                if paired_diagnostic_payload.get("records"):
+                    paired_diagnostic_summary = aggregate_paired_diagnostic(
+                        paired_diagnostic_payload["records"][0]["observations"]
+                    )
+            except CallBudgetExhausted:
+                paired_diagnostic_payload = {
+                    "status": "skipped_call_budget_exhausted",
+                    "records": [],
+                }
+
+        metrics = None
+        candidate_valid_count = 0
+        shift_interval: dict[str, Any] = {
+            "status": "not_computed",
+            "null_reason": "reference_or_candidate_unavailable",
+            "intervals": None,
+        }
+        if (
+            reference_summary is not None
+            and reference_summary["vad_mean"] is not None
+            and final_selected_result is not None
+            and final_selected_result.get("mean_observed_vad")
+        ):
+            metrics = compute_reference_relative_metrics(
+                reference_vad=reference_summary["vad_mean"],
+                candidate_vad=final_selected_result["mean_observed_vad"],
+                target_vad=dict(target_context.target_vad or {}),
+                reference_sd=reference_summary["vad_sd"],
+            )
+            candidate_evaluations = [
+                {"affect_ratings": dict(row)}
+                for row in (
+                    final_selected_result.get("result", {}).get(
+                        "affective_evaluations"
+                    )
+                    or []
+                )
+            ]
+            candidate_valid_count = len(candidate_evaluations)
+            shift_interval = bootstrap_shift_interval(
+                reference_observations=reference_observations,
+                candidate_observations=candidate_evaluations,
+                seed=seed,
+            )
+        outcome_classification = classify_reference_relative_outcome(
+            metrics=metrics,
+            thresholds=thresholds,
+            reference_valid_count=(
+                int(reference_summary["valid_count"])
+                if reference_summary is not None
+                else 0
+            ),
+            candidate_valid_count=candidate_valid_count,
+            reference_sd=(
+                reference_summary["vad_sd"]
+                if reference_summary is not None
+                else None
+            ),
+            paired_summary=paired_diagnostic_summary,
+        )
+        reference_relative = {
+            "status": "completed"
+            if reference_evaluation["status"] == "completed"
+            else reference_evaluation["status"],
+            "reference_evaluation": {
+                key: value
+                for key, value in reference_evaluation.items()
+                if key != "individual_evaluations"
+            },
+            "metrics": metrics,
+            "thresholds": thresholds.to_dict(),
+            "bootstrap_shift_interval": shift_interval,
+            "paired_comparison": paired_diagnostic_summary,
+            "reference_relative_outcome": outcome_classification,
+            "interpretation": REFERENCE_RELATIVE_INTERPRETATION,
+        }
+        _write_json(
+            out_dir / "reference_relative_evaluation.json", reference_relative
+        )
+        reference_relative_row = reference_relative_csv_row(
+            gesture=context.gesture,
+            target_state=context.target_state,
+            metrics=metrics,
+            paired_summary=paired_diagnostic_summary,
+            outcome_label=outcome_classification["label"],
+        )
+        _write_csv(
+            out_dir / "reference_relative_summary.csv",
+            [reference_relative_row],
+        )
+
     final_vad = dict(
         final_selected_result["mean_observed_vad"] if final_selected_result is not None
         else baseline.baseline_observed_vad
@@ -2098,6 +2366,15 @@ def run_context(
             else None
         ),
         "comparison_status": comparison_status,
+        "reference_relative_evaluation": (
+            reference_relative if reference_relative["status"] != "not_run" else None
+        ),
+        "reference_relative_outcome": (
+            (reference_relative.get("reference_relative_outcome") or {}).get("label")
+            if reference_relative["status"] != "not_run"
+            else None
+        ),
+        "reference_relative_csv_row": reference_relative_row,
         "initial_synthetic_objective_distance": synthetic_initial_distance,
         "final_synthetic_objective_distance": final_synthetic_distance,
         "synthetic_distance_reduction": synthetic_distance_reduction,
@@ -2149,6 +2426,23 @@ def main(argv: list[str] | None = None) -> int:
         if args.robust_elite_max_feature_error is not None
         else defaults.get("robust_elite_max_feature_error", 0.08)
     )
+    evaluate_reference = bool(
+        args.evaluate_reference or defaults.get("evaluate_reference", False)
+    )
+    reference_evaluation_repeats = int(
+        args.reference_evaluation_repeats
+        if args.reference_evaluation_repeats is not None
+        else defaults.get("reference_evaluation_repeats") or validation_vlm_repeats
+    )
+    paired_reference_diagnostic = bool(
+        args.paired_reference_diagnostic
+        or defaults.get("paired_reference_diagnostic", False)
+    )
+    paired_reference_repeats = int(
+        args.paired_reference_repeats
+        if args.paired_reference_repeats is not None
+        else defaults.get("paired_reference_repeats") or paired_validation_repeats
+    )
     live_estimate = _estimate_live_calls(
         stage_payload,
         rounds_max=rounds_max,
@@ -2157,6 +2451,14 @@ def main(argv: list[str] | None = None) -> int:
         validation_top_k=validation_top_k,
         validation_vlm_repeats=validation_vlm_repeats,
         paired_validation_repeats=paired_validation_repeats,
+        reference_evaluation_repeats=(
+            reference_evaluation_repeats if evaluate_reference else 0
+        ),
+        paired_reference_repeats=(
+            paired_reference_repeats
+            if evaluate_reference and paired_reference_diagnostic
+            else 0
+        ),
     )
     call_budget: GeminiCallBudget | None = None
     if args.evaluator == "gemini":
@@ -2211,8 +2513,20 @@ def main(argv: list[str] | None = None) -> int:
             seed=args.seed,
             resume=args.resume,
             workers=args.workers,
+            evaluate_reference=evaluate_reference,
+            reference_evaluation_repeats=reference_evaluation_repeats,
+            paired_reference_diagnostic=paired_reference_diagnostic,
+            paired_reference_repeats=paired_reference_repeats,
         )
         stage_status.append(result)
+    if evaluate_reference:
+        csv_rows: list[dict[str, Any]] = []
+        for item in stage_status:
+            row = item.get("reference_relative_csv_row")
+            if row is not None:
+                csv_rows.append(row)
+        if csv_rows:
+            _write_csv(stage_out / "reference_relative_summary.csv", csv_rows)
     _write_json(
         stage_out / "stage_status.json",
         {
@@ -2253,6 +2567,18 @@ def main(argv: list[str] | None = None) -> int:
                 "resume": bool(args.resume),
                 "max_gemini_calls": (
                     int(args.max_gemini_calls) if args.evaluator == "gemini" else None
+                ),
+                "evaluate_reference": evaluate_reference,
+                "reference_evaluation_repeats": (
+                    reference_evaluation_repeats if evaluate_reference else None
+                ),
+                "paired_reference_diagnostic": (
+                    paired_reference_diagnostic if evaluate_reference else False
+                ),
+                "paired_reference_repeats": (
+                    paired_reference_repeats
+                    if evaluate_reference and paired_reference_diagnostic
+                    else None
                 ),
             },
             "estimated_live_calls": live_estimate,

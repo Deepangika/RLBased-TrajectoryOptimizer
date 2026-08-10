@@ -30,10 +30,25 @@ from laban_rl.targets import TARGET_PROFILES
 PAIR_CACHE_FORMAT_VERSION = 1
 PAIR_PROMPT_VERSION = "blinded-target-affect-ab-v1"
 PAIR_SCHEMA_VERSION = "paired-affect-preference-v1"
+DIAGNOSTIC_PROMPT_VERSION = "blinded-reference-diagnostic-ab-v1"
+DIAGNOSTIC_SCHEMA_VERSION = "paired-reference-diagnostic-v1"
 
 
 class PairedPreferenceAssessment(BaseModel):
     choice: Literal["A", "B", "neither"]
+    confidence: float = Field(ge=0.0, le=1.0)
+    reasoning_summary: str = Field(min_length=1, max_length=1000)
+
+
+class PairedReferenceDiagnosticAssessment(BaseModel):
+    """Blinded comparative judgment with dimension-level VAD directions."""
+
+    choice: Literal["A", "B", "neither"]
+    valence_higher: Literal["A", "B", "similar"]
+    arousal_higher: Literal["A", "B", "similar"]
+    dominance_higher: Literal["A", "B", "similar"]
+    same_gesture: bool
+    noticeable_difference: float = Field(ge=0.0, le=1.0)
     confidence: float = Field(ge=0.0, le=1.0)
     reasoning_summary: str = Field(min_length=1, max_length=1000)
 
@@ -210,6 +225,8 @@ class PairedPreferenceCache:
 class GeminiPairedPreferenceEvaluator:
     """Ask Gemini which blinded clip better expresses the supplied target."""
 
+    assessment_model: type[BaseModel] = PairedPreferenceAssessment
+
     def __init__(self, **kwargs: Any) -> None:
         self.video_evaluator = GeminiProVideoEvaluator(**kwargs)
         self.model = self.video_evaluator.model
@@ -243,6 +260,14 @@ Judge visible movement only. Which animation expresses the target affect more
 strongly: A, B, or neither? Choose neither when the difference is not
 perceptually meaningful or neither clip expresses the target.
 """.strip()
+
+    def _observation_extras(
+        self,
+        assessment: BaseModel,
+        displayed: tuple[str, str],
+    ) -> dict[str, Any]:
+        """Additional schema-specific fields, mapped from A/B after parsing."""
+        return {}
 
     def evaluate_pair(
         self,
@@ -317,12 +342,12 @@ perceptually meaningful or neither clip expresses the target.
                     config=types.GenerateContentConfig(
                         temperature=self.temperature,
                         response_mime_type="application/json",
-                        response_schema=PairedPreferenceAssessment,
+                        response_schema=self.assessment_model,
                     ),
                 )
                 if not response.text:
                     raise RuntimeError("Gemini returned an empty paired response.")
-                assessment = PairedPreferenceAssessment.model_validate_json(
+                assessment = self.assessment_model.model_validate_json(
                     response.text
                 )
                 translated = {
@@ -338,6 +363,7 @@ perceptually meaningful or neither clip expresses the target.
                     "choice": translated,
                     "confidence": float(assessment.confidence),
                     "reasoning_summary": assessment.reasoning_summary,
+                    **self._observation_extras(assessment, displayed),
                 }
             except Exception as exc:
                 transient = (
@@ -356,6 +382,138 @@ perceptually meaningful or neither clip expresses the target.
 
     def close(self) -> None:
         self.video_evaluator.close()
+
+
+def _translate_side(raw: str, displayed: tuple[str, str]) -> str:
+    return {"A": displayed[0], "B": displayed[1], "similar": "similar"}[raw]
+
+
+class GeminiPairedReferenceDiagnosticEvaluator(GeminiPairedPreferenceEvaluator):
+    """Blinded reference-vs-candidate diagnostic with dimension-level questions.
+
+    The prompt never reveals which motion is optimised, never states that
+    improvement is expected, and never exposes targets, LMA profiles, or
+    rewards. Sides are mapped back to reference/candidate only after parsing.
+    """
+
+    assessment_model = PairedReferenceDiagnosticAssessment
+
+    def cache_identity(self) -> dict[str, Any]:
+        video_identity = self.video_evaluator.cache_identity()
+        return {
+            "provider": "gemini-paired-reference-diagnostic",
+            "model": self.model,
+            "prompt_version": DIAGNOSTIC_PROMPT_VERSION,
+            "schema_version": DIAGNOSTIC_SCHEMA_VERSION,
+            "settings": dict(video_identity["settings"]),
+        }
+
+    @staticmethod
+    def _prompt(context: Context) -> str:
+        return f"""
+You are comparing two robot-arm animation clips, Motion A and Motion B.
+
+Gesture category: {context.gesture.upper()}
+Intended emotion: {context.target_label}
+
+The clips are blinded. Do not infer their source from filenames or metadata.
+Judge visible movement only.
+
+Answer all of the following:
+1. choice: Which motion better communicates the intended emotion: A, B, or
+   neither? Choose neither when there is no meaningful difference or neither
+   communicates it.
+2. valence_higher: Which motion appears higher in valence (more positive
+   emotional tone): A, B, or similar?
+3. arousal_higher: Which motion appears higher in arousal (more energetic /
+   activated): A, B, or similar?
+4. dominance_higher: Which motion appears higher in dominance (more assertive
+   / in control): A, B, or similar?
+5. same_gesture: Do both clips still represent the same underlying gesture?
+6. noticeable_difference: How noticeable is the difference between the two
+   motions overall, from 0.0 (identical) to 1.0 (completely different)?
+""".strip()
+
+    def _observation_extras(
+        self,
+        assessment: BaseModel,
+        displayed: tuple[str, str],
+    ) -> dict[str, Any]:
+        return {
+            "raw_valence_higher": assessment.valence_higher,
+            "valence_higher": _translate_side(assessment.valence_higher, displayed),
+            "raw_arousal_higher": assessment.arousal_higher,
+            "arousal_higher": _translate_side(assessment.arousal_higher, displayed),
+            "raw_dominance_higher": assessment.dominance_higher,
+            "dominance_higher": _translate_side(
+                assessment.dominance_higher, displayed
+            ),
+            "same_gesture": bool(assessment.same_gesture),
+            "noticeable_difference": float(assessment.noticeable_difference),
+        }
+
+
+class MockPairedReferenceDiagnosticEvaluator:
+    """Deterministic offline diagnostic evaluator for tests and mock runs."""
+
+    def cache_identity(self) -> dict[str, Any]:
+        return {
+            "provider": "mock-paired-reference-diagnostic",
+            "model": "laban-target-distance",
+            "prompt_version": DIAGNOSTIC_PROMPT_VERSION,
+            "schema_version": DIAGNOSTIC_SCHEMA_VERSION,
+            "settings": {"neither_distance_delta": 0.01},
+        }
+
+    def evaluate_pair(
+        self,
+        context: Context,
+        reference_result: LabanOptimisationResult,
+        styled_result: LabanOptimisationResult,
+        *,
+        repeat_index: int,
+        pair_hash: str,
+    ) -> dict[str, Any]:
+        base = MockPairedPreferenceEvaluator().evaluate_pair(
+            context,
+            reference_result,
+            styled_result,
+            repeat_index=repeat_index,
+            pair_hash=pair_hash,
+        )
+        displayed = (base["displayed_a"], base["displayed_b"])
+
+        def profile_mean(result: LabanOptimisationResult) -> float:
+            return float(
+                np.mean([result.achieved_profile[key] for key in FEATURE_KEYS])
+            )
+
+        reference_mean = profile_mean(reference_result)
+        styled_mean = profile_mean(styled_result)
+        if abs(reference_mean - styled_mean) <= 0.01:
+            side = "similar"
+        else:
+            side = "reference" if reference_mean > styled_mean else "styled"
+        raw_side = (
+            "similar"
+            if side == "similar"
+            else ("A" if side == displayed[0] else "B")
+        )
+        base.update(
+            {
+                "raw_valence_higher": raw_side,
+                "valence_higher": side,
+                "raw_arousal_higher": raw_side,
+                "arousal_higher": side,
+                "raw_dominance_higher": raw_side,
+                "dominance_higher": side,
+                "same_gesture": True,
+                "noticeable_difference": min(
+                    1.0, abs(reference_mean - styled_mean)
+                ),
+            }
+        )
+        return base
 
 
 class MockPairedPreferenceEvaluator:

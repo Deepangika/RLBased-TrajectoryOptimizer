@@ -89,6 +89,8 @@ def make_result(path: Path, *, offset: float = 0.0) -> LabanOptimisationResult:
         raw_result={
             "reward_info": {
                 "path_length_ratio": 1.0,
+                "endpoint_error": 0.0,
+                "direction_error": 0.0,
                 "joint_limit_error": 0.0,
             }
         },

@@ -64,6 +64,8 @@ def make_result(tmp_path: Path) -> LabanOptimisationResult:
         raw_result={
             "reward_info": {
                 "path_length_ratio": 1.0,
+                "endpoint_error": 0.0,
+                "direction_error": 0.0,
                 "joint_limit_error": 0.0,
             }
         },

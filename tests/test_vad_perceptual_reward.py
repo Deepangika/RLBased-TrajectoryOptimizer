@@ -44,6 +44,8 @@ def make_result(tmp_path: Path) -> LabanOptimisationResult:
         raw_result={
             "reward_info": {
                 "path_length_ratio": 1.0,
+                "endpoint_error": 0.0,
+                "direction_error": 0.0,
                 "joint_limit_error": 0.0,
             }
         },
@@ -59,6 +61,36 @@ def test_vad_targets_are_complete_and_bounded():
 def test_invalid_vad_is_rejected():
     with pytest.raises(ValueError, match=r"\[0, 1\]"):
         validate_vad({"valence": 1.2, "arousal": 0.5, "dominance": 0.5})
+
+
+@pytest.mark.parametrize(
+    ("metric", "value", "reason"),
+    [
+        ("endpoint_error", 0.081, "endpoint_preservation"),
+        ("direction_error", 0.251, "direction_preservation"),
+    ],
+)
+def test_endpoint_and_direction_violations_are_hard_rejected(
+    tmp_path, metric, value, reason
+):
+    optimisation_result = make_result(tmp_path)
+    optimisation_result.raw_result["reward_info"][metric] = value
+    environment = PerceptualBanditEnvironment(
+        evaluator=FixedEvaluator(
+            {"valence": 0.9, "arousal": 0.75, "dominance": 0.65},
+            {"happiness": 1.0},
+        ),
+        reward_config=EnvironmentRewardConfig(repeat_evaluations=1),
+    )
+
+    result = environment.step_from_result(
+        context=Context("point", "happiness"),
+        optimisation_result=optimisation_result,
+    )
+
+    assert not result.valid_realisation
+    assert not result.physically_acceptable
+    assert reason in (result.failure_reason or "")
 
 
 def test_vad_is_default_primary_reward(tmp_path):

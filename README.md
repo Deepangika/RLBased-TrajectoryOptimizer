@@ -340,6 +340,13 @@ The two-level architecture per candidate:
    separate seed and cache namespace;
 8. only independently validated feasible candidates can be selected.
 
+The inner trajectory optimiser uses the compact objective
+`E_LMA + lambda_path E_path + lambda_jerk E_jerk`. Joint limits, path-length,
+endpoint, and direction requirements are feasibility constraints; their hinge
+penalties guide the numerical search but are reported separately from the
+three-term objective. See
+[`docs/simplified_inner_objective.md`](docs/simplified_inner_objective.md).
+
 Evaluators:
 
 - **synthetic** — closed-form hidden-optimum objective; validates learning

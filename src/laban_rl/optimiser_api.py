@@ -207,6 +207,8 @@ def build_reference_motion(
             "reward_info": {
                 "total_loss": 0.0,
                 "path_length_ratio": 1.0,
+                "endpoint_error": 0.0,
+                "direction_error": 0.0,
                 "joint_limit_error": 0.0,
             },
             "motion_source": "reference",

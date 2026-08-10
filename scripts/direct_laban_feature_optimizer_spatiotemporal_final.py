@@ -28,12 +28,15 @@ More gesture-preserving run:
 
     python scripts/direct_laban_feature_optimizer_spatiotemporal_final.py --gesture point --target confident --nearest-path-weight 8.0 --path-length-weight 4.0 --detour-weight 2.0 --max-dev-weight 4.0 --time-roughness-weight 0.2 --out outputs/direct_laban_point_confident_spatiotemporal_strict
 
-Key v2 changes:
+Key v3 changes:
 
     - adds symmetric path-length preservation to stop waves collapsing
       to a much shorter path.
-    - removes the hard endpoint assumption by default. The start is still fixed,
-      but the final pose can move naturally using a smooth endpoint offset.
+    - uses the compact research objective
+      E_LMA + lambda_p E_path + lambda_s E_jerk.
+    - treats joint limits, path length, endpoint drift, and direction drift as
+      feasibility constraints. Quadratic hinge penalties guide the numerical
+      optimiser, but are reported separately from the three-term objective.
 """
 
 from __future__ import annotations
@@ -374,56 +377,56 @@ def compute_out_of_range_penalty(features_unclipped: Dict[str, float]) -> float:
 def compose_loss_components(
     *,
     feature_loss: float,
-    target_tracking_errors: Dict[str, float],
-    out_of_range_error: float,
-    joint_preservation_error: float,
     smoothness_error: float,
     joint_limit_error: float,
-    spatial_coeff_error: float,
-    timing_coeff_error: float,
     terms: Dict[str, float],
     args,
 ) -> Dict[str, float]:
-    """Single source of truth for both optimisation and final loss reporting."""
-    components = {
-        "feature_loss": float(feature_loss),
-        "target_weight": (
-            float(args.weight_target_weight)
-            * float(target_tracking_errors["weight"])
-        ),
-        "target_time": (
-            float(args.time_target_weight)
-            * float(target_tracking_errors["time"])
-        ),
-        "target_flow_boundness": (
-            float(args.flow_boundness_target_weight)
-            * float(target_tracking_errors["flow_boundness"])
-        ),
-        "target_space_indirectness": (
-            float(args.space_indirectness_target_weight)
-            * float(target_tracking_errors["space_indirectness"])
-        ),
-        "target_shape_arcness": (
-            float(args.shape_arcness_target_weight)
-            * float(target_tracking_errors["shape_arcness"])
-        ),
-        "out_of_range": float(args.out_of_range_weight) * float(out_of_range_error),
-        "joint_preservation": float(args.preserve_weight) * float(joint_preservation_error),
-        "nearest_path": float(args.nearest_path_weight) * float(terms["nearest_path_mse"]),
-        "endpoint": float(args.endpoint_weight) * float(terms["endpoint_error"]),
-        "direction": float(args.direction_weight) * float(terms["direction_error"]),
-        "path_length": float(args.path_length_weight) * float(terms["path_length_error"]),
-        "detour": float(args.detour_weight) * float(terms["detour_error"]),
-        "max_deviation": float(args.max_dev_weight) * float(terms["max_dev_error"]),
-        "smoothness": float(args.smooth_weight) * float(smoothness_error),
-        "joint_limits": float(args.joint_limit_weight) * float(joint_limit_error),
-        "spatial_coefficients": float(args.coeff_weight) * float(spatial_coeff_error),
-        "timing_coefficients": float(args.time_coeff_weight) * float(timing_coeff_error),
-        "time_warp": float(args.time_warp_weight) * float(terms["time_warp_deviation"]),
-        "time_roughness": float(args.time_roughness_weight) * float(terms["time_roughness"]),
+    """Return the compact objective and a separate feasibility guide.
+
+    Differential Evolution does not enforce these nonlinear constraints in the
+    current pipeline, so squared hinge violations steer the search toward the
+    feasible region. They remain separate from the conceptual objective and
+    are independently checked by the outer acceptance gate.
+    """
+    objective_terms = {
+        "lma": float(feature_loss),
+        "path": float(args.nearest_path_weight) * float(terms["nearest_path_mse"]),
+        "jerk": float(args.smooth_weight) * float(smoothness_error),
     }
-    components["total_loss"] = float(sum(components.values()))
-    return components
+    path_low = max(
+        0.0,
+        float(args.minimum_path_length_ratio) - float(terms["path_length_ratio"]),
+    )
+    path_high = max(
+        0.0,
+        float(terms["path_length_ratio"]) - float(args.maximum_path_length_ratio),
+    )
+    endpoint_excess = max(
+        0.0,
+        float(terms["endpoint_error"]) - float(args.endpoint_tolerance),
+    )
+    direction_excess = max(
+        0.0,
+        float(terms["direction_error"]) - float(args.direction_tolerance),
+    )
+    constraint_terms = {
+        "joint_limits": float(joint_limit_error),
+        "path_length": path_low**2 + path_high**2,
+        "endpoint": endpoint_excess**2,
+        "direction": direction_excess**2,
+    }
+    objective_loss = float(sum(objective_terms.values()))
+    constraint_penalty = float(args.constraint_penalty_weight) * float(
+        sum(constraint_terms.values())
+    )
+    return {
+        **{f"objective_{key}": value for key, value in objective_terms.items()},
+        **{f"constraint_{key}": value for key, value in constraint_terms.items()},
+        "objective_loss": objective_loss,
+        "constraint_penalty": constraint_penalty,
+        "total_loss": objective_loss + constraint_penalty,
+    }
 
 
 def _validate_external_target_profile(profile: Dict[str, float]) -> Dict[str, float]:
@@ -453,6 +456,13 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
         from scipy.optimize import differential_evolution, minimize
     except ImportError as exc:
         raise ImportError("This script requires scipy. Install with: pip install scipy") from exc
+
+    if not 0.0 < args.minimum_path_length_ratio <= args.maximum_path_length_ratio:
+        raise ValueError("Invalid path-length-ratio acceptance interval.")
+    for name in ("endpoint_tolerance", "direction_tolerance", "constraint_penalty_weight"):
+        value = float(getattr(args, name))
+        if not np.isfinite(value) or value < 0.0:
+            raise ValueError(f"{name} must be finite and non-negative.")
 
     arm = laban.ArmConfig(n_points=160, duration=2.0, l1=0.30, l2=0.25)
     filter_config = laban.FilterConfig(enabled=True, cutoff_hz=5.0, order=4)
@@ -561,12 +571,6 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
             target_profile,
             feature_weights,
         )
-        target_tracking_errors = {
-            key: (
-                float(var_norm_unclipped[key]) - float(target_profile[key])
-            ) ** 2
-            for key in FEATURE_KEYS
-        }
         out_of_range_error = compute_out_of_range_penalty(var_norm_unclipped)
         
         joint_preservation_error = float(np.mean((q_spatial - q_ref) ** 2))
@@ -578,13 +582,8 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
         timing_coeff_error = float(np.mean(timing_coeffs ** 2)) if len(timing_coeffs) else 0.0
         loss_components = compose_loss_components(
             feature_loss=feature_loss,
-            target_tracking_errors=target_tracking_errors,
-            out_of_range_error=out_of_range_error,
-            joint_preservation_error=joint_preservation_error,
             smoothness_error=smoothness_error,
             joint_limit_error=joint_limit_error,
-            spatial_coeff_error=spatial_coeff_error,
-            timing_coeff_error=timing_coeff_error,
             terms=terms,
             args=args,
         )
@@ -645,8 +644,9 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
     print(f"maxiter:               {args.maxiter}")
     print(f"popsize:               {args.popsize}")
     print(f"Feature weights:       {feature_weights}")
-    print(f"path_length_weight:    {args.path_length_weight}")
-    print(f"endpoint_weight:       {args.endpoint_weight}")
+    print(f"lambda_path:           {args.nearest_path_weight}")
+    print(f"lambda_jerk:           {args.smooth_weight}")
+    print(f"constraint guide:      {args.constraint_penalty_weight}")
 
     print_section("REFERENCE FEATURES")
     for key in FEATURE_KEYS:
@@ -700,10 +700,6 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
             f"{var_norm_unclipped}"
         )
     feature_loss, feature_diag = weighted_feature_rmse(var_norm_unclipped, target_profile, feature_weights)
-    target_tracking_errors = {
-        key: (float(var_norm_unclipped[key]) - float(target_profile[key])) ** 2
-        for key in FEATURE_KEYS
-    }
     out_of_range_error = compute_out_of_range_penalty(var_norm_unclipped)
     joint_preservation_error = float(np.mean((q_spatial - q_ref) ** 2))
     terms = compute_preservation_terms(q_ref, q_var, q_spatial, warped_u, speed, arm, args.detour_tolerance, args.max_dev_tolerance)
@@ -713,13 +709,8 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
     timing_coeff_error = float(np.mean(timing_coeffs ** 2)) if len(timing_coeffs) else 0.0
     loss_components = compose_loss_components(
         feature_loss=feature_loss,
-        target_tracking_errors=target_tracking_errors,
-        out_of_range_error=out_of_range_error,
-        joint_preservation_error=joint_preservation_error,
         smoothness_error=smoothness_error,
         joint_limit_error=joint_limit_error,
-        spatial_coeff_error=spatial_coeff_error,
-        timing_coeff_error=timing_coeff_error,
         terms=terms,
         args=args,
     )
@@ -727,6 +718,8 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
 
     reward_info = {
         "total_loss": float(total_loss),
+        "objective_loss": float(loss_components["objective_loss"]),
+        "constraint_penalty": float(loss_components["constraint_penalty"]),
         "feature_loss": float(feature_loss),
         "out_of_range_error": float(out_of_range_error),
         "loss_components": loss_components,
@@ -760,6 +753,11 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
         "shape_weight": args.shape_weight,
         "detour_tolerance": args.detour_tolerance,
         "max_dev_tolerance": args.max_dev_tolerance,
+        "minimum_path_length_ratio": args.minimum_path_length_ratio,
+        "maximum_path_length_ratio": args.maximum_path_length_ratio,
+        "endpoint_tolerance": args.endpoint_tolerance,
+        "direction_tolerance": args.direction_tolerance,
+        "constraint_penalty_weight": args.constraint_penalty_weight,
         **terms,
         **feature_diag,
     }
@@ -824,6 +822,8 @@ def optimise(args, external_target_profile: Dict[str, float] | None = None):
 
     print_section("SPATIOTEMPORAL DIRECT OPTIMISER RESULT")
     print(f"Total loss:              {total_loss:.6f}")
+    print(f"Three-term objective:    {loss_components['objective_loss']:.6f}")
+    print(f"Constraint guide:        {loss_components['constraint_penalty']:.6f}")
     print(f"Feature loss:            {feature_loss:.6f}")
     print(f"Joint preservation err:  {joint_preservation_error:.6f}")
     print(f"Nearest-path MSE:        {terms['nearest_path_mse']:.6f}")
@@ -875,7 +875,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-delta", type=float, default=0.35)
     parser.add_argument("--max-total-delta", type=float, default=0.50, help="Strict maximum norm of the combined shoulder-elbow residual at each frame, in radians.")
     parser.add_argument("--max-end-delta", type=float, default=0.22, help="Maximum smooth learned endpoint offset in radians when endpoint mode is soft/free.")
-    parser.add_argument("--endpoint-mode", choices=["hard", "soft", "free"], default="soft", help="hard forces final joint pose to match reference; soft/free allow a natural endpoint. soft still uses endpoint_weight as a penalty; free usually pairs with endpoint_weight=0.")
+    parser.add_argument("--endpoint-mode", choices=["hard", "soft", "free"], default="soft", help="hard fixes the final joint pose; soft/free allow a learned endpoint offset that must satisfy --endpoint-tolerance.")
     parser.add_argument("--time-scale", type=float, default=1.6)
     parser.add_argument("--maxiter", type=int, default=45)
     parser.add_argument("--popsize", type=int, default=5)
@@ -905,6 +905,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--detour-weight", type=float, default=0.5)
     parser.add_argument("--max-dev-weight", type=float, default=1.0)
     parser.add_argument("--smooth-weight", type=float, default=0.01)
+    parser.add_argument("--minimum-path-length-ratio", type=float, default=0.70)
+    parser.add_argument("--maximum-path-length-ratio", type=float, default=1.30)
+    parser.add_argument("--endpoint-tolerance", type=float, default=0.08, help="Maximum summed start/end end-effector drift in metres.")
+    parser.add_argument("--direction-tolerance", type=float, default=0.25, help="Maximum cosine direction error (0=same, 2=opposite).")
+    parser.add_argument("--constraint-penalty-weight", type=float, default=100.0, help="Numerical DE guidance only; constraint violations remain hard-rejected after optimisation.")
     parser.add_argument("--joint-limit-weight", type=float, default=5.0)
     parser.add_argument("--coeff-weight", type=float, default=0.01)
     parser.add_argument("--time-coeff-weight", type=float, default=0.01)

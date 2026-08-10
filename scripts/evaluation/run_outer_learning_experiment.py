@@ -692,6 +692,18 @@ def _make_environment(
             max_feature_error_threshold=max_feature_error_threshold,
             reject_excessive_feature_error=True,
             evaluator_failure_mode="raise",
+            minimum_path_length_ratio=float(
+                optimiser_overrides.get("minimum_path_length_ratio", 0.70)
+            ),
+            maximum_path_length_ratio=float(
+                optimiser_overrides.get("maximum_path_length_ratio", 1.30)
+            ),
+            endpoint_tolerance=float(
+                optimiser_overrides.get("endpoint_tolerance", 0.08)
+            ),
+            direction_tolerance=float(
+                optimiser_overrides.get("direction_tolerance", 0.25)
+            ),
         ),
         optimiser_overrides=optimiser_overrides,
         observation_cache=PerceptualObservationCache(observation_cache),

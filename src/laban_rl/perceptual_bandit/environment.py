@@ -341,6 +341,8 @@ class EnvironmentRewardConfig:
     # structurally invalid or joint-unsafe trajectory to the perceptual model.
     minimum_path_length_ratio: float = 0.70
     maximum_path_length_ratio: float = 1.30
+    endpoint_tolerance: float = 0.08
+    direction_tolerance: float = 0.25
     joint_limit_tolerance: float = 1e-6
 
     def validate(self) -> None:
@@ -393,6 +395,10 @@ class EnvironmentRewardConfig:
             )
         if not 0.0 < self.minimum_path_length_ratio <= self.maximum_path_length_ratio:
             raise ValueError("Invalid path-length-ratio acceptance interval.")
+        if not np.isfinite(self.endpoint_tolerance) or self.endpoint_tolerance < 0.0:
+            raise ValueError("endpoint_tolerance must be finite and non-negative.")
+        if not np.isfinite(self.direction_tolerance) or self.direction_tolerance < 0.0:
+            raise ValueError("direction_tolerance must be finite and non-negative.")
         if self.joint_limit_tolerance < 0.0:
             raise ValueError("joint_limit_tolerance must be non-negative.")
 
@@ -410,6 +416,8 @@ class EnvironmentStepResult:
     failure_reason: str | None
     invalid_features: list[str]
     path_preserved: bool
+    endpoints_preserved: bool
+    direction_preserved: bool
     joint_limits_satisfied: bool
     physically_acceptable: bool
 
@@ -768,6 +776,8 @@ class PerceptualBanditEnvironment:
 
         reward_info = optimisation_result.raw_result.get("reward_info", {})
         path_length_ratio = float(reward_info.get("path_length_ratio", np.nan))
+        endpoint_error = float(reward_info.get("endpoint_error", np.nan))
+        direction_error = float(reward_info.get("direction_error", np.nan))
         joint_limit_error = float(reward_info.get("joint_limit_error", np.inf))
         path_preserved = bool(
             np.isfinite(path_length_ratio)
@@ -775,11 +785,24 @@ class PerceptualBanditEnvironment:
             <= path_length_ratio
             <= self.reward_config.maximum_path_length_ratio
         )
+        endpoints_preserved = bool(
+            np.isfinite(endpoint_error)
+            and endpoint_error <= self.reward_config.endpoint_tolerance
+        )
+        direction_preserved = bool(
+            np.isfinite(direction_error)
+            and direction_error <= self.reward_config.direction_tolerance
+        )
         joint_limits_satisfied = bool(
             np.isfinite(joint_limit_error)
             and joint_limit_error <= self.reward_config.joint_limit_tolerance
         )
-        physically_acceptable = bool(path_preserved and joint_limits_satisfied)
+        physically_acceptable = bool(
+            path_preserved
+            and endpoints_preserved
+            and direction_preserved
+            and joint_limits_satisfied
+        )
 
         if invalid_features:
             reason = (
@@ -798,6 +821,8 @@ class PerceptualBanditEnvironment:
                 failure_reason=reason,
                 invalid_features=invalid_features,
                 path_preserved=path_preserved,
+                endpoints_preserved=endpoints_preserved,
+                direction_preserved=direction_preserved,
                 joint_limits_satisfied=joint_limits_satisfied,
                 physically_acceptable=False,
                 realisation_rmse=None,
@@ -842,6 +867,10 @@ class PerceptualBanditEnvironment:
             failed = []
             if not path_preserved:
                 failed.append("path_preservation")
+            if not endpoints_preserved:
+                failed.append("endpoint_preservation")
+            if not direction_preserved:
+                failed.append("direction_preservation")
             if not joint_limits_satisfied:
                 failed.append("joint_limits")
             return EnvironmentStepResult(
@@ -852,6 +881,8 @@ class PerceptualBanditEnvironment:
                 failure_reason="physical_acceptance_failed:" + ",".join(failed),
                 invalid_features=[],
                 path_preserved=path_preserved,
+                endpoints_preserved=endpoints_preserved,
+                direction_preserved=direction_preserved,
                 joint_limits_satisfied=joint_limits_satisfied,
                 physically_acceptable=False,
                 realisation_rmse=float(optimisation_result.realisation_rmse),
@@ -925,6 +956,8 @@ class PerceptualBanditEnvironment:
                 ),
                 invalid_features=[],
                 path_preserved=path_preserved,
+                endpoints_preserved=endpoints_preserved,
+                direction_preserved=direction_preserved,
                 joint_limits_satisfied=joint_limits_satisfied,
                 physically_acceptable=physically_acceptable,
                 realisation_rmse=realisation_rmse,
@@ -993,6 +1026,8 @@ class PerceptualBanditEnvironment:
                     failure_reason=f"evaluator_error: {str(evaluator_error)}",
                     invalid_features=[],
                     path_preserved=path_preserved,
+                    endpoints_preserved=endpoints_preserved,
+                    direction_preserved=direction_preserved,
                     joint_limits_satisfied=joint_limits_satisfied,
                     physically_acceptable=physically_acceptable,
                     realisation_rmse=realisation_rmse,
@@ -1073,6 +1108,8 @@ class PerceptualBanditEnvironment:
             failure_reason=None,
             invalid_features=[],
             path_preserved=path_preserved,
+            endpoints_preserved=endpoints_preserved,
+            direction_preserved=direction_preserved,
             joint_limits_satisfied=joint_limits_satisfied,
             physically_acceptable=physically_acceptable,
             realisation_rmse=realisation_rmse,
